@@ -1,5 +1,9 @@
 package net.bsrc.cbod.main;
 
+import java.util.List;
+
+import net.bsrc.cbod.pascal.EPascalType;
+import net.bsrc.cbod.pascal.PascalVOC;
 import net.bsrc.cbod.util.ConfigurationUtil;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -13,12 +17,14 @@ public class Main {
 
 	public static void main(String[] args) throws ConfigurationException {
 		
+		List<String> fileNames=PascalVOC.getInstance().getImageNames(EPascalType.CAR);
+		List<String> filePaths = PascalVOC.getInstance().getImagePaths(EPascalType.CAR);
 		
 		
-		String s=ConfigurationUtil.getString("deneme2");
-		String s1=ConfigurationUtil.getString("target.env");
 		
-		System.out.println(s);
+		
+		System.out.println(filePaths);
+		
 	}
 
 }
