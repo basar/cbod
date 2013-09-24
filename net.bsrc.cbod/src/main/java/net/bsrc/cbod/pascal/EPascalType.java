@@ -15,6 +15,4 @@ public enum EPascalType {
 		return name;
 	}
 	
-	
-	
 }

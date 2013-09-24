@@ -1,10 +1,8 @@
 package net.bsrc.cbod.main;
 
-import java.util.List;
-
-import net.bsrc.cbod.pascal.EPascalType;
 import net.bsrc.cbod.pascal.PascalVOC;
-import net.bsrc.cbod.util.ConfigurationUtil;
+import net.bsrc.cbod.pascal.xml.PascalAnnotation;
+import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.opencv.core.Core;
@@ -16,15 +14,19 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws ConfigurationException {
+
+		PascalVOC pascal = PascalVOC.getInstance();
+
+		//List<String> fileNames = pascal.getImageNames(EPascalType.CAR, 0);
+		//List<String> filePaths = pascal.getImagePaths(EPascalType.CAR, 0);
 		
-		List<String> fileNames=PascalVOC.getInstance().getImageNames(EPascalType.CAR);
-		List<String> filePaths = PascalVOC.getInstance().getImagePaths(EPascalType.CAR);
+		String xml = pascal.getAnnotationXML("2008_000028");
 		
 		
+		PascalAnnotation ann=PascalXMLHelper.fromXML(xml);
 		
-		
-		System.out.println(filePaths);
-		
+		System.out.println(ann);
+
 	}
 
 }

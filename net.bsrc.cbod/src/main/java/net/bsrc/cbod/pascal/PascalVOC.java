@@ -19,9 +19,6 @@ import org.apache.commons.lang.StringUtils;
  */
 public class PascalVOC {
 
-	private static final String TYPE_FILE_SUFFIX = "_trainval.txt";
-	private static final String JPEG_SUFFIX = ".jpg";
-
 	private static PascalVOC instance = null;
 
 	private String mainDir;
@@ -31,6 +28,10 @@ public class PascalVOC {
 	private String annotationDir;
 
 	private String indexDir;
+
+	private String segmentationClassDir;
+
+	private String segmentationObjectDir;
 
 	/**
 	 * To prevent object creation
@@ -62,6 +63,12 @@ public class PascalVOC {
 				.getString("net.bsrc.cbod.pascal.annotationDir"));
 		indexDir = mainDir.concat(ConfigurationUtil
 				.getString("net.bsrc.cbod.pascal.indexDir"));
+		segmentationClassDir = mainDir.concat(ConfigurationUtil
+				.getString("net.bsrc.cbod.pascal.segmentationClassDir"));
+		segmentationObjectDir = mainDir.concat(ConfigurationUtil
+				.getString("net.bsrc.cbod.pascal.segmentationObjectDir"));
+		
+
 	}
 
 	public String getMainDir() {
@@ -80,17 +87,27 @@ public class PascalVOC {
 		return indexDir;
 	}
 
+	public String getSegmentationClassDir() {
+		return segmentationClassDir;
+	}
+
+	public String getSegmentationObjectDir() {
+		return segmentationObjectDir;
+	}
+
 	/**
 	 * Returns image names that belong to given pascal type
 	 * 
 	 * @param type
+	 * @param suffix
+	 *            0 train, 1 val, 2 both
 	 * @return
 	 */
-	public List<String> getImageNames(EPascalType type) {
+	public List<String> getImageNames(EPascalType type, int suffix) {
 
 		List<String> resultList = new ArrayList<String>();
 		String filePath = indexDir.concat("/").concat(type.getName())
-				.concat(TYPE_FILE_SUFFIX);
+				.concat(getTrainValSuffix(suffix));
 		File file = FileUtils.getFile(filePath);
 
 		try {
@@ -113,6 +130,7 @@ public class PascalVOC {
 			}
 
 		} catch (IOException e) {
+			// TODO logger yazilacak!
 			e.printStackTrace();
 		}
 
@@ -125,29 +143,78 @@ public class PascalVOC {
 	 * @param type
 	 * @return
 	 */
-	public List<String> getImagePaths(EPascalType type) {
+	public List<String> getImagePaths(EPascalType type, int suffix) {
 
 		List<String> resultList = new ArrayList<String>();
 
-		List<String> imageNames = getImageNames(type);
+		List<String> imageNames = getImageNames(type, suffix);
 
 		for (String imageName : imageNames) {
 			String imagePath = imageDir.concat("/").concat(imageName)
-					.concat(JPEG_SUFFIX);
+					.concat(PascalConstants.JPEG_SUFFIX);
 			resultList.add(imagePath);
 		}
 
 		return resultList;
 
 	}
-	
+
 	/**
 	 * Returns full pascal image path
+	 * 
 	 * @param imageName
 	 * @return
 	 */
 	public String getImagePath(String imageName) {
-		return imageDir.concat("/").concat(imageName).concat(JPEG_SUFFIX);
+		return imageDir.concat("/").concat(imageName).concat(PascalConstants.JPEG_SUFFIX);
+	}
+
+	/**
+	 * Returns annotaion xml data
+	 * 
+	 * @param imageName
+	 * @return
+	 */
+	public String getAnnotationXML(String imageName) {
+
+		String xml = null;
+
+		File xmlFile = FileUtils.getFile(annotationDir.concat("/")
+				.concat(imageName).concat(PascalConstants.XML_SUFFIX));
+		try {
+			xml = FileUtils.readFileToString(xmlFile);
+		} catch (IOException e) {
+			// TODO Logger yazilacak!
+			e.printStackTrace();
+		}
+
+		return xml;
+
+	}
+
+	/**
+	 * 0 train, 1 val, 2 both
+	 * 
+	 * @param suffix
+	 * @return
+	 */
+	private String getTrainValSuffix(int suffix) {
+		String result = null;
+		switch (suffix) {
+		case 0:
+			result = PascalConstants.TRAIN_SUFFIX;
+			break;
+		case 1:
+			result = PascalConstants.VAL_SUFFIX;
+			break;
+		case 2:
+			result = PascalConstants.TRAIN_VAL_SUFFIX;
+			break;
+		default:
+			// TODO uyari verilecek!
+			break;
+		}
+		return result;
 	}
 
 }
