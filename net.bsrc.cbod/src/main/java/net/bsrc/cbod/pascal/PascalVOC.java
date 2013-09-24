@@ -55,19 +55,18 @@ public class PascalVOC {
 	}
 
 	private void initialize() {
-		mainDir = ConfigurationUtil.getString("net.bsrc.cbod.pascal.mainDir");
+		mainDir = ConfigurationUtil.getString(PascalConstants.MAIN_DIR_KEY);
 
 		imageDir = mainDir.concat(ConfigurationUtil
-				.getString("net.bsrc.cbod.pascal.imageDir"));
+				.getString(PascalConstants.IMAGE_DIR_KEY));
 		annotationDir = mainDir.concat(ConfigurationUtil
-				.getString("net.bsrc.cbod.pascal.annotationDir"));
+				.getString(PascalConstants.ANNOTATION_DIR_KEY));
 		indexDir = mainDir.concat(ConfigurationUtil
-				.getString("net.bsrc.cbod.pascal.indexDir"));
+				.getString(PascalConstants.INDEX_DIR_KEY));
 		segmentationClassDir = mainDir.concat(ConfigurationUtil
-				.getString("net.bsrc.cbod.pascal.segmentationClassDir"));
+				.getString(PascalConstants.SEGMENTATION_CLASS_DIR_KEY));
 		segmentationObjectDir = mainDir.concat(ConfigurationUtil
-				.getString("net.bsrc.cbod.pascal.segmentationObjectDir"));
-		
+				.getString(PascalConstants.SEGMENTATION_OBJECT_DIR_KEY));
 
 	}
 
@@ -166,7 +165,8 @@ public class PascalVOC {
 	 * @return
 	 */
 	public String getImagePath(String imageName) {
-		return imageDir.concat("/").concat(imageName).concat(PascalConstants.JPEG_SUFFIX);
+		return imageDir.concat("/").concat(imageName)
+				.concat(PascalConstants.JPEG_SUFFIX);
 	}
 
 	/**
