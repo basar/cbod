@@ -1,4 +1,4 @@
-package net.bsrc.cbod.util;
+package net.bsrc.cbod.core.util;
 
 import net.bsrc.cbod.core.CBODConstants;
 

@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
-import net.bsrc.cbod.util.ConfigurationUtil;
+import net.bsrc.cbod.core.util.ConfigurationUtil;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -55,18 +56,19 @@ public class PascalVOC {
 	}
 
 	private void initialize() {
-		mainDir = ConfigurationUtil.getString(PascalConstants.MAIN_DIR_KEY);
+		mainDir = ConfigurationUtil
+				.getString(CBODConstants.PASCAL_MAIN_DIR_KEY);
 
 		imageDir = mainDir.concat(ConfigurationUtil
-				.getString(PascalConstants.IMAGE_DIR_KEY));
+				.getString(CBODConstants.PASCAL_IMAGE_DIR_KEY));
 		annotationDir = mainDir.concat(ConfigurationUtil
-				.getString(PascalConstants.ANNOTATION_DIR_KEY));
+				.getString(CBODConstants.PASCAL_ANNOTATION_DIR_KEY));
 		indexDir = mainDir.concat(ConfigurationUtil
-				.getString(PascalConstants.INDEX_DIR_KEY));
+				.getString(CBODConstants.PASCAL_INDEX_DIR_KEY));
 		segmentationClassDir = mainDir.concat(ConfigurationUtil
-				.getString(PascalConstants.SEGMENTATION_CLASS_DIR_KEY));
+				.getString(CBODConstants.PASCAL_SEGMENTATION_CLASS_DIR_KEY));
 		segmentationObjectDir = mainDir.concat(ConfigurationUtil
-				.getString(PascalConstants.SEGMENTATION_OBJECT_DIR_KEY));
+				.getString(CBODConstants.PASCAL_SEGMENTATION_OBJECT_DIR_KEY));
 
 	}
 
