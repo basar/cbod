@@ -1,6 +1,9 @@
 package net.bsrc.cbod.pascal.xml;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import net.bsrc.cbod.pascal.EPascalType;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
@@ -67,6 +70,16 @@ public class PascalAnnotation {
 
 	public List<PascalObject> getObjectList() {
 		return objectList;
+	}
+
+	public List<PascalObject> getObjectList(EPascalType type) {
+		List<PascalObject> result = new ArrayList<PascalObject>();
+		for (PascalObject po : getObjectList()) {
+			if (po.getName() != null && po.getName().equals(type.getName())) {
+				result.add(po);
+			}
+		}
+		return result;
 	}
 
 	public void setObjectList(List<PascalObject> objectList) {

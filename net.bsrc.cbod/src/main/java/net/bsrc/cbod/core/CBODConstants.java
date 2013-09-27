@@ -7,7 +7,7 @@ package net.bsrc.cbod.core;
  * 
  */
 public final class CBODConstants {
-	
+
 	/**
 	 * Command project constants
 	 */
@@ -16,6 +16,9 @@ public final class CBODConstants {
 	public static final String TARGET_ENV_KEY = "target.env";
 	public static final String PROJECT_TARGET_ENV_PROPERTIES = "project.${"
 			+ TARGET_ENV_KEY + "}.properties";
+
+	public static final String JPEG_SUFFIX = ".jpg";
+	public static final String XML_SUFFIX = ".xml";
 
 	/**
 	 * Property files keys

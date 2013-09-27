@@ -8,6 +8,8 @@ import java.util.List;
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
+import net.bsrc.cbod.pascal.xml.PascalAnnotation;
+import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -152,7 +154,7 @@ public class PascalVOC {
 
 		for (String imageName : imageNames) {
 			String imagePath = imageDir.concat("/").concat(imageName)
-					.concat(PascalConstants.JPEG_SUFFIX);
+					.concat(CBODConstants.JPEG_SUFFIX);
 			resultList.add(imagePath);
 		}
 
@@ -168,7 +170,7 @@ public class PascalVOC {
 	 */
 	public String getImagePath(String imageName) {
 		return imageDir.concat("/").concat(imageName)
-				.concat(PascalConstants.JPEG_SUFFIX);
+				.concat(CBODConstants.JPEG_SUFFIX);
 	}
 
 	/**
@@ -182,7 +184,7 @@ public class PascalVOC {
 		String xml = null;
 
 		File xmlFile = FileUtils.getFile(annotationDir.concat("/")
-				.concat(imageName).concat(PascalConstants.XML_SUFFIX));
+				.concat(imageName).concat(CBODConstants.XML_SUFFIX));
 		try {
 			xml = FileUtils.readFileToString(xmlFile);
 		} catch (IOException e) {
@@ -191,6 +193,18 @@ public class PascalVOC {
 		}
 
 		return xml;
+
+	}
+
+	/**
+	 * 
+	 * @param imageName
+	 * @return
+	 */
+	public PascalAnnotation getAnnotation(String imageName) {
+
+		String xml = getAnnotationXML(imageName);
+		return PascalXMLHelper.fromXML(xml);
 
 	}
 
