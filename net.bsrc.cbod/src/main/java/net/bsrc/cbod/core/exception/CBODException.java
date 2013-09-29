@@ -7,6 +7,10 @@ public class CBODException extends RuntimeException {
 
 	}
 
+	public CBODException(Throwable t) {
+		super(t);
+	}
+
 	public CBODException(String message) {
 		super(message);
 	}

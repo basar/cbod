@@ -9,11 +9,11 @@ public class PascalObject {
 
 	private String pose;
 
-	private String truncated;
+	private int truncated;
 
-	private String occluded;
+	private int occluded;
 
-	private String difficult;
+	private int difficult;
 
 	private PascalBndBox bndbox;
 
@@ -37,19 +37,19 @@ public class PascalObject {
 		this.pose = pose;
 	}
 
-	public String getTruncated() {
-		return truncated;
+	public boolean isTruncated() {
+		return truncated == 1;
 	}
 
-	public void setTruncated(String truncated) {
+	public void setTruncated(int truncated) {
 		this.truncated = truncated;
 	}
 
-	public String getOccluded() {
-		return occluded;
+	public boolean isOccluded() {
+		return occluded == 1;
 	}
 
-	public void setOccluded(String occluded) {
+	public void setOccluded(int occluded) {
 		this.occluded = occluded;
 	}
 
@@ -61,11 +61,11 @@ public class PascalObject {
 		this.bndbox = bndbox;
 	}
 
-	public String getDifficult() {
-		return difficult;
+	public boolean isDifficult() {
+		return difficult == 1;
 	}
 
-	public void setDifficult(String difficult) {
+	public void setDifficult(int difficult) {
 		this.difficult = difficult;
 	}
 
@@ -75,7 +75,5 @@ public class PascalObject {
 				+ truncated + ", occluded=" + occluded + ", difficult="
 				+ difficult + ", bndbox=" + bndbox + "]";
 	}
-	
-	
 
 }

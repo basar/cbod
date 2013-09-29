@@ -23,7 +23,12 @@ public final class CBODConstants {
 	/**
 	 * Property files keys
 	 */
-
+	
+	/**
+	 * CBOD Core 
+	 */
+	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.outputDir";
+	
 	/**
 	 * Pascal VOC
 	 */
@@ -37,7 +42,6 @@ public final class CBODConstants {
 	/**
 	 * JSEG
 	 */
-	public static final String JSEG_OUTPUT_DIR_KEY = "net.bsrc.cbod.jseg.outputDir";
 	public static final String JSEG_EXECUTE_COMMAND_KEY = "net.bsrc.cbod.jseg.executeCommand";
 
 	/**

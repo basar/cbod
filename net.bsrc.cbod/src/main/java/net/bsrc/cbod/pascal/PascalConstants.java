@@ -12,11 +12,11 @@ public final class PascalConstants {
 	protected static final String TRAIN_SUFFIX = "_train.txt";
 	protected static final String VAL_SUFFIX = "_val.txt";
 
-	protected static final String POSE_LEFT = "Left";
-	protected static final String POSE_RIGHT = "Right";
-	protected static final String POSE_REAR = "Rear";
-	protected static final String POSE_FRONTAL = "Frontal";
-	protected static final String POSE_UNSPECIFIED = "Unspecified";
+	public static final String POSE_LEFT = "Left";
+	public static final String POSE_RIGHT = "Right";
+	public static final String POSE_REAR = "Rear";
+	public static final String POSE_FRONTAL = "Frontal";
+	public static final String POSE_UNSPECIFIED = "Unspecified";
 
 	private PascalConstants() {
 

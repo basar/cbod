@@ -1,6 +1,12 @@
 package net.bsrc.cbod.jseg;
 
+import java.io.File;
+
+import org.apache.commons.io.FileUtils;
+
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
 import net.bsrc.cbod.core.util.ProcessUtil;
 
@@ -14,9 +20,10 @@ public class JSEG {
 
 	private static JSEG instance = null;
 
-	private String outputDir;
-
 	private String executeCommand;
+
+	public final static int MIN_IMG_WIDTH = 64;
+	public final static int MIN_IMG_HEIGHT = 64;
 
 	private JSEG() {
 
@@ -36,14 +43,8 @@ public class JSEG {
 	}
 
 	private void initialize() {
-		outputDir = ConfigurationUtil
-				.getString(CBODConstants.JSEG_OUTPUT_DIR_KEY);
 		executeCommand = ConfigurationUtil
 				.getString(CBODConstants.JSEG_EXECUTE_COMMAND_KEY);
-	}
-
-	public String getOutputDir() {
-		return outputDir;
 	}
 
 	public String getExecuteCommand() {
@@ -76,8 +77,32 @@ public class JSEG {
 
 	}
 
-	public void executeWithDefaultParams(String imgName, String imgPath) {
+	/**
+	 * 
+	 * @param imgPath
+	 */
+	public void executeWithDefaultParams(String imgPath) {
 
+		String outputDir = CBODUtil.getDefaultOutputDirectory()
+				.getAbsolutePath();
+		executeWithDefaultParams(imgPath, outputDir);
+
+	}
+
+	/**
+	 * 
+	 * @param imgPath
+	 * @param outputDir
+	 */
+	public void executeWithDefaultParams(String imgPath, String outputDir) {
+
+		File file = FileUtils.getFile(imgPath);
+
+		if (!file.exists()) {
+			throw new CBODException("Dosya bulunamadi:" + imgPath);
+		}
+
+		String imgName = file.getName();
 		String mapFile = outputDir.concat("/").concat(imgName).concat(".map");
 
 		String segmentedImg = outputDir.concat("/").concat(imgName)
@@ -87,4 +112,7 @@ public class JSEG {
 				mapFile);
 
 	}
+	
+	
 }
+
