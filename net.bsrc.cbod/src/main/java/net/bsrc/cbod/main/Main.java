@@ -5,9 +5,9 @@ import java.util.List;
 
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
+import net.bsrc.cbod.jseg.JSEGParameter;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.pascal.EPascalType;
-import net.bsrc.cbod.pascal.PascalConstants;
 import net.bsrc.cbod.pascal.PascalVOC;
 import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalBndBox;
@@ -31,6 +31,7 @@ public class Main {
 		PascalVOC pascal = PascalVOC.getInstance();
 
 		List<String> imgNames = pascal.getImageNames(EPascalType.CAR, 2);
+		List<String> segmentedImageNames = new ArrayList<String>();
 
 		for (int i = 0; i < imgNames.size(); i++) {
 
@@ -52,9 +53,16 @@ public class Main {
 						.concat("/" + po.getPose() + "/")
 						.concat(imgName + "_" + j).concat(".jpg");
 				OpenCV.writeImage(crop, outputImgPath);
-
+				segmentedImageNames.add(outputImgPath);
 			}
+		}
 
+		for (int i = 0; i < 10; i++) {
+			String imageName = segmentedImageNames.get(i);
+			JSEGParameter jsegParam = new JSEGParameter(imageName);
+			JSEG.getInstance().execute(jsegParam);
+
+			String mapName = jsegParam.getRegionMapFileName();
 		}
 
 	}

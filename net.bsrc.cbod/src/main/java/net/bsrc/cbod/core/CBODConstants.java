@@ -19,16 +19,18 @@ public final class CBODConstants {
 
 	public static final String JPEG_SUFFIX = ".jpg";
 	public static final String XML_SUFFIX = ".xml";
+	public static final String MAP_SUFFIX = ".map";
+	public static final String SEG_SUFFIX = ".seg";
 
 	/**
 	 * Property files keys
 	 */
-	
+
 	/**
-	 * CBOD Core 
+	 * CBOD Core
 	 */
 	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.outputDir";
-	
+
 	/**
 	 * Pascal VOC
 	 */

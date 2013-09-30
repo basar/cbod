@@ -1,8 +1,6 @@
 package net.bsrc.cbod.jseg;
 
-import java.io.File;
-
-import org.apache.commons.io.FileUtils;
+import net.bsrc.cbod.core.CBODConstants;
 
 /**
  * JSEG parameter model
@@ -111,6 +109,11 @@ public class JSEGParameter {
 	 */
 	public JSEGParameter(String inputFileName) {
 		this.inputFileName = inputFileName;
+		this.outputFileImage = inputFileName.replaceAll(
+				CBODConstants.JPEG_SUFFIX, CBODConstants.SEG_SUFFIX
+						+ CBODConstants.JPEG_SUFFIX);
+		this.regionMapFileName = inputFileName.replaceAll(
+				CBODConstants.JPEG_SUFFIX, CBODConstants.MAP_SUFFIX);
 	}
 
 	public String getInputFileName() {
@@ -200,22 +203,24 @@ public class JSEGParameter {
 
 		// output file name and factor
 		sb.append("-o ");
-		if (outputFileImage != null) {
-			sb.append(outputFileImage).append(" ");
-		} else {
-			sb.append(inputFileName.replaceAll(".jpg", ".seg.jpg")).append(" ");
-			sb.append(factor).append(" ");
-		}
+		sb.append(outputFileImage).append(" ");
+		sb.append(factor).append(" ");
 
 		// region map file
 		sb.append("-r").append(regionMapType).append(" ");
-		if (regionMapFileName != null) {
-			sb.append(regionMapFileName).append(" ");
-		} else {
-			sb.append(inputFileName.replaceAll(".jpg", ".map")).append(" ");
+		sb.append(regionMapFileName).append(" ");
+
+		if (colorQuantizationThreshold != null) {
+			sb.append("-q ").append(colorQuantizationThreshold).append(" ");
 		}
-		
-		
+
+		if (regionMergeThreshold != null) {
+			sb.append("-m ").append(regionMergeThreshold).append(" ");
+		}
+
+		if (numberOfScales != null) {
+			sb.append("-i ").append(numberOfScales);
+		}
 
 		return sb.toString();
 	}

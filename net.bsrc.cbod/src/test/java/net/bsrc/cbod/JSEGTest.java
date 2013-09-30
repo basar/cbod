@@ -9,9 +9,6 @@ public class JSEGTest {
 	@Test
 	public void testJSEGParameter() {
 
-		String fileName = "/Users/bsr/Documents/Phd/output/1234.jpg";
-		JSEGParameter param = new JSEGParameter(fileName);
-
 	}
 
 }
