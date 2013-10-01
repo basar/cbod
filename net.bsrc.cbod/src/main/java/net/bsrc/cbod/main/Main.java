@@ -60,9 +60,18 @@ public class Main {
 		for (int i = 0; i < 10; i++) {
 			String imageName = segmentedImageNames.get(i);
 			JSEGParameter jsegParam = new JSEGParameter(imageName);
+			String mapName = jsegParam.getRegionMapFileName();
 			JSEG.getInstance().execute(jsegParam);
 
-			String mapName = jsegParam.getRegionMapFileName();
+			List<Mat> regions = OpenCV.getSegmentedRegions(imageName, mapName,
+					true);
+
+			for (int r = 0; r < regions.size(); r++) {
+				Mat region = regions.get(r);
+				OpenCV.writeImage(region,
+						imageName.replaceAll(".jpg", ".seg." + r + ".jpg"));
+			}
+
 		}
 
 	}

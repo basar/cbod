@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.bsrc.cbod.core.exception.CBODException;
 import net.bsrc.cbod.opencv.OpenCV;
 
 import org.apache.commons.io.FileUtils;
@@ -14,9 +15,18 @@ import org.opencv.core.Mat;
 
 public class RegionMapFactory {
 
-	public static RegionMap getRegionMap(String imgPath, String mapPath) {
+	public static RegionMap getRegionMap(String imageName, String mapName) {
 
-		File mapFile = FileUtils.getFile(mapPath);
+		File mapFile = FileUtils.getFile(mapName);
+		File imgFile = FileUtils.getFile(imageName);
+
+		if (!mapFile.exists()) {
+			throw new CBODException("Map file cannot be found " + mapFile);
+		}
+
+		if (!imgFile.exists()) {
+			throw new CBODException("Img file cannot be found " + imgFile);
+		}
 
 		byte[] arr = null;
 
@@ -26,7 +36,7 @@ public class RegionMapFactory {
 			e.printStackTrace();
 		}
 
-		Mat orgImg = OpenCV.getImageMat(imgPath);
+		Mat orgImg = OpenCV.getImageMat(imageName);
 
 		final Mat map = new Mat(orgImg.size(), CvType.CV_8UC1);
 		final Set<Integer> labels = new HashSet<Integer>();
