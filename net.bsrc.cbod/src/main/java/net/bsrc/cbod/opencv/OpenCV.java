@@ -10,11 +10,7 @@ import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.pascal.xml.PascalBndBox;
 
 import org.apache.commons.io.FileUtils;
-import org.opencv.core.CvException;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
+import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
@@ -118,7 +114,7 @@ public final class OpenCV {
 			Point[] arr = points.toArray(new Point[points.size()]);
 			Rect rect = Imgproc.boundingRect(new MatOfPoint(arr));
 
-			Mat region = null;
+			Mat region;
 			if (isBlackBg) {
 				region = getImageWithBlackBg(org, points).submat(rect);
 			} else {
