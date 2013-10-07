@@ -56,7 +56,8 @@ public class JSEG implements IProcessExecute {
 
 	/**
 	 * 
-	 * @param parameter process parameter
+	 * @param parameter
+	 *            process parameter
 	 */
 	public void execute(String parameter) {
 		StringBuilder sb = new StringBuilder();
