@@ -28,12 +28,12 @@ public class RegionMapFactory {
 			throw new CBODException("Img file cannot be found " + imgFile);
 		}
 
-		byte[] arr = null;
+		byte[] arr;
 
 		try {
 			arr = IOUtils.toByteArray(new FileInputStream(mapFile));
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new CBODException(e);
 		}
 
 		Mat orgImg = OpenCV.getImageMat(imageName);

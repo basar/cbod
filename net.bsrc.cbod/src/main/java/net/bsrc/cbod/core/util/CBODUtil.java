@@ -3,10 +3,10 @@ package net.bsrc.cbod.core.util;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
-
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * Util operations for
@@ -29,6 +29,10 @@ public final class CBODUtil {
 			createDirectory(file);
 
 		return file;
+	}
+
+	public static String getDefaultOutputDirectoryPath() {
+		return getDefaultOutputDirectory().getAbsolutePath();
 	}
 
 	/**

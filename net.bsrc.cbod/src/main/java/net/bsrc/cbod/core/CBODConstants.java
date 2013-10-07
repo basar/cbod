@@ -29,7 +29,7 @@ public final class CBODConstants {
 	/**
 	 * CBOD Core
 	 */
-	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.outputDir";
+	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.dir";
 
 	/**
 	 * Pascal VOC
@@ -45,6 +45,12 @@ public final class CBODConstants {
 	 * JSEG
 	 */
 	public static final String JSEG_EXECUTE_COMMAND_KEY = "net.bsrc.cbod.jseg.executeCommand";
+
+	/**
+	 * MPEG Fex
+	 */
+	public static final String MPEG_BIL_FEX_EXECUTE_COMMAND_KEY = "net.bsrc.cbod.mpeg.bil.fex.executeCommand";
+    public static final String MPEG_FEX_DIR = "net.bsrc.cbod.mpeg.fex.dir";
 
 	/**
 	 * To prevent object creation

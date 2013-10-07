@@ -1,6 +1,7 @@
 package net.bsrc.cbod.jseg;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.IProcessExecute;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
 import net.bsrc.cbod.core.util.ProcessUtil;
 
@@ -10,7 +11,7 @@ import net.bsrc.cbod.core.util.ProcessUtil;
  * @author bsr
  * 
  */
-public class JSEG {
+public class JSEG implements IProcessExecute {
 
 	private static JSEG instance = null;
 
@@ -55,7 +56,7 @@ public class JSEG {
 
 	/**
 	 * 
-	 * @param parameter
+	 * @param parameter process parameter
 	 */
 	public void execute(String parameter) {
 		StringBuilder sb = new StringBuilder();

@@ -6,7 +6,7 @@ import net.bsrc.cbod.core.CBODConstants;
  * JSEG parameter model
  * 
  * @author bsr
- * @see http://vision.ece.ucsb.edu/segmentation/jseg/software/
+ * @see "http://vision.ece.ucsb.edu/segmentation/jseg/software/"
  */
 public class JSEGParameter {
 
