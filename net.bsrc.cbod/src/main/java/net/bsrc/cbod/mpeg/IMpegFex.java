@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public interface IMpegFex {
 
-	List<Map<String, int[]>> extractColorStructureDescriptors(
-			List<String> imgNames, int descriptorSize);
+	List<Map<String, List<Integer>>> extractColorStructureDescriptors(
+			List<String> imgNames, Integer descriptorSize);
 
 }

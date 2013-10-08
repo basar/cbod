@@ -2,12 +2,15 @@ package net.bsrc.cbod.main;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
+import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.pascal.EPascalType;
 import net.bsrc.cbod.pascal.PascalVOC;
@@ -28,8 +31,12 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		cropVehiclesFromImageDataSetAndSegmentThem();
-	}
+        BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+
+        List<String> fileNames = CBODUtil.getFileList("/Users/bsr/Documents/Phd/cbod/train_data/tire");
+
+        List<Map<String,List<Integer>>> maps = mpegFex.extractColorStructureDescriptors(fileNames, null);
+    }
 
 	/**
      *

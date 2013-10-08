@@ -21,6 +21,7 @@ public final class CBODConstants {
 	public static final String XML_SUFFIX = ".xml";
 	public static final String MAP_SUFFIX = ".map";
 	public static final String SEG_SUFFIX = ".seg";
+    public static final String TXT_SUFFIX = ".txt";
 
 	/**
 	 * Property files keys
@@ -52,7 +53,8 @@ public final class CBODConstants {
 	public static final String MPEG_BIL_FEX_EXECUTE_COMMAND_KEY = "net.bsrc.cbod.mpeg.bil.fex.executeCommand";
     public static final String MPEG_FEX_DIR = "net.bsrc.cbod.mpeg.fex.dir";
 
-	/**
+
+    /**
 	 * To prevent object creation
 	 */
 	private CBODConstants() {

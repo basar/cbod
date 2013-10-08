@@ -5,9 +5,10 @@ import java.io.InputStreamReader;
 
 /**
  * External process operations
- * @see http://www.rgagnon.com/javadetails/java-0014.html
+ * 
+ * @see "http://www.rgagnon.com/javadetails/java-0014.html"
  * @author bsr
- *
+ * 
  */
 public class ProcessUtil {
 
@@ -20,7 +21,7 @@ public class ProcessUtil {
 					p.getInputStream()));
 			BufferedReader bre = new BufferedReader(new InputStreamReader(
 					p.getErrorStream()));
-			String line = null;
+			String line;
 			while ((line = bri.readLine()) != null) {
 				System.out.println(line);
 			}
