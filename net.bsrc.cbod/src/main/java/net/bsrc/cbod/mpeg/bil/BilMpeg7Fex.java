@@ -10,6 +10,7 @@ import java.util.Map;
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.IProcessExecute;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
 import net.bsrc.cbod.core.util.ProcessUtil;
@@ -63,15 +64,20 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		CBODUtil.createDirectory(mpegFexDirPath);
 	}
 
-	private String writeImageNamesToFile(List<String> imgNames) {
+	private String writeImageFullPathsToFile(List<ImageModel> imageModelList) {
 
 		File tmpDir = FileUtils.getTempDirectory();
 
 		File tmpFile = FileUtils.getFile(tmpDir.getAbsolutePath().concat(
 				"/" + TMP_FILE_NAME));
 
+		List<String> imageNames = new ArrayList<String>();
+		for (ImageModel imgModel : imageModelList) {
+			imageNames.add(imgModel.getImageFullPath());
+		}
+
 		try {
-			FileUtils.writeLines(tmpFile, imgNames);
+			FileUtils.writeLines(tmpFile, imageNames);
 		} catch (IOException e) {
 			throw new CBODException(e);
 		}
@@ -133,8 +139,12 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	}
 
 	@Override
-	public List<Map<String, List<Integer>>> extractColorStructureDescriptors(
-			List<String> imgNames, Integer descriptorSize) {
+	public void extractColorStructureDescriptors(
+			List<ImageModel> imageModelList, Integer descriptorSize) {
+
+		if (imageModelList == null || imageModelList.isEmpty()) {
+			throw new CBODException("imageModelList must not be null or empty");
+		}
 
 		StringBuilder parameter = new StringBuilder();
 		parameter.append(CSD).append(" ");
@@ -142,7 +152,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		if (descriptorSize != null)
 			parameter.append(descriptorSize).append(" ");
 
-		String inputFilePath = writeImageNamesToFile(imgNames);
+		String inputFilePath = writeImageFullPathsToFile(imageModelList);
 		parameter.append(inputFilePath).append(" ");
 
 		String descriptorFile = getDescriptorFile(CSD);
@@ -150,7 +160,16 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 
 		execute(parameter.toString());
 
-		return getDescriptors(descriptorFile);
+		// Fill color structure descriptors
+		for (Map<String, List<Integer>> map : getDescriptors(descriptorFile)) {
+			for (ImageModel imgModel : imageModelList) {
+				List<Integer> descs = map.get(imgModel.getImageName());
+				if (descs != null) {
+					imgModel.setColorStructureDescriptors(descs);
+					break;
+				}
+			}
+		}
 	}
 
 	@Override

@@ -2,12 +2,10 @@ package net.bsrc.cbod.core.util;
 
 import net.bsrc.cbod.core.CBODConstants;
 
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.configuration.*;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Project configuration utilities
@@ -16,6 +14,9 @@ import org.apache.commons.lang.StringUtils;
  * 
  */
 public final class ConfigurationUtil {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ConfigurationUtil.class);
 
 	private static CompositeConfiguration compositeConfig = null;
 
@@ -62,8 +63,7 @@ public final class ConfigurationUtil {
 							+ CBODConstants.PROJECT_PROPERTIES));
 
 		} catch (ConfigurationException e) {
-			//TODO logger yazilacak!
-			e.printStackTrace();
+			logger.error("Error!!:", e);
 		}
 
 		return config;

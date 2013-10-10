@@ -1,4 +1,4 @@
-package net.bsrc.cbod.core;
+package net.bsrc.cbod.core.model;
 
 import java.util.Set;
 

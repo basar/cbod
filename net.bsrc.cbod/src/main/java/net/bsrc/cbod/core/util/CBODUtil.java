@@ -96,4 +96,10 @@ public final class CBODUtil {
 
 		return fileNameList;
 	}
+
+	public static String getFileName(String fileFullPath) {
+		File file = new File(fileFullPath);
+		return file.getName();
+	}
+
 }

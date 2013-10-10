@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.RegionMap;
 import net.bsrc.cbod.opencv.OpenCV;
 
 import org.apache.commons.io.FileUtils;

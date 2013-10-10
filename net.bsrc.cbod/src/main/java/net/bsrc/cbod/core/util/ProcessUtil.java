@@ -3,6 +3,9 @@ package net.bsrc.cbod.core.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * External process operations
  * 
@@ -11,6 +14,9 @@ import java.io.InputStreamReader;
  * 
  */
 public class ProcessUtil {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ProcessUtil.class);
 
 	public static void execute(String param) {
 
@@ -23,19 +29,18 @@ public class ProcessUtil {
 					p.getErrorStream()));
 			String line;
 			while ((line = bri.readLine()) != null) {
-				System.out.println(line);
+				logger.info(line);
 			}
 			bri.close();
 			while ((line = bre.readLine()) != null) {
-				System.out.println(line);
+				logger.info(line);
 			}
 			bre.close();
 			p.waitFor();
-			System.out.println("Done.");
+			logger.info("Done.");
 
 		} catch (Exception e) {
-			// TODO logger yaz
-			e.printStackTrace();
+			logger.error("", e);
 		}
 
 	}

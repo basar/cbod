@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.RegionMap;
+import net.bsrc.cbod.core.model.RegionMap;
 import net.bsrc.cbod.core.RegionMapFactory;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.pascal.xml.PascalBndBox;

@@ -2,11 +2,10 @@ package net.bsrc.cbod.main;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
@@ -22,8 +21,12 @@ import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
+
+	private final static Logger logger = LoggerFactory.getLogger(Main.class);
 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -31,12 +34,21 @@ public class Main {
 
 	public static void main(String[] args) {
 
-        BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
 
-        List<String> fileNames = CBODUtil.getFileList("/Users/bsr/Documents/Phd/cbod/train_data/tire");
+		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
 
-        List<Map<String,List<Integer>>> maps = mpegFex.extractColorStructureDescriptors(fileNames, null);
-    }
+		for (String fileFullPath : CBODUtil
+				.getFileList("/Users/bsr/Documents/Phd/cbod/train_data/tire")) {
+			ImageModel imageModel = new ImageModel();
+			imageModel.setImageFullPath(fileFullPath);
+			imageModel.setImageName(CBODUtil.getFileName(fileFullPath));
+			imageModelList.add(imageModel);
+		}
+
+		mpegFex.extractColorStructureDescriptors(imageModelList, 256);
+
+	}
 
 	/**
      *
