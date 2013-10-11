@@ -18,6 +18,16 @@ public class ImageModel {
 
 	private List<Integer> colorStructureDescriptors = new ArrayList<Integer>();
 
+	private List<Integer> scalableColorDescriptors = new ArrayList<Integer>();
+
+	private List<Integer> colorLayoutDescriptors = new ArrayList<Integer>();
+
+	private List<Integer> dominantColorDesciptors = new ArrayList<Integer>();
+
+	private List<Integer> homogeneousTextureDescriptors = new ArrayList<Integer>();
+
+    private List<Integer> tempDescriptors = new ArrayList<Integer>();
+
 	public ImageModel() {
 
 	}
@@ -55,11 +65,36 @@ public class ImageModel {
 		this.imageName = imageName;
 	}
 
-	@Override
-	public String toString() {
-		return "ImageModel{" + "imageName='" + imageName + '\''
-				+ ", imageFullPath='" + imageFullPath + '\'' + ", mat=" + mat
-				+ ", colorStructureDescriptors=" + colorStructureDescriptors
-				+ '}';
+	public List<Integer> getScalableColorDescriptors() {
+		return scalableColorDescriptors;
 	}
+
+	public void setScalableColorDescriptors(
+			List<Integer> scalableColorDescriptors) {
+		this.scalableColorDescriptors = scalableColorDescriptors;
+	}
+
+	public List<Integer> getColorLayoutDescriptors() {
+		return colorLayoutDescriptors;
+	}
+
+	public void setColorLayoutDescriptors(List<Integer> colorLayoutDescriptors) {
+		this.colorLayoutDescriptors = colorLayoutDescriptors;
+	}
+
+	public List<Integer> getDominantColorDesciptors() {
+		return dominantColorDesciptors;
+	}
+
+	public void setDominantColorDesciptors(List<Integer> dominantColorDesciptors) {
+		this.dominantColorDesciptors = dominantColorDesciptors;
+	}
+
+    public List<Integer> getHomogeneousTextureDescriptors() {
+        return homogeneousTextureDescriptors;
+    }
+
+    public void setHomogeneousTextureDescriptors(List<Integer> homogeneousTextureDescriptors) {
+        this.homogeneousTextureDescriptors = homogeneousTextureDescriptors;
+    }
 }

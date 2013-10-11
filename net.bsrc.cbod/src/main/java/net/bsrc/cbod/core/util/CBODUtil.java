@@ -1,6 +1,7 @@
 package net.bsrc.cbod.core.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,8 @@ import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Util operations for
@@ -17,6 +20,9 @@ import org.apache.commons.io.FileUtils;
  * 
  */
 public final class CBODUtil {
+
+	private final static Logger logger = LoggerFactory
+			.getLogger(CBODUtil.class);
 
 	private CBODUtil() {
 
@@ -73,7 +79,8 @@ public final class CBODUtil {
 	 * @param dirPath
 	 * @return
 	 */
-	public static List<String> getFileList(String dirPath) {
+	public static List<String> getFileList(final String dirPath,
+			final String suffix) {
 
 		File dir = FileUtils.getFile(dirPath);
 
@@ -88,7 +95,12 @@ public final class CBODUtil {
 
 		List<String> fileNameList = new ArrayList<String>();
 
-		File[] files = dir.listFiles();
+		File[] files = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File file, String s) {
+				return s.endsWith(suffix);
+			}
+		});
 
 		for (File file : files) {
 			fileNameList.add(file.getAbsolutePath());

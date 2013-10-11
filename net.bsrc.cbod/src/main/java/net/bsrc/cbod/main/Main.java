@@ -38,8 +38,9 @@ public class Main {
 
 		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
 
-		for (String fileFullPath : CBODUtil
-				.getFileList("/Users/bsr/Documents/Phd/cbod/train_data/tire")) {
+		for (String fileFullPath : CBODUtil.getFileList(
+				"/Users/bsr/Documents/Phd/cbod/train_data/tire/",
+				CBODConstants.JPEG_SUFFIX)) {
 			ImageModel imageModel = new ImageModel();
 			imageModel.setImageFullPath(fileFullPath);
 			imageModel.setImageName(CBODUtil.getFileName(fileFullPath));
@@ -47,6 +48,11 @@ public class Main {
 		}
 
 		mpegFex.extractColorStructureDescriptors(imageModelList, 256);
+		mpegFex.extractScalableColorDescriptors(imageModelList, 256);
+		mpegFex.extractColorLayoutDescriptors(imageModelList, 64, 28);
+		mpegFex.extractDominantColorDescriptors(imageModelList, null, null,
+				null, null, null, null);
+		mpegFex.extractHomogeneousTextureDesciptors(imageModelList, 1);
 
 	}
 
