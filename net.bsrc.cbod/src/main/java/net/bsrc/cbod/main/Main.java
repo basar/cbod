@@ -36,6 +36,7 @@ public class Main {
 
 		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
 
+
 		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
 
 		for (String fileFullPath : CBODUtil.getFileList(
