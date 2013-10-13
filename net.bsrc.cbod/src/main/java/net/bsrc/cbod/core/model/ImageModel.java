@@ -16,29 +16,10 @@ public class ImageModel {
 
 	private Mat mat;
 
-	private List<Integer> colorStructureDescriptors = new ArrayList<Integer>();
-
-	private List<Integer> scalableColorDescriptors = new ArrayList<Integer>();
-
-	private List<Integer> colorLayoutDescriptors = new ArrayList<Integer>();
-
-	private List<Integer> dominantColorDesciptors = new ArrayList<Integer>();
-
-	private List<Integer> homogeneousTextureDescriptors = new ArrayList<Integer>();
-
-    private List<Integer> tempDescriptors = new ArrayList<Integer>();
+	private List<Descriptor> descriptors = new ArrayList<Descriptor>();
 
 	public ImageModel() {
 
-	}
-
-	public List<Integer> getColorStructureDescriptors() {
-		return colorStructureDescriptors;
-	}
-
-	public void setColorStructureDescriptors(
-			List<Integer> colorStructureDescriptors) {
-		this.colorStructureDescriptors = colorStructureDescriptors;
 	}
 
 	public Mat getMat() {
@@ -65,36 +46,11 @@ public class ImageModel {
 		this.imageName = imageName;
 	}
 
-	public List<Integer> getScalableColorDescriptors() {
-		return scalableColorDescriptors;
+	public List<Descriptor> getDescriptors() {
+		return descriptors;
 	}
 
-	public void setScalableColorDescriptors(
-			List<Integer> scalableColorDescriptors) {
-		this.scalableColorDescriptors = scalableColorDescriptors;
+	public void setDescriptors(List<Descriptor> descriptors) {
+		this.descriptors = descriptors;
 	}
-
-	public List<Integer> getColorLayoutDescriptors() {
-		return colorLayoutDescriptors;
-	}
-
-	public void setColorLayoutDescriptors(List<Integer> colorLayoutDescriptors) {
-		this.colorLayoutDescriptors = colorLayoutDescriptors;
-	}
-
-	public List<Integer> getDominantColorDesciptors() {
-		return dominantColorDesciptors;
-	}
-
-	public void setDominantColorDesciptors(List<Integer> dominantColorDesciptors) {
-		this.dominantColorDesciptors = dominantColorDesciptors;
-	}
-
-    public List<Integer> getHomogeneousTextureDescriptors() {
-        return homogeneousTextureDescriptors;
-    }
-
-    public void setHomogeneousTextureDescriptors(List<Integer> homogeneousTextureDescriptors) {
-        this.homogeneousTextureDescriptors = homogeneousTextureDescriptors;
-    }
 }

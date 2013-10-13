@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.model.RegionMap;
 import net.bsrc.cbod.core.RegionMapFactory;
+import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.ImageModel;
+import net.bsrc.cbod.core.model.RegionMap;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.pascal.xml.PascalBndBox;
 
@@ -33,6 +35,18 @@ public final class OpenCV {
 	public static Mat getImageMat(String imgPath) {
 		Mat mat = Highgui.imread(imgPath);
 		return mat;
+	}
+
+	/**
+	 * 
+	 * @param imageModel
+	 * @return
+	 */
+	public static Mat getImageMat(ImageModel imageModel) {
+		if (imageModel == null) {
+			throw new CBODException("ImageModel must not be null!");
+		}
+		return getImageMat(imageModel.getImageFullPath());
 	}
 
 	/**

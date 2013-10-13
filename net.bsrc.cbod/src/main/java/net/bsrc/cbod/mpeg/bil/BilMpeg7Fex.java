@@ -10,6 +10,8 @@ import java.util.Map;
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.IProcessExecute;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.Descriptor;
+import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
@@ -38,12 +40,6 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 
 	private String mpegFexDirPath;
 
-	private final static String CSD = "CSD";
-	private final static String SCD = "SCD";
-	private final static String CLD = "CLD";
-	private final static String DCD = "DCD";
-	private final static String HTD = "HTD";
-	private final static String EHD = "EHD";
 	private final static String TMP_FILE_NAME = "fex.txt";
 
 	private BilMpeg7Fex() {
@@ -76,21 +72,22 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	public void extractColorStructureDescriptors(
 			List<ImageModel> imageModelList, Integer descriptorSize) {
 
-		extractDescriptors(CSD, imageModelList, descriptorSize);
+		extractDescriptors(EDescriptorType.CSD, imageModelList, descriptorSize);
 	}
 
 	@Override
 	public void extractScalableColorDescriptors(
 			List<ImageModel> imageModelList, Integer descriptorSize) {
 
-		extractDescriptors(SCD, imageModelList, descriptorSize);
+		extractDescriptors(EDescriptorType.SCD, imageModelList, descriptorSize);
 	}
 
 	@Override
 	public void extractColorLayoutDescriptors(List<ImageModel> imageModelList,
 			Integer numberOfYCoeff, Integer numberOfCCoeff) {
 
-		extractDescriptors(CLD, imageModelList, numberOfYCoeff, numberOfCCoeff);
+		extractDescriptors(EDescriptorType.CLD, imageModelList, numberOfYCoeff,
+				numberOfCCoeff);
 
 	}
 
@@ -100,8 +97,9 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 			Integer varianceFlag, Integer spatialFlag, Integer numBin1,
 			Integer numBin2, Integer numBin3) {
 
-		extractDescriptors(DCD, imageModelList, normalizationFlag,
-				varianceFlag, spatialFlag, numBin1, numBin2, numBin3);
+		extractDescriptors(EDescriptorType.DCD, imageModelList,
+				normalizationFlag, varianceFlag, spatialFlag, numBin1, numBin2,
+				numBin3);
 
 	}
 
@@ -109,7 +107,13 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	public void extractHomogeneousTextureDesciptors(
 			List<ImageModel> imageModelList, Integer layerFLag) {
 
-		extractDescriptors(HTD, imageModelList, layerFLag);
+		extractDescriptors(EDescriptorType.HTD, imageModelList, layerFLag);
+	}
+
+	@Override
+	public void extractEdgeHistogramDescriptors(List<ImageModel> imageModelList) {
+
+		extractDescriptors(EDescriptorType.EHD, imageModelList, null);
 	}
 
 	/**
@@ -119,7 +123,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	 * @param params
 	 * @param <T>
 	 */
-	private <T> void extractDescriptors(String descType,
+	private <T> void extractDescriptors(EDescriptorType descType,
 			List<ImageModel> imageModelList, T... params) {
 
 		if (imageModelList == null || imageModelList.isEmpty()) {
@@ -129,15 +133,17 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		StringBuilder parameter = new StringBuilder();
 		parameter.append(descType).append(" ");
 
-		for (T t : params) {
-			if (t != null)
-				parameter.append(t).append(" ");
+		if (params != null) {
+			for (T t : params) {
+				if (t != null)
+					parameter.append(t).append(" ");
+			}
 		}
 
 		String inputFilePath = writeImageFullPathsToFile(imageModelList);
 		parameter.append(inputFilePath).append(" ");
 
-		String descriptorFile = getDescriptorFile(descType);
+		String descriptorFile = getDescriptorFile(descType.getName());
 		parameter.append(descriptorFile);
 
 		execute(parameter.toString());
@@ -148,22 +154,9 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 				List<Integer> descs = map.get(imgModel.getImageName());
 				if (descs != null) {
 
-					if (descType.equals(CSD))
-						imgModel.setColorStructureDescriptors(descs);
-
-					if (descType.equals(SCD))
-						imgModel.setScalableColorDescriptors(descs);
-
-					if (descType.equals(CLD))
-						imgModel.setColorLayoutDescriptors(descs);
-
-					if (descType.equals(DCD))
-						imgModel.setDominantColorDesciptors(descs);
-
-					if (descType.equals(HTD))
-						imgModel.setHomogeneousTextureDescriptors(descs);
-
-					break;
+					Descriptor descriptor = new Descriptor(descType);
+					descriptor.setDataList(descs);
+					imgModel.getDescriptors().add(descriptor);
 				}
 			}
 		}

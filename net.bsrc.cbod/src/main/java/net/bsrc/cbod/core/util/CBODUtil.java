@@ -10,6 +10,7 @@ import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,10 @@ public final class CBODUtil {
 		File[] files = dir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File file, String s) {
-				return s.endsWith(suffix);
+
+				if (!StringUtils.isEmpty(suffix))
+					return s.endsWith(suffix);
+				return true;
 			}
 		});
 

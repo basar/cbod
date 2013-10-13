@@ -36,7 +36,6 @@ public class Main {
 
 		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
 
-
 		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
 
 		for (String fileFullPath : CBODUtil.getFileList(
@@ -45,6 +44,7 @@ public class Main {
 			ImageModel imageModel = new ImageModel();
 			imageModel.setImageFullPath(fileFullPath);
 			imageModel.setImageName(CBODUtil.getFileName(fileFullPath));
+
 			imageModelList.add(imageModel);
 		}
 
@@ -54,6 +54,7 @@ public class Main {
 		mpegFex.extractDominantColorDescriptors(imageModelList, null, null,
 				null, null, null, null);
 		mpegFex.extractHomogeneousTextureDesciptors(imageModelList, 1);
+		mpegFex.extractEdgeHistogramDescriptors(imageModelList);
 
 	}
 

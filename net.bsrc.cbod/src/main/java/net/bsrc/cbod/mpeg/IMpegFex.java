@@ -26,4 +26,6 @@ public interface IMpegFex {
 	void extractHomogeneousTextureDesciptors(List<ImageModel> imageModelList,
 			Integer layerFLag);
 
+	void extractEdgeHistogramDescriptors(List<ImageModel> imageModelList);
+
 }
