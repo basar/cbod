@@ -225,7 +225,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 
 		List<String> imageNames = new ArrayList<String>();
 		for (ImageModel imgModel : imageModelList) {
-			imageNames.add(imgModel.getImageFullPath());
+			imageNames.add(imgModel.getImagePath());
 		}
 
 		try {

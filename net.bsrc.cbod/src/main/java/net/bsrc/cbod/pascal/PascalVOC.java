@@ -7,12 +7,15 @@ import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
 import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pascal Visual Object Classes
@@ -21,6 +24,9 @@ import org.apache.commons.lang.StringUtils;
  * 
  */
 public class PascalVOC {
+
+	private final static Logger logger = LoggerFactory
+			.getLogger(PascalVOC.class);
 
 	private static PascalVOC instance = null;
 
@@ -102,13 +108,17 @@ public class PascalVOC {
 	 * Returns image names that belong to given pascal type
 	 * 
 	 * @param type
+	 *            pascal type
 	 * @param suffix
 	 *            0 train, 1 val, 2 both
+	 * @param label
+	 *            -1 negative images, 1 positive images, 0 difficult
 	 * @return
 	 */
-	public List<String> getImageNames(EPascalType type, int suffix) {
+	public List<ImageModel> getImageModels(EPascalType type, int suffix,
+			int label) {
 
-		List<String> resultList = new ArrayList<String>();
+		List<ImageModel> resultList = new ArrayList<ImageModel>();
 		String filePath = indexDir.concat("/").concat(type.getName())
 				.concat(getTrainValSuffix(suffix));
 		File file = FileUtils.getFile(filePath);
@@ -127,39 +137,21 @@ public class PascalVOC {
 
 				String specifier = arr[1];
 				// Only positive images
-				if (StringUtils.isNotEmpty(specifier) && specifier.equals("1")) {
-					resultList.add(arr[0]);
+				if (StringUtils.isNotEmpty(specifier)
+						&& specifier.equals(Integer.toString(label))) {
+					ImageModel imgModel = new ImageModel();
+					imgModel.setImageName(arr[0]
+							.concat(CBODConstants.JPEG_SUFFIX));
+					imgModel.setImagePath(getImagePath(arr[0]));
+					resultList.add(imgModel);
 				}
 			}
 
 		} catch (IOException e) {
-			// TODO logger yazilacak!
-			e.printStackTrace();
+			throw new CBODException(e);
 		}
 
 		return resultList;
-	}
-
-	/**
-	 * Returns image paths that belong to given pascal type
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public List<String> getImagePaths(EPascalType type, int suffix) {
-
-		List<String> resultList = new ArrayList<String>();
-
-		List<String> imageNames = getImageNames(type, suffix);
-
-		for (String imageName : imageNames) {
-			String imagePath = imageDir.concat("/").concat(imageName)
-					.concat(CBODConstants.JPEG_SUFFIX);
-			resultList.add(imagePath);
-		}
-
-		return resultList;
-
 	}
 
 	/**
@@ -188,8 +180,7 @@ public class PascalVOC {
 		try {
 			xml = FileUtils.readFileToString(xmlFile);
 		} catch (IOException e) {
-			// TODO Logger yazilacak!
-			e.printStackTrace();
+			throw new CBODException(e);
 		}
 
 		return xml;
@@ -227,7 +218,7 @@ public class PascalVOC {
 			result = PascalConstants.TRAIN_VAL_SUFFIX;
 			break;
 		default:
-			// TODO uyari verilecek!
+			logger.error("Invalid suffix parameter");
 			break;
 		}
 		return result;

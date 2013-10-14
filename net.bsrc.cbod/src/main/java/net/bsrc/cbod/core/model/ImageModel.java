@@ -1,8 +1,12 @@
 package net.bsrc.cbod.core.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.opencv.core.Mat;
 
 /**
@@ -12,7 +16,14 @@ public class ImageModel {
 
 	private String imageName;
 
-	private String imageFullPath;
+	private String imagePath;
+
+	/**
+	 * image name without suffix
+	 */
+	private String rawImageName;
+
+	private File file;
 
 	private Mat mat;
 
@@ -30,14 +41,6 @@ public class ImageModel {
 		this.mat = mat;
 	}
 
-	public String getImageFullPath() {
-		return imageFullPath;
-	}
-
-	public void setImageFullPath(String imageFullPath) {
-		this.imageFullPath = imageFullPath;
-	}
-
 	public String getImageName() {
 		return imageName;
 	}
@@ -52,5 +55,38 @@ public class ImageModel {
 
 	public void setDescriptors(List<Descriptor> descriptors) {
 		this.descriptors = descriptors;
+	}
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+
+	public File getFile() {
+		if (file == null) {
+			file = FileUtils.getFile(imagePath);
+		}
+		return file;
+	}
+
+	public String getRawImageName() {
+		if (StringUtils.isEmpty(rawImageName)) {
+			rawImageName = FilenameUtils.removeExtension(imageName);
+		}
+		return rawImageName;
+	}
+
+	public Descriptor getDescriptor(EDescriptorType type) {
+		if (type == null)
+			return null;
+		for (Descriptor descriptor : getDescriptors()) {
+			if (descriptor.getType() == type) {
+				return descriptor;
+			}
+		}
+		return null;
 	}
 }

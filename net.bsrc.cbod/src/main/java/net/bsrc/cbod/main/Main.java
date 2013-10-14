@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
@@ -17,8 +18,10 @@ import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalBndBox;
 import net.bsrc.cbod.pascal.xml.PascalObject;
 import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
+import net.bsrc.cbod.svm.libsvm.LibSvm;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
@@ -34,27 +37,97 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		extractDescriptors();
+
+	}
+
+	private static void extractDescriptors() {
+
 		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
 
-		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
+		String cbodDirPath = CBODUtil.getDefaultOutputDirectoryPath();
 
-		for (String fileFullPath : CBODUtil.getFileList(
-				"/Users/bsr/Documents/Phd/cbod/train_data/tire/",
+		List<ImageModel> positiveImageModelList = new ArrayList<ImageModel>();
+		List<ImageModel> negativeImageModelList = new ArrayList<ImageModel>();
+
+		String positiveImageDirPath = cbodDirPath.concat("/train_data/tire");
+		String negativeImageDirPath = cbodDirPath
+				.concat("/train_data/negative");
+
+		for (String imgPath : CBODUtil.getFileList(positiveImageDirPath,
 				CBODConstants.JPEG_SUFFIX)) {
-			ImageModel imageModel = new ImageModel();
-			imageModel.setImageFullPath(fileFullPath);
-			imageModel.setImageName(CBODUtil.getFileName(fileFullPath));
 
-			imageModelList.add(imageModel);
+			ImageModel imgModel = new ImageModel();
+			imgModel.setImagePath(imgPath);
+			imgModel.setImageName(FilenameUtils.getName(imgPath));
+
+			positiveImageModelList.add(imgModel);
+
 		}
 
-		mpegFex.extractColorStructureDescriptors(imageModelList, 256);
-		mpegFex.extractScalableColorDescriptors(imageModelList, 256);
-		mpegFex.extractColorLayoutDescriptors(imageModelList, 64, 28);
-		mpegFex.extractDominantColorDescriptors(imageModelList, null, null,
-				null, null, null, null);
-		mpegFex.extractHomogeneousTextureDesciptors(imageModelList, 1);
-		mpegFex.extractEdgeHistogramDescriptors(imageModelList);
+		for (String imgPath : CBODUtil.getFileList(negativeImageDirPath,
+				CBODConstants.JPEG_SUFFIX)) {
+
+			ImageModel imgModel = new ImageModel();
+			imgModel.setImagePath(imgPath);
+			imgModel.setImageName(FilenameUtils.getName(imgPath));
+
+			negativeImageModelList.add(imgModel);
+
+		}
+
+		mpegFex.extractEdgeHistogramDescriptors(positiveImageModelList);
+		mpegFex.extractEdgeHistogramDescriptors(negativeImageModelList);
+
+		LibSvm libSvm = LibSvm.getInstance();
+
+		libSvm.createTrainDataFile(cbodDirPath.concat("/svm/ehd_model.txt"), 0, negativeImageModelList, 1,
+				positiveImageModelList, EDescriptorType.EHD);
+
+	}
+
+	private static void segmentNegativeImages() {
+
+		PascalVOC pascal = PascalVOC.getInstance();
+
+		List<ImageModel> imageModelList = pascal.getImageModels(
+				EPascalType.CAR, 2, -1);
+
+		String directoryName = CBODUtil.getDefaultOutputDirectoryPath().concat(
+				"/train_data/negative");
+
+		for (int i = 0; i < 10; i++) {
+
+			ImageModel imgModel = imageModelList.get(i);
+			String imageRawName = imgModel.getRawImageName();
+
+			JSEGParameter jsegParam = new JSEGParameter(imgModel.getImagePath());
+			jsegParam.setRegionMapFileName(directoryName.concat("/").concat(
+					imageRawName + CBODConstants.MAP_SUFFIX));
+			jsegParam.setOutputFileImage(directoryName
+					.concat("/")
+					.concat(imageRawName)
+					.concat(CBODConstants.SEG_SUFFIX
+							+ CBODConstants.JPEG_SUFFIX));
+			String mapName = jsegParam.getRegionMapFileName();
+
+			JSEG.getInstance().execute(jsegParam);
+
+			List<Mat> regions = OpenCV.getSegmentedRegions(
+					imgModel.getImagePath(), mapName, true);
+
+			for (int r = 0; r < regions.size(); r++) {
+
+				Mat region = regions.get(r);
+				String regionName = directoryName
+						.concat("/")
+						.concat(imageRawName)
+						.concat(CBODConstants.SEG_SUFFIX + r
+								+ CBODConstants.JPEG_SUFFIX);
+				// Save region file to disk
+				OpenCV.writeImage(region, regionName);
+			}
+		}
 
 	}
 
@@ -68,17 +141,20 @@ public class Main {
 		String vehicleOutputDir = outputDir.concat("/Vehicle");
 		PascalVOC pascal = PascalVOC.getInstance();
 
-		List<String> imgNames = pascal.getImageNames(EPascalType.CAR, 2);
+		List<ImageModel> imageModelList = pascal.getImageModels(
+				EPascalType.CAR, 2, 1);
 		List<String> segmentedImageNames = new ArrayList<String>();
 
 		final String jpg = CBODConstants.JPEG_SUFFIX;
 		final String seg = CBODConstants.SEG_SUFFIX;
 		final String map = CBODConstants.MAP_SUFFIX;
 
-		for (int i = 0; i < imgNames.size(); i++) {
+		for (int i = 0; i < imageModelList.size(); i++) {
 
-			String imgName = imgNames.get(i);
-			String imgPath = pascal.getImagePath(imgName);
+			ImageModel imgModel = imageModelList.get(i);
+
+			String imgName = imgModel.getRawImageName();
+			String imgPath = imgModel.getImagePath();
 
 			PascalAnnotation ann = PascalXMLHelper.fromXML(pascal
 					.getAnnotationXML(imgName));

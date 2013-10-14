@@ -46,7 +46,7 @@ public final class OpenCV {
 		if (imageModel == null) {
 			throw new CBODException("ImageModel must not be null!");
 		}
-		return getImageMat(imageModel.getImageFullPath());
+		return getImageMat(imageModel.getImagePath());
 	}
 
 	/**
@@ -94,17 +94,17 @@ public final class OpenCV {
 
 	/**
 	 * 
-	 * @param imageName
+	 * @param imagePath
 	 *            name of the orginal image
-	 * @param mapName
+	 * @param mapFilePath
 	 *            name of the orginal image's map file
 	 * @return
 	 */
-	public static List<Mat> getSegmentedRegions(String imageName,
-			String mapName, boolean isBlackBg) {
+	public static List<Mat> getSegmentedRegions(String imagePath,
+			String mapFilePath, boolean isBlackBg) {
 
-		Mat org = getImageMat(imageName);
-		RegionMap regionMap = RegionMapFactory.getRegionMap(imageName, mapName);
+		Mat org = getImageMat(imagePath);
+		RegionMap regionMap = RegionMapFactory.getRegionMap(imagePath, mapFilePath);
 
 		List<Mat> result = new ArrayList<Mat>();
 
