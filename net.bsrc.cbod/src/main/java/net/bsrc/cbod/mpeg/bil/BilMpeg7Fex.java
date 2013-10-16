@@ -244,7 +244,6 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		sb.append(" ");
 		sb.append(parameter);
 		String tmp = sb.toString();
-		logger.info(tmp);
 		ProcessUtil.execute(tmp);
 	}
 

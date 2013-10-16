@@ -22,6 +22,7 @@ public class ProcessUtil {
 
 		try {
 
+			logger.debug(param);
 			Process p = Runtime.getRuntime().exec(param);
 			BufferedReader bri = new BufferedReader(new InputStreamReader(
 					p.getInputStream()));
