@@ -5,7 +5,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * User: bsr Date: 10/16/13 Time: 1:18 PM
  */
-public class SvmScaleParameter {
+public class ScaleParameter {
 
 	/**
 	 * x scaling lower limit (default -1)
@@ -30,7 +30,7 @@ public class SvmScaleParameter {
     /**
      * default constructor
      */
-	public SvmScaleParameter() {
+	public ScaleParameter() {
 
 	}
 

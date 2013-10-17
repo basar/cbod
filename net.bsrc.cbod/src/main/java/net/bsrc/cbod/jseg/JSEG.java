@@ -64,7 +64,7 @@ public class JSEG implements IProcessExecute {
 		sb.append(executeCommand);
 		sb.append(" ");
 		sb.append(parameter);
-		ProcessUtil.execute(sb.toString());
+		ProcessUtil.execute(sb.toString(),null);
 	}
 
 }

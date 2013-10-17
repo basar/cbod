@@ -1,8 +1,12 @@
 package net.bsrc.cbod.core.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +22,7 @@ public class ProcessUtil {
 	private static final Logger logger = LoggerFactory
 			.getLogger(ProcessUtil.class);
 
-	public static void execute(String param) {
+	public static void execute(String param, File outputFile) {
 
 		try {
 
@@ -28,17 +32,29 @@ public class ProcessUtil {
 					p.getInputStream()));
 			BufferedReader bre = new BufferedReader(new InputStreamReader(
 					p.getErrorStream()));
+
 			String line;
+			List<String> lines = new ArrayList<String>();
+
 			while ((line = bri.readLine()) != null) {
-				logger.info(line);
+				if (outputFile == null) {
+					logger.info(line);
+				} else {
+					lines.add(line);
+				}
 			}
+
 			bri.close();
+
+			if (outputFile != null)
+				FileUtils.writeLines(outputFile, lines);
+
 			while ((line = bre.readLine()) != null) {
 				logger.info(line);
 			}
 			bre.close();
 			p.waitFor();
-			logger.info("Done.");
+			logger.info("Process finished");
 
 		} catch (Exception e) {
 			logger.error("", e);

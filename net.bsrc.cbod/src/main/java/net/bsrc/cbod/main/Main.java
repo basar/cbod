@@ -19,7 +19,7 @@ import net.bsrc.cbod.pascal.xml.PascalBndBox;
 import net.bsrc.cbod.pascal.xml.PascalObject;
 import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
-import net.bsrc.cbod.svm.libsvm.SvmScaleParameter;
+import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -82,16 +82,16 @@ public class Main {
 
 		LibSvm libSvm = LibSvm.getInstance();
 
-		String dataFileName = "ehd_model.txt";
+		String dataFileName = "ehd_data.txt";
         String rangeFileName = "ehd_range.txt";
 
 		libSvm.createFormattedDataFile(dataFileName, 0, negativeImageModelList,
 				1, positiveImageModelList, EDescriptorType.EHD);
 
-		SvmScaleParameter scaleParameter = new SvmScaleParameter();
+		ScaleParameter scaleParameter = new ScaleParameter();
 		scaleParameter.setSaveFileName(rangeFileName);
 
-		libSvm.doScale(dataFileName, scaleParameter);
+		String scaleFileName=libSvm.doScale(dataFileName, scaleParameter);
 
 
 

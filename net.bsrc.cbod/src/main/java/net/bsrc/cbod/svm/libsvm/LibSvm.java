@@ -11,8 +11,8 @@ import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
-
 import net.bsrc.cbod.core.util.ProcessUtil;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -60,40 +60,24 @@ public class LibSvm {
 				.concat(temp);
 	}
 
+
+
+    public void doTrain(){
+
+
+
+    }
+
+
 	/**
 	 * 
-	 * @param name
-	 * @param labelA
-	 * @param imageModelListA
-	 * @param labelB
-	 * @param imageModelListB
-	 * @param descType
-	 * @param isScale
-	 * @return
+	 * @param dataFileName
+	 *            svm data file
+	 * @param scaleParameter
+	 * @return scaled file name
 	 */
-	public String doTrain(String name, final int labelA,
-			final List<ImageModel> imageModelListA, final int labelB,
-			final List<ImageModel> imageModelListB, EDescriptorType descType,
-			final boolean isScale) {
-
-		if (StringUtils.isEmpty(name)) {
-			name = LibSvm.class.getName();
-		}
-
-		if (labelA == labelB)
-			throw new CBODException(
-					"LabelA and LabelB must have different values!");
-
-		if (CollectionUtils.isEmpty(imageModelListA)
-				|| CollectionUtils.isEmpty(imageModelListB))
-			throw new CBODException(
-					"Imagemodel lists must not be null or empty");
-
-		return null;
-	}
-
 	public String doScale(String dataFileName,
-			SvmScaleParameter svmScaleParameter) {
+			ScaleParameter scaleParameter) {
 
 		String outputFileName = svmDirectoryPath.concat("/")
 				.concat(FilenameUtils.removeExtension(dataFileName))
@@ -102,33 +86,33 @@ public class LibSvm {
 		StringBuilder sb = new StringBuilder();
 		sb.append(scaleExecuteCommand).append(" ");
 
-		String saveFile = svmScaleParameter.getSaveFileName();
-		String restoreFile = svmScaleParameter.getRestoreFileName();
+		String saveFile = scaleParameter.getSaveFileName();
+		String restoreFile = scaleParameter.getRestoreFileName();
 
 		if (!StringUtils.isEmpty(saveFile) && !StringUtils.isEmpty(restoreFile))
 			throw new CBODException(
 					"Savefile and restore file must not be empty at the same time");
 
 		if (!StringUtils.isEmpty(saveFile)) {
-			svmScaleParameter.setSaveFileName(svmDirectoryPath.concat("/")
+			scaleParameter.setSaveFileName(svmDirectoryPath.concat("/")
 					.concat(saveFile));
 		}
 
 		if (!StringUtils.isEmpty(restoreFile)) {
-			svmScaleParameter.setRestoreFileName(svmDirectoryPath.concat("/")
+			scaleParameter.setRestoreFileName(svmDirectoryPath.concat("/")
 					.concat(restoreFile));
 		}
 
-		sb.append(svmScaleParameter.toString()).append(" ");
+		sb.append(scaleParameter.toString()).append(" ");
 
 		sb.append(svmDirectoryPath.concat("/").concat(dataFileName))
 				.append(" ");
 
-		//sb.append("> ").append(outputFileName);
+		ProcessUtil.execute(sb.toString(), new File(outputFileName));
 
-		ProcessUtil.execute(sb.toString());
+		String scaledFileName = FilenameUtils.getName(outputFileName);
 
-		return outputFileName;
+		return scaledFileName;
 	}
 
 	/**
@@ -154,7 +138,7 @@ public class LibSvm {
 			throw new CBODException(
 					"Imagemodel lists must not be null or empty");
 
-		File file = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
+		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
 				dataFileName));
 		List<String> lines = new ArrayList<String>();
 
@@ -174,7 +158,7 @@ public class LibSvm {
 		}
 
 		try {
-			FileUtils.writeLines(file, lines);
+			FileUtils.writeLines(dataFile, lines);
 		} catch (IOException e) {
 			throw new CBODException(e);
 		}
