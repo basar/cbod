@@ -10,6 +10,7 @@ import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +117,45 @@ public final class CBODUtil {
 	public static String getFileName(String fileFullPath) {
 		File file = new File(fileFullPath);
 		return file.getName();
+	}
+
+	/**
+	 * 
+	 * @param sb
+	 * @param key
+	 * @param values
+	 */
+	public static void appendParam(StringBuilder sb, String key,
+			Object... values) {
+
+		if (!isAllParamsNull(values)) {
+			sb.append(key).append(" ");
+			for (Object o : values) {
+				if (o != null)
+					sb.append(o).append(" ");
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param objects
+	 * @return
+	 */
+	public static boolean isAllParamsNull(Object... objects) {
+
+		boolean result = true;
+
+		if (!ArrayUtils.isEmpty(objects)) {
+			for (Object object : objects) {
+				if (object != null) {
+					result = false;
+					break;
+				}
+			}
+		}
+
+		return result;
 	}
 
 }

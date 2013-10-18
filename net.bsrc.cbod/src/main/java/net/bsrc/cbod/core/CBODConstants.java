@@ -57,6 +57,8 @@ public final class CBODConstants {
 	 * LIBSVM
 	 */
 	public static final String LIB_SVM_SCALE_EXECUTE_COMMAND = "net.bsrc.cbod.libsvm.scale.executeCommand";
+	public static final String LIB_SVM_TRAIN_EXECUTE_COMMAND = "net.bsrc.cbod.libsvm.train.executeCommand";
+	public static final String LIB_SVM_PREDICT_EXECUTE_COMMAND = "net.bsrc.cbod.libsvm.predict.executeCommand";
 	public static final String LIB_SVM_DIR = "net.bsrc.cobd.libsvm.dir";
 
 	/**

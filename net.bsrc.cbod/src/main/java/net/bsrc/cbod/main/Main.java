@@ -20,6 +20,7 @@ import net.bsrc.cbod.pascal.xml.PascalObject;
 import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
+import net.bsrc.cbod.svm.libsvm.TrainParameter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -51,9 +52,14 @@ public class Main {
 		List<ImageModel> positiveImageModelList = new ArrayList<ImageModel>();
 		List<ImageModel> negativeImageModelList = new ArrayList<ImageModel>();
 
+		List<ImageModel> testPositiveImageModelList = new ArrayList<ImageModel>();
+		List<ImageModel> testNegativeImageModelList = new ArrayList<ImageModel>();
+
 		String positiveImageDirPath = cbodDirPath.concat("/train_data/tire");
 		String negativeImageDirPath = cbodDirPath
 				.concat("/train_data/negative");
+
+		int k = 0;
 
 		for (String imgPath : CBODUtil.getFileList(positiveImageDirPath,
 				CBODConstants.JPEG_SUFFIX)) {
@@ -62,9 +68,15 @@ public class Main {
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 
-			positiveImageModelList.add(imgModel);
+			if ((k++) % 2 == 0) {
+				testPositiveImageModelList.add(imgModel);
+			} else {
+				positiveImageModelList.add(imgModel);
+			}
 
 		}
+
+		k = 0;
 
 		for (String imgPath : CBODUtil.getFileList(negativeImageDirPath,
 				CBODConstants.JPEG_SUFFIX)) {
@@ -73,27 +85,48 @@ public class Main {
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 
-			negativeImageModelList.add(imgModel);
+			if ((k++) % 2 == 0) {
+				testNegativeImageModelList.add(imgModel);
+			} else {
+				negativeImageModelList.add(imgModel);
+			}
 
 		}
 
 		mpegFex.extractEdgeHistogramDescriptors(positiveImageModelList);
+		mpegFex.extractEdgeHistogramDescriptors(testPositiveImageModelList);
 		mpegFex.extractEdgeHistogramDescriptors(negativeImageModelList);
+		mpegFex.extractEdgeHistogramDescriptors(testNegativeImageModelList);
 
 		LibSvm libSvm = LibSvm.getInstance();
 
-		String dataFileName = "ehd_data.txt";
-        String rangeFileName = "ehd_range.txt";
+		String trainingFileName = "ehd_training.txt";
+		String testFileName = "ehd_test.txt";
+		String rangeFileName = "ehd_range.txt";
 
-		libSvm.createFormattedDataFile(dataFileName, 0, negativeImageModelList,
-				1, positiveImageModelList, EDescriptorType.EHD);
+		libSvm.createFormattedDataFile(trainingFileName, 0,
+				negativeImageModelList, 1, positiveImageModelList,
+				EDescriptorType.EHD);
+
+		libSvm.createFormattedDataFile(testFileName, 0,
+				testNegativeImageModelList, 1, testPositiveImageModelList,
+				EDescriptorType.EHD);
 
 		ScaleParameter scaleParameter = new ScaleParameter();
 		scaleParameter.setSaveFileName(rangeFileName);
 
-		String scaleFileName=libSvm.doScale(dataFileName, scaleParameter);
+		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+				scaleParameter);
+
+		scaleParameter.setSaveFileName(null);
+		scaleParameter.setRestoreFileName(rangeFileName);
+
+		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
 
 
+		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+		libSvm.doPredict(scaleTestFileName, modelFileName, null);
 
 	}
 

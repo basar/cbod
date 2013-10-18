@@ -7,6 +7,7 @@ import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
@@ -31,9 +32,15 @@ public class LibSvm {
 
 	public String scaleExecuteCommand;
 
+	public String trainExecuteCommand;
+
+	public String predictExecuteCommand;
+
 	public String svmDirectoryPath;
 
 	private static final String SCALE_EXT = ".scale";
+	private static final String MODEL_EXT = ".model";
+	private static final String PREDICT_EXT = ".predict";
 
 	private LibSvm() {
 
@@ -55,69 +62,18 @@ public class LibSvm {
 	private void initialize() {
 		scaleExecuteCommand = ConfigurationUtil
 				.getString(CBODConstants.LIB_SVM_SCALE_EXECUTE_COMMAND);
+		trainExecuteCommand = ConfigurationUtil
+				.getString(CBODConstants.LIB_SVM_TRAIN_EXECUTE_COMMAND);
+		predictExecuteCommand = ConfigurationUtil
+				.getString(CBODConstants.LIB_SVM_PREDICT_EXECUTE_COMMAND);
 		String temp = ConfigurationUtil.getString(CBODConstants.LIB_SVM_DIR);
 		svmDirectoryPath = CBODUtil.getDefaultOutputDirectoryPath()
 				.concat(temp);
 	}
 
-
-
-    public void doTrain(){
-
-
-
-    }
-
-
 	/**
 	 * 
-	 * @param dataFileName
-	 *            svm data file
-	 * @param scaleParameter
-	 * @return scaled file name
-	 */
-	public String doScale(String dataFileName,
-			ScaleParameter scaleParameter) {
-
-		String outputFileName = svmDirectoryPath.concat("/")
-				.concat(FilenameUtils.removeExtension(dataFileName))
-				.concat(SCALE_EXT).concat(CBODConstants.TXT_SUFFIX);
-
-		StringBuilder sb = new StringBuilder();
-		sb.append(scaleExecuteCommand).append(" ");
-
-		String saveFile = scaleParameter.getSaveFileName();
-		String restoreFile = scaleParameter.getRestoreFileName();
-
-		if (!StringUtils.isEmpty(saveFile) && !StringUtils.isEmpty(restoreFile))
-			throw new CBODException(
-					"Savefile and restore file must not be empty at the same time");
-
-		if (!StringUtils.isEmpty(saveFile)) {
-			scaleParameter.setSaveFileName(svmDirectoryPath.concat("/")
-					.concat(saveFile));
-		}
-
-		if (!StringUtils.isEmpty(restoreFile)) {
-			scaleParameter.setRestoreFileName(svmDirectoryPath.concat("/")
-					.concat(restoreFile));
-		}
-
-		sb.append(scaleParameter.toString()).append(" ");
-
-		sb.append(svmDirectoryPath.concat("/").concat(dataFileName))
-				.append(" ");
-
-		ProcessUtil.execute(sb.toString(), new File(outputFileName));
-
-		String scaledFileName = FilenameUtils.getName(outputFileName);
-
-		return scaledFileName;
-	}
-
-	/**
-	 * 
-	 * @param dataFileName
+	 * @param fileName
 	 *            data file name (not path only name)
 	 * @param labelA
 	 * @param imageModelListA
@@ -125,7 +81,7 @@ public class LibSvm {
 	 * @param imageModelListB
 	 * @param descType
 	 */
-	public void createFormattedDataFile(String dataFileName, int labelA,
+	public void createFormattedDataFile(String fileName, int labelA,
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
 
@@ -139,10 +95,18 @@ public class LibSvm {
 					"Imagemodel lists must not be null or empty");
 
 		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
-				dataFileName));
+				fileName));
 		List<String> lines = new ArrayList<String>();
 
 		for (ImageModel imageModel : imageModelListA) {
+
+			Descriptor descriptor = imageModel.getDescriptor(descType);
+			if (descriptor == null) {
+				logger.error(
+						"descriptor couldn't be found for image model: {}",
+						imageModel.toString());
+				continue;
+			}
 
 			String line = formatData(labelA, imageModel.getDescriptor(descType)
 					.getDataList());
@@ -151,6 +115,14 @@ public class LibSvm {
 		}
 
 		for (ImageModel imageModel : imageModelListB) {
+
+			Descriptor descriptor = imageModel.getDescriptor(descType);
+			if (descriptor == null) {
+				logger.error(
+						"descriptor couldn't be found for image model: {}",
+						imageModel.toString());
+				continue;
+			}
 
 			String line = formatData(labelB, imageModel.getDescriptor(descType)
 					.getDataList());
@@ -163,6 +135,114 @@ public class LibSvm {
 			throw new CBODException(e);
 		}
 
+	}
+
+	/**
+	 * 
+	 * @param trainingFileName
+	 *            svm data file
+	 * @param scaleParameter
+	 * @return scaled file name
+	 */
+	public String doScale(String trainingFileName, ScaleParameter scaleParameter) {
+
+		String outputFileName = svmDirectoryPath.concat("/")
+				.concat(FilenameUtils.removeExtension(trainingFileName))
+				.concat(SCALE_EXT).concat(CBODConstants.TXT_SUFFIX);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(scaleExecuteCommand).append(" ");
+
+		String saveFile = scaleParameter.getSaveFileName();
+		String restoreFile = scaleParameter.getRestoreFileName();
+
+		if (!StringUtils.isEmpty(saveFile) && !StringUtils.isEmpty(restoreFile))
+			throw new CBODException(
+					"Savefile and restore file must not be empty at the same time");
+
+		if (!StringUtils.isEmpty(saveFile)) {
+			scaleParameter.setSaveFileName(svmDirectoryPath.concat("/").concat(
+					saveFile));
+		}
+
+		if (!StringUtils.isEmpty(restoreFile)) {
+			scaleParameter.setRestoreFileName(svmDirectoryPath.concat("/")
+					.concat(restoreFile));
+		}
+
+		sb.append(scaleParameter.toString()).append(" ");
+
+		sb.append(svmDirectoryPath.concat("/").concat(trainingFileName))
+				.append(" ");
+
+		ProcessUtil.execute(sb.toString(), new File(outputFileName));
+
+		String scaledFileName = FilenameUtils.getName(outputFileName);
+
+		return scaledFileName;
+	}
+
+	/**
+	 * 
+	 * @param trainingFileName
+	 * @return model file name
+	 */
+	public String doTrain(String trainingFileName, TrainParameter trainParameter) {
+
+		String modelFilePath = svmDirectoryPath.concat("/")
+				.concat(FilenameUtils.removeExtension(trainingFileName))
+				.concat(MODEL_EXT).concat(CBODConstants.TXT_SUFFIX);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(trainExecuteCommand).append(" ");
+
+		if (trainParameter != null) {
+			sb.append(trainParameter.toString()).append(" ");
+		}
+
+		sb.append(svmDirectoryPath.concat("/").concat(trainingFileName))
+				.append(" ");
+		sb.append(modelFilePath);
+
+		ProcessUtil.execute(sb.toString(), null);
+
+		String modelFileName = FilenameUtils.getName(modelFilePath);
+
+		return modelFileName;
+	}
+
+	/**
+	 * 
+	 * @param testFileName
+	 * @param modelFileName
+	 * @param predictParameter
+	 * @return
+	 */
+	public String doPredict(String testFileName, String modelFileName,
+			PredictParameter predictParameter) {
+
+		String predictFilePath = svmDirectoryPath.concat("/")
+				.concat(FilenameUtils.removeExtension(modelFileName))
+				.concat(PREDICT_EXT).concat(CBODConstants.TXT_SUFFIX);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(predictExecuteCommand).append(" ");
+
+		if (predictParameter != null) {
+			sb.append(predictParameter.toString()).append(" ");
+		}
+
+		sb.append(svmDirectoryPath.concat("/").concat(testFileName))
+				.append(" ");
+		sb.append(svmDirectoryPath.concat("/").concat(modelFileName)).append(
+				" ");
+		sb.append(predictFilePath);
+
+		ProcessUtil.execute(sb.toString(), null);
+
+		String predictFileName = FilenameUtils.getName(predictFilePath);
+
+		return predictFileName;
 	}
 
 	private <T> String formatData(int label, List<T> data) {

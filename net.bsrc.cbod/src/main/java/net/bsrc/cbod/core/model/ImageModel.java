@@ -89,4 +89,11 @@ public class ImageModel {
 		}
 		return null;
 	}
+
+	@Override
+	public String toString() {
+		return "ImageModel{" + "imageName='" + imageName + '\''
+				+ ", imagePath='" + imagePath + '\'' + ", rawImageName='"
+				+ rawImageName + '\'' + '}';
+	}
 }

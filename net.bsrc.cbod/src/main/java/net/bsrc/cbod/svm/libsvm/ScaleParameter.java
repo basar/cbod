@@ -1,5 +1,6 @@
 package net.bsrc.cbod.svm.libsvm;
 
+import net.bsrc.cbod.core.util.CBODUtil;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -71,21 +72,12 @@ public class ScaleParameter {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("-l").append(" ");
-		sb.append(lower).append(" ");
 
-		sb.append("-u").append(" ");
-		sb.append(upper).append(" ");
+        CBODUtil.appendParam(sb,"-l",lower);
+        CBODUtil.appendParam(sb,"-u",upper);
+        CBODUtil.appendParam(sb,"-s",saveFileName);
+        CBODUtil.appendParam(sb,"-r",restoreFileName);
 
-		if (!StringUtils.isEmpty(saveFileName)) {
-			sb.append("-s").append(" ");
-			sb.append(saveFileName).append(" ");
-		}
-
-		if (!StringUtils.isEmpty(restoreFileName)) {
-			sb.append("-r").append(" ");
-			sb.append(restoreFileName).append(" ");
-		}
 
 		return sb.toString();
 

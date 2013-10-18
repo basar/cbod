@@ -1,6 +1,7 @@
 package net.bsrc.cbod.jseg;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.util.CBODUtil;
 
 /**
  * JSEG parameter model
@@ -193,34 +194,13 @@ public class JSEGParameter {
 
 		StringBuilder sb = new StringBuilder();
 
-		// Input file name
-		sb.append("-i ");
-		sb.append(inputFileName).append(" ");
-
-		// media type
-		sb.append("-t ");
-		sb.append(inputMediaType).append(" ");
-
-		// output file name and factor
-		sb.append("-o ");
-		sb.append(outputFileImage).append(" ");
-		sb.append(factor).append(" ");
-
-		// region map file
-		sb.append("-r").append(regionMapType).append(" ");
-		sb.append(regionMapFileName).append(" ");
-
-		if (colorQuantizationThreshold != null) {
-			sb.append("-q ").append(colorQuantizationThreshold).append(" ");
-		}
-
-		if (regionMergeThreshold != null) {
-			sb.append("-m ").append(regionMergeThreshold).append(" ");
-		}
-
-		if (numberOfScales != null) {
-			sb.append("-i ").append(numberOfScales);
-		}
+		CBODUtil.appendParam(sb, "-i", inputFileName);
+		CBODUtil.appendParam(sb, "-t", inputMediaType);
+		CBODUtil.appendParam(sb, "-o", outputFileImage, factor);
+		CBODUtil.appendParam(sb, "-r", regionMapType, regionMapFileName);
+		CBODUtil.appendParam(sb, "-q", colorQuantizationThreshold);
+		CBODUtil.appendParam(sb, "-m", regionMergeThreshold);
+		CBODUtil.appendParam(sb, "-l", numberOfScales);
 
 		return sb.toString();
 	}

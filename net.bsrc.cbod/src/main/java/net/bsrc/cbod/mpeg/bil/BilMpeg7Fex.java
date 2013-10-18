@@ -148,7 +148,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 
 		execute(parameter.toString());
 
-		// Fill dominant color descriptors
+		// Fill descriptors
 		for (Map<String, List<Integer>> map : getDescriptors(descriptorFile)) {
 			for (ImageModel imgModel : imageModelList) {
 				List<Integer> descs = map.get(imgModel.getImageName());

@@ -1,5 +1,7 @@
 package net.bsrc.cbod.svm.libsvm;
 
+import net.bsrc.cbod.core.util.CBODUtil;
+
 /**
  * User: bsr Date: 10/17/13 Time: 1:40 PM
  */
@@ -32,7 +34,67 @@ public class TrainParameter {
 	 */
 	private Float gamma = null;
 
+	/**
+     *
+     */
+	private Float cost = null;
+
 	public TrainParameter() {
+
+	}
+
+	public Integer getSvmType() {
+		return svmType;
+	}
+
+	public void setSvmType(Integer svmType) {
+		this.svmType = svmType;
+	}
+
+	public Integer getKernelType() {
+		return kernelType;
+	}
+
+	public void setKernelType(Integer kernelType) {
+		this.kernelType = kernelType;
+	}
+
+	public Integer getDegree() {
+		return degree;
+	}
+
+	public void setDegree(Integer degree) {
+		this.degree = degree;
+	}
+
+	public Float getGamma() {
+		return gamma;
+	}
+
+	public void setGamma(Float gamma) {
+		this.gamma = gamma;
+	}
+
+	public Float getCost() {
+		return cost;
+	}
+
+	public void setCost(Float cost) {
+		this.cost = cost;
+	}
+
+	@Override
+	public String toString() {
+
+		StringBuilder sb = new StringBuilder();
+
+		CBODUtil.appendParam(sb, "-s", svmType);
+		CBODUtil.appendParam(sb, "-t", kernelType);
+		CBODUtil.appendParam(sb, "-d", degree);
+		CBODUtil.appendParam(sb, "-g", gamma);
+		CBODUtil.appendParam(sb, "-c", cost);
+
+		return sb.toString();
 
 	}
 
