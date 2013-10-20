@@ -29,6 +29,10 @@ public class ImageModel {
 
 	private List<Descriptor> descriptors = new ArrayList<Descriptor>();
 
+	private boolean negativeImg = false;
+
+	private EDataType dataType;
+
 	public ImageModel() {
 
 	}
@@ -77,6 +81,22 @@ public class ImageModel {
 			rawImageName = FilenameUtils.removeExtension(imageName);
 		}
 		return rawImageName;
+	}
+
+	public boolean isNegativeImg() {
+		return negativeImg;
+	}
+
+	public void setNegativeImg(boolean negativeImg) {
+		this.negativeImg = negativeImg;
+	}
+
+	public EDataType getDataType() {
+		return dataType;
+	}
+
+	public void setDataType(EDataType dataType) {
+		this.dataType = dataType;
 	}
 
 	public Descriptor getDescriptor(EDescriptorType type) {

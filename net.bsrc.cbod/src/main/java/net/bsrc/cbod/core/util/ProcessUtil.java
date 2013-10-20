@@ -43,18 +43,19 @@ public class ProcessUtil {
 					lines.add(line);
 				}
 			}
-
 			bri.close();
-
-			if (outputFile != null)
-				FileUtils.writeLines(outputFile, lines);
 
 			while ((line = bre.readLine()) != null) {
 				logger.info(line);
 			}
 			bre.close();
+
 			p.waitFor();
+
 			logger.info("Process finished");
+
+			if (outputFile != null)
+				FileUtils.writeLines(outputFile, lines);
 
 		} catch (Exception e) {
 			logger.error("", e);

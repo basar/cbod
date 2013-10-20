@@ -8,8 +8,10 @@ import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.ImageModel;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -156,6 +158,63 @@ public final class CBODUtil {
 		}
 
 		return result;
+	}
+
+	/**
+	 * 
+	 * @param relativeDir
+	 * @return
+	 */
+	public static List<ImageModel> getImageModelList(String relativeDir) {
+
+		List<ImageModel> resultList = new ArrayList<ImageModel>();
+
+		String defaultOutputDir = getDefaultOutputDirectoryPath();
+		String imageDirPath = defaultOutputDir.concat(relativeDir);
+
+		List<String> imgPathList = getFileList(imageDirPath,
+				CBODConstants.JPEG_SUFFIX);
+		for (String imgPath : imgPathList) {
+
+			ImageModel imgModel = new ImageModel();
+			imgModel.setImagePath(imgPath);
+			imgModel.setImageName(FilenameUtils.getName(imgPath));
+
+			resultList.add(imgModel);
+		}
+
+		return resultList;
+	}
+
+	/**
+	 * 
+	 * @param relativeDir
+	 * @param testProportion
+	 * @return
+	 */
+	public static List<List<ImageModel>> seperateImageModelList(
+			String relativeDir, int testProportion) {
+
+		List<ImageModel> trainImageModelList = new ArrayList<ImageModel>();
+		List<ImageModel> testImageModelList = new ArrayList<ImageModel>();
+
+		List<ImageModel> imageModelList = getImageModelList(relativeDir);
+
+		int k = 0;
+		for (ImageModel imageModel : imageModelList) {
+			if ((k++) % testProportion == 0) {
+				testImageModelList.add(imageModel);
+			} else {
+				trainImageModelList.add(imageModel);
+			}
+		}
+
+		List<List<ImageModel>> result = new ArrayList<List<ImageModel>>();
+		result.add(trainImageModelList);
+		result.add(testImageModelList);
+
+		return result;
+
 	}
 
 }

@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.model.EDataType;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
+import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
@@ -20,7 +22,6 @@ import net.bsrc.cbod.pascal.xml.PascalObject;
 import net.bsrc.cbod.pascal.xml.PascalXMLHelper;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
-import net.bsrc.cbod.svm.libsvm.TrainParameter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -39,13 +40,65 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		extractDescriptors();
+
+		ImageModelService service = ImageModelService.getInstance();
+
+		List<ImageModel> positiveImageModelList = service.getImageModelList(
+				EDataType.TRAIN, false);
+		List<ImageModel> testPositiveImageModelList = service
+				.getImageModelList(EDataType.TEST, false);
+		List<ImageModel> negativeImageModelList = service.getImageModelList(
+				EDataType.TRAIN, true);
+		List<ImageModel> testNegativeImageModelList = service
+				.getImageModelList(EDataType.TEST, true);
+
+		testSVM(positiveImageModelList, testPositiveImageModelList,
+				negativeImageModelList, testNegativeImageModelList,
+				EDescriptorType.EHD);
+
 
 	}
 
-	private static void extractDescriptors() {
+	private static void testSVM(List<ImageModel> positiveImageModelList,
+			List<ImageModel> testPositiveImageModelList,
+			List<ImageModel> negativeImageModelList,
+			List<ImageModel> testNegativeImageModelList,
+			EDescriptorType descriptorType) {
 
-		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+		LibSvm libSvm = LibSvm.getInstance();
+
+		String descName = descriptorType.getName();
+
+		String trainingFileName = descName + ".training.txt";
+		String testFileName = descName + ".test.txt";
+		String rangeFileName = descName + ".range.txt";
+
+		libSvm.createFormattedDataFile(trainingFileName, 0,
+				negativeImageModelList, 1, positiveImageModelList,
+				descriptorType);
+
+		libSvm.createFormattedDataFile(testFileName, 0,
+				testNegativeImageModelList, 1, testPositiveImageModelList,
+				descriptorType);
+
+		ScaleParameter scaleParameter = new ScaleParameter();
+		scaleParameter.setSaveFileName(rangeFileName);
+
+		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+				scaleParameter);
+
+		scaleParameter.setSaveFileName(null);
+		scaleParameter.setRestoreFileName(rangeFileName);
+
+		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+		libSvm.doPredict(scaleTestFileName, modelFileName, null);
+
+	}
+
+	private static void saveImageModelsToDB() {
 
 		String cbodDirPath = CBODUtil.getDefaultOutputDirectoryPath();
 
@@ -68,9 +121,11 @@ public class Main {
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 
-			if ((k++) % 2 == 0) {
+			if ((k++) % 4 == 0) {
+				imgModel.setDataType(EDataType.TEST);
 				testPositiveImageModelList.add(imgModel);
 			} else {
+				imgModel.setDataType(EDataType.TRAIN);
 				positiveImageModelList.add(imgModel);
 			}
 
@@ -84,49 +139,59 @@ public class Main {
 			ImageModel imgModel = new ImageModel();
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
+			imgModel.setNegativeImg(true);
 
-			if ((k++) % 2 == 0) {
+			if ((k++) % 4 == 0) {
+				imgModel.setDataType(EDataType.TEST);
 				testNegativeImageModelList.add(imgModel);
 			} else {
+				imgModel.setDataType(EDataType.TRAIN);
 				negativeImageModelList.add(imgModel);
 			}
 
 		}
+
+		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+
+		mpegFex.extractColorStructureDescriptors(positiveImageModelList, 256);
+		mpegFex.extractColorStructureDescriptors(testPositiveImageModelList,
+				256);
+		mpegFex.extractColorStructureDescriptors(negativeImageModelList, 256);
+		mpegFex.extractColorStructureDescriptors(testNegativeImageModelList,
+				256);
+
+		mpegFex.extractScalableColorDescriptors(positiveImageModelList, 256);
+		mpegFex.extractScalableColorDescriptors(testPositiveImageModelList, 256);
+		mpegFex.extractScalableColorDescriptors(negativeImageModelList, 256);
+		mpegFex.extractScalableColorDescriptors(testNegativeImageModelList, 256);
+
+		mpegFex.extractColorLayoutDescriptors(positiveImageModelList, 64, 28);
+		mpegFex.extractColorLayoutDescriptors(testPositiveImageModelList, 64,
+				28);
+		mpegFex.extractColorLayoutDescriptors(negativeImageModelList, 64, 28);
+		mpegFex.extractColorLayoutDescriptors(testNegativeImageModelList, 64,
+				28);
+
+		mpegFex.extractDominantColorDescriptors(positiveImageModelList, 1, 0,
+				1, 32, 32, 32);
+		mpegFex.extractDominantColorDescriptors(testPositiveImageModelList, 1,
+				0, 1, 32, 32, 32);
+		mpegFex.extractDominantColorDescriptors(negativeImageModelList, 1, 0,
+				1, 32, 32, 32);
+		mpegFex.extractDominantColorDescriptors(testNegativeImageModelList, 1,
+				0, 1, 32, 32, 32);
 
 		mpegFex.extractEdgeHistogramDescriptors(positiveImageModelList);
 		mpegFex.extractEdgeHistogramDescriptors(testPositiveImageModelList);
 		mpegFex.extractEdgeHistogramDescriptors(negativeImageModelList);
 		mpegFex.extractEdgeHistogramDescriptors(testNegativeImageModelList);
 
-		LibSvm libSvm = LibSvm.getInstance();
+		ImageModelService service = ImageModelService.getInstance();
 
-		String trainingFileName = "ehd_training.txt";
-		String testFileName = "ehd_test.txt";
-		String rangeFileName = "ehd_range.txt";
-
-		libSvm.createFormattedDataFile(trainingFileName, 0,
-				negativeImageModelList, 1, positiveImageModelList,
-				EDescriptorType.EHD);
-
-		libSvm.createFormattedDataFile(testFileName, 0,
-				testNegativeImageModelList, 1, testPositiveImageModelList,
-				EDescriptorType.EHD);
-
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setSaveFileName(rangeFileName);
-
-		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
-				scaleParameter);
-
-		scaleParameter.setSaveFileName(null);
-		scaleParameter.setRestoreFileName(rangeFileName);
-
-		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
-
-
-		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
-
-		libSvm.doPredict(scaleTestFileName, modelFileName, null);
+		service.saveImageModelList(positiveImageModelList);
+		service.saveImageModelList(negativeImageModelList);
+		service.saveImageModelList(testPositiveImageModelList);
+		service.saveImageModelList(testNegativeImageModelList);
 
 	}
 

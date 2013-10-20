@@ -54,6 +54,12 @@
             <version>1.4.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.db4o</groupId>
+            <artifactId>db4o-full-java5</artifactId>
+            <version>8.0-SNAPSHOT</version>
+        </dependency>
+
 
     </dependencies>
 
@@ -86,6 +92,13 @@
         </plugins>
 
     </build>
+
+    <repositories>
+        <repository>
+            <id>source.db4o</id>
+            <url>http://source.db4o.com/maven</url>
+        </repository>
+    </repositories>
 
 
 </project>

@@ -62,6 +62,11 @@ public final class CBODConstants {
 	public static final String LIB_SVM_DIR = "net.bsrc.cobd.libsvm.dir";
 
 	/**
+	 * DB4O
+	 */
+	public static final String DB4O_FILE_PATH = "net.bsrc.cbod.db4o.filePath";
+
+	/**
 	 * To prevent object creation
 	 */
 	private CBODConstants() {
