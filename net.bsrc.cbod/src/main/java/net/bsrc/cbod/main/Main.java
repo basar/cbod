@@ -8,6 +8,7 @@ import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.model.EDataType;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
+import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
@@ -40,30 +41,33 @@ public class Main {
 
 	public static void main(String[] args) {
 
+		// Edge histogram descriptors
+		testSVM(EDescriptorType.EHD);
+		// Color layout descriptors
+		//testSVM(EDescriptorType.CLD);
+		// Scalable color descriptors
+		//testSVM(EDescriptorType.SCD);
+		// Color structure descriptors
+		//testSVM(EDescriptorType.CSD);
+		// Dominant color descriptors
+		//testSVM(EDescriptorType.DCD);
+
+		DB4O.getInstance().close();
+
+	}
+
+	private static void testSVM(EDescriptorType descriptorType) {
 
 		ImageModelService service = ImageModelService.getInstance();
 
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
 				EDataType.TRAIN, false);
-		List<ImageModel> testPositiveImageModelList = service
-				.getImageModelList(EDataType.TEST, false);
 		List<ImageModel> negativeImageModelList = service.getImageModelList(
 				EDataType.TRAIN, true);
+		List<ImageModel> testPositiveImageModelList = service
+				.getImageModelList(EDataType.TEST, false);
 		List<ImageModel> testNegativeImageModelList = service
 				.getImageModelList(EDataType.TEST, true);
-
-		testSVM(positiveImageModelList, testPositiveImageModelList,
-				negativeImageModelList, testNegativeImageModelList,
-				EDescriptorType.EHD);
-
-
-	}
-
-	private static void testSVM(List<ImageModel> positiveImageModelList,
-			List<ImageModel> testPositiveImageModelList,
-			List<ImageModel> negativeImageModelList,
-			List<ImageModel> testNegativeImageModelList,
-			EDescriptorType descriptorType) {
 
 		LibSvm libSvm = LibSvm.getInstance();
 
@@ -121,7 +125,7 @@ public class Main {
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 
-			if ((k++) % 4 == 0) {
+			if ((k++) % 2 == 0) {
 				imgModel.setDataType(EDataType.TEST);
 				testPositiveImageModelList.add(imgModel);
 			} else {
@@ -141,7 +145,7 @@ public class Main {
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 			imgModel.setNegativeImg(true);
 
-			if ((k++) % 4 == 0) {
+			if ((k++) % 2 == 0) {
 				imgModel.setDataType(EDataType.TEST);
 				testNegativeImageModelList.add(imgModel);
 			} else {

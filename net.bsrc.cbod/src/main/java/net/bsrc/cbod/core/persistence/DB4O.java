@@ -45,4 +45,10 @@ public class DB4O {
 	public ObjectContainer getObjContainer() {
 		return objContainer;
 	}
+
+	public void close() {
+		if (objContainer != null) {
+			objContainer.close();
+		}
+	}
 }

@@ -14,6 +14,9 @@ import org.opencv.core.Mat;
  */
 public class ImageModel {
 
+	/**
+	 * Name with suffix
+	 */
 	private String imageName;
 
 	private String imagePath;

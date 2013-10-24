@@ -5,12 +5,12 @@ package net.bsrc.cbod.core.model;
  */
 public enum EDescriptorType {
 
-	CSD("CSD"),
-    SCD("SCD"),
-    CLD("CLD"),
-    DCD("DCD"),
-    HTD("HTD"),
-    EHD("EHD");
+	CSD("CSD"), // Color structure descriptors
+	SCD("SCD"), // Scalable color descriptors
+	CLD("CLD"), // Color layout descriptors
+	DCD("DCD"), // Dominant color descriptors
+	HTD("HTD"), // Homogeneus texture descriptors
+	EHD("EHD");// Edge histogram descriptors
 
 	private String name;
 
