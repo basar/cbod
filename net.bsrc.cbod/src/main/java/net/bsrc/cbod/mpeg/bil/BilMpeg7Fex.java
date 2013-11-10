@@ -20,6 +20,7 @@ import net.bsrc.cbod.mpeg.IMpegFex;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,9 +127,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	private <T> void extractDescriptors(EDescriptorType descType,
 			List<ImageModel> imageModelList, T... params) {
 
-		if (imageModelList == null || imageModelList.isEmpty()) {
-			throw new CBODException("imageModelList must not be null or empty");
-		}
+		Validate.notEmpty(imageModelList, "Image model list must not be null");
 
 		StringBuilder parameter = new StringBuilder();
 		parameter.append(descType).append(" ");
@@ -213,7 +212,6 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 			throw new CBODException(e);
 		}
 
-
 		return resultMap;
 	}
 
@@ -245,7 +243,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		sb.append(" ");
 		sb.append(parameter);
 		String tmp = sb.toString();
-		ProcessUtil.execute(tmp,null);
+		ProcessUtil.execute(tmp, null);
 	}
 
 	public String getMpegFexDirPath() {

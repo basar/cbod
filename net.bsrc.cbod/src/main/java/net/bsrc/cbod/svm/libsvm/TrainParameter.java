@@ -88,11 +88,11 @@ public class TrainParameter {
 
 		StringBuilder sb = new StringBuilder();
 
-		CBODUtil.appendParam(sb, "-s", svmType);
-		CBODUtil.appendParam(sb, "-t", kernelType);
-		CBODUtil.appendParam(sb, "-d", degree);
-		CBODUtil.appendParam(sb, "-g", gamma);
-		CBODUtil.appendParam(sb, "-c", cost);
+		CBODUtil.appendParam(sb, "-s", new Object[] { svmType });
+		CBODUtil.appendParam(sb, "-t", new Object[] { kernelType });
+		CBODUtil.appendParam(sb, "-d", new Object[] { degree });
+		CBODUtil.appendParam(sb, "-g", new Object[] { gamma });
+		CBODUtil.appendParam(sb, "-c", new Object[] { cost });
 
 		return sb.toString();
 

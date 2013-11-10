@@ -77,6 +77,20 @@ public final class CBODUtil {
 
 	}
 
+	public static void compareTwoImageModelCollection(List<ImageModel> models1,
+			List<ImageModel> models2) {
+
+		for (ImageModel model1 : models1) {
+			for (ImageModel model2 : models2) {
+				if (model1.getImageName().equals(model2.getImageName())) {
+					throw new CBODException(
+							"The collections cotain equals image model elements!");
+				}
+			}
+		}
+
+	}
+
 	/**
 	 * get all files that place in the given directory path
 	 * 
@@ -127,15 +141,33 @@ public final class CBODUtil {
 	 * @param key
 	 * @param values
 	 */
-	public static void appendParam(StringBuilder sb, String key,
-			Object... values) {
+	public static void appendParam(StringBuilder sb, String key, Object[] values) {
+		appendParam(sb, " ", key, values);
+	}
+
+	/**
+	 * 
+	 * @param sb
+	 * @param delimiter
+	 * @param key
+	 * @param values
+	 */
+	public static void appendParam(StringBuilder sb, String delimiter,
+			String key, Object[] values) {
+
+		appendParamCommon(sb, delimiter, key, values);
+	}
+
+	private static void appendParamCommon(StringBuilder sb, String delimiter,
+			String key, Object[] values) {
 
 		if (!isAllParamsNull(values)) {
-			sb.append(key).append(" ");
+			sb.append(key).append(delimiter);
 			for (Object o : values) {
 				if (o != null)
 					sb.append(o).append(" ");
 			}
+
 		}
 	}
 

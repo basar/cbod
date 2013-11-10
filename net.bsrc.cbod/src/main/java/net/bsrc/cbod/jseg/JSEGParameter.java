@@ -194,13 +194,15 @@ public class JSEGParameter {
 
 		StringBuilder sb = new StringBuilder();
 
-		CBODUtil.appendParam(sb, "-i", inputFileName);
-		CBODUtil.appendParam(sb, "-t", inputMediaType);
-		CBODUtil.appendParam(sb, "-o", outputFileImage, factor);
-		CBODUtil.appendParam(sb, "-r", regionMapType, regionMapFileName);
-		CBODUtil.appendParam(sb, "-q", colorQuantizationThreshold);
-		CBODUtil.appendParam(sb, "-m", regionMergeThreshold);
-		CBODUtil.appendParam(sb, "-l", numberOfScales);
+		CBODUtil.appendParam(sb, "-i", new Object[] { inputFileName });
+		CBODUtil.appendParam(sb, "-t", new Object[] { inputMediaType });
+		CBODUtil.appendParam(sb, "-o", new Object[] { outputFileImage, factor });
+		CBODUtil.appendParam(sb, "-r", "", new Object[] { regionMapType,
+				regionMapFileName });
+		CBODUtil.appendParam(sb, "-q",
+				new Object[] { colorQuantizationThreshold });
+		CBODUtil.appendParam(sb, "-m", new Object[] { regionMergeThreshold });
+		CBODUtil.appendParam(sb, "-l", new Object[] { numberOfScales });
 
 		return sb.toString();
 	}

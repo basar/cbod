@@ -2,6 +2,7 @@ package net.bsrc.cbod.main;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
@@ -26,6 +27,7 @@ import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.Validate;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
@@ -41,33 +43,48 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		// Edge histogram descriptors
-		testSVM(EDescriptorType.EHD);
+	    //saveImageModelsToDB();
+
+		// Edge histogram descriptors (best result for tire)
+		testSVM(EDescriptorType.EHD, CBODConstants.CAR_WINDOW_PART);
 		// Color layout descriptors
-		//testSVM(EDescriptorType.CLD);
-		// Scalable color descriptors
-		//testSVM(EDescriptorType.SCD);
+		testSVM(EDescriptorType.CLD,CBODConstants.CAR_WINDOW_PART);
+		// Scalable color descriptors (best result for window)
+		testSVM(EDescriptorType.SCD,CBODConstants.CAR_WINDOW_PART);
 		// Color structure descriptors
-		//testSVM(EDescriptorType.CSD);
+		testSVM(EDescriptorType.CSD,CBODConstants.CAR_WINDOW_PART);
 		// Dominant color descriptors
-		//testSVM(EDescriptorType.DCD);
+		testSVM(EDescriptorType.DCD,CBODConstants.CAR_WINDOW_PART);
 
 		DB4O.getInstance().close();
 
 	}
 
-	private static void testSVM(EDescriptorType descriptorType) {
+	private static void testSVM(EDescriptorType descriptorType,
+			String objectPart) {
 
 		ImageModelService service = ImageModelService.getInstance();
 
+		/**
+		 * Egitim verileri
+		 */
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
-				EDataType.TRAIN, false);
-		List<ImageModel> negativeImageModelList = service.getImageModelList(
-				EDataType.TRAIN, true);
+				EDataType.TRAIN, objectPart);
+		List<ImageModel> negativeImageModelList = service
+				.getNegativeImageModelList(EDataType.TRAIN,
+						positiveImageModelList.size());
+
+		/**
+		 * Test verileri
+		 */
 		List<ImageModel> testPositiveImageModelList = service
-				.getImageModelList(EDataType.TEST, false);
+				.getImageModelList(EDataType.TEST, objectPart);
 		List<ImageModel> testNegativeImageModelList = service
-				.getImageModelList(EDataType.TEST, true);
+				.getNegativeImageModelList(EDataType.TEST,
+						testPositiveImageModelList.size());
+
+        CBODUtil.compareTwoImageModelCollection(positiveImageModelList,testPositiveImageModelList);
+        CBODUtil.compareTwoImageModelCollection(negativeImageModelList,testNegativeImageModelList);
 
 		LibSvm libSvm = LibSvm.getInstance();
 
@@ -112,20 +129,25 @@ public class Main {
 		List<ImageModel> testPositiveImageModelList = new ArrayList<ImageModel>();
 		List<ImageModel> testNegativeImageModelList = new ArrayList<ImageModel>();
 
-		String positiveImageDirPath = cbodDirPath.concat("/train_data/tire");
+		String tireImageDirPath = cbodDirPath.concat("/train_data/tire");
+		String windowImageDirPath = cbodDirPath.concat("/train_data/window");
 		String negativeImageDirPath = cbodDirPath
 				.concat("/train_data/negative");
 
-		int k = 0;
+		List<String> fileList = CBODUtil.getFileList(tireImageDirPath,
+				CBODConstants.JPEG_SUFFIX);
 
-		for (String imgPath : CBODUtil.getFileList(positiveImageDirPath,
-				CBODConstants.JPEG_SUFFIX)) {
+		for (int i = 0; i < fileList.size(); i++) {
+
+			String imgPath = fileList.get(i);
 
 			ImageModel imgModel = new ImageModel();
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
+			imgModel.setObjectClassType(CBODConstants.CAR_OBJECT_CLASS_TYPE);
+			imgModel.setObjectPart(CBODConstants.CAR_TIRE_PART);
 
-			if ((k++) % 2 == 0) {
+			if (i % 4 == 0) {
 				imgModel.setDataType(EDataType.TEST);
 				testPositiveImageModelList.add(imgModel);
 			} else {
@@ -135,17 +157,42 @@ public class Main {
 
 		}
 
-		k = 0;
+		fileList = CBODUtil.getFileList(windowImageDirPath,
+				CBODConstants.JPEG_SUFFIX);
 
-		for (String imgPath : CBODUtil.getFileList(negativeImageDirPath,
-				CBODConstants.JPEG_SUFFIX)) {
+		for (int i = 0; i < fileList.size(); i++) {
+
+			String imgPath = fileList.get(i);
+
+			ImageModel imgModel = new ImageModel();
+			imgModel.setImagePath(imgPath);
+			imgModel.setImageName(FilenameUtils.getName(imgPath));
+			imgModel.setObjectClassType(CBODConstants.CAR_OBJECT_CLASS_TYPE);
+			imgModel.setObjectPart(CBODConstants.CAR_WINDOW_PART);
+
+			if (i % 4 == 0) {
+				imgModel.setDataType(EDataType.TEST);
+				testPositiveImageModelList.add(imgModel);
+			} else {
+				imgModel.setDataType(EDataType.TRAIN);
+				positiveImageModelList.add(imgModel);
+			}
+
+		}
+
+		fileList = CBODUtil.getFileList(negativeImageDirPath,
+				CBODConstants.JPEG_SUFFIX);
+
+		for (int i = 0; i < fileList.size(); i++) {
+
+			String imgPath = fileList.get(i);
 
 			ImageModel imgModel = new ImageModel();
 			imgModel.setImagePath(imgPath);
 			imgModel.setImageName(FilenameUtils.getName(imgPath));
 			imgModel.setNegativeImg(true);
 
-			if ((k++) % 2 == 0) {
+			if (i % 4 == 0) {
 				imgModel.setDataType(EDataType.TEST);
 				testNegativeImageModelList.add(imgModel);
 			} else {
@@ -199,25 +246,32 @@ public class Main {
 
 	}
 
-	private static void segmentNegativeImages() {
+	private static void segmentNegativeImages(int count) {
 
 		PascalVOC pascal = PascalVOC.getInstance();
 
 		List<ImageModel> imageModelList = pascal.getImageModels(
 				EPascalType.CAR, 2, -1);
 
+		Validate.isTrue(!(count > imageModelList.size()),
+				"Count parameter must not be bigger than list size");
+
 		String directoryName = CBODUtil.getDefaultOutputDirectoryPath().concat(
 				"/train_data/negative");
 
-		for (int i = 0; i < 10; i++) {
+		String tempDirectory = FileUtils.getTempDirectoryPath();
+
+		Collections.shuffle(imageModelList);
+
+		for (int i = 0; i < count; i++) {
 
 			ImageModel imgModel = imageModelList.get(i);
 			String imageRawName = imgModel.getRawImageName();
 
 			JSEGParameter jsegParam = new JSEGParameter(imgModel.getImagePath());
-			jsegParam.setRegionMapFileName(directoryName.concat("/").concat(
+			jsegParam.setRegionMapFileName(tempDirectory.concat("/").concat(
 					imageRawName + CBODConstants.MAP_SUFFIX));
-			jsegParam.setOutputFileImage(directoryName
+			jsegParam.setOutputFileImage(tempDirectory
 					.concat("/")
 					.concat(imageRawName)
 					.concat(CBODConstants.SEG_SUFFIX

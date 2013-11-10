@@ -134,11 +134,13 @@ public class PascalVOC {
 					throw new CBODException(
 							"Line does not suitable for parsing");
 				}
-
+				// specifier determines the types of an image in terms of
+				// negative,positive or dificult
 				String specifier = arr[1];
-				// Only positive images
+
 				if (StringUtils.isNotEmpty(specifier)
 						&& specifier.equals(Integer.toString(label))) {
+
 					ImageModel imgModel = new ImageModel();
 					imgModel.setImageName(arr[0]
 							.concat(CBODConstants.JPEG_SUFFIX));

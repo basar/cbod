@@ -21,6 +21,10 @@ public class ImageModel {
 
 	private String imagePath;
 
+	private String objectClassType;
+
+	private String objectPart;
+
 	/**
 	 * image name without suffix
 	 */
@@ -113,10 +117,40 @@ public class ImageModel {
 		return null;
 	}
 
-	@Override
-	public String toString() {
-		return "ImageModel{" + "imageName='" + imageName + '\''
-				+ ", imagePath='" + imagePath + '\'' + ", rawImageName='"
-				+ rawImageName + '\'' + '}';
+	public String getObjectPart() {
+		return objectPart;
 	}
+
+	public void setObjectPart(String objectPart) {
+		this.objectPart = objectPart;
+	}
+
+	public void setRawImageName(String rawImageName) {
+		this.rawImageName = rawImageName;
+	}
+
+	public void setFile(File file) {
+		this.file = file;
+	}
+
+	public String getObjectClassType() {
+		return objectClassType;
+	}
+
+	public void setObjectClassType(String objectClassType) {
+		this.objectClassType = objectClassType;
+	}
+
+    @Override
+    public String toString() {
+        return "ImageModel{" +
+                "negativeImg=" + negativeImg +
+                ", dataType=" + dataType +
+                ", rawImageName='" + rawImageName + '\'' +
+                ", objectPart='" + objectPart + '\'' +
+                ", objectClassType='" + objectClassType + '\'' +
+                ", imageName='" + imageName + '\'' +
+                ", imagePath='" + imagePath + '\'' +
+                '}';
+    }
 }

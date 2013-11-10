@@ -18,6 +18,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,7 @@ public class LibSvm {
 	public void createFormattedDataFile(String fileName, int labelA,
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
+
 
 		if (labelA == labelB)
 			throw new CBODException(

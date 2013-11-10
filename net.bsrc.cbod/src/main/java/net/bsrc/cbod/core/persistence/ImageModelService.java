@@ -1,8 +1,12 @@
 package net.bsrc.cbod.core.persistence;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDataType;
+import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -47,12 +51,12 @@ public class ImageModelService {
 
 	public void saveImageModel(ImageModel imageModel) {
 
-		ObjectContainer db = db4O.getObjContainer();
+		ObjectContainer container = db4O.getObjContainer();
 
 		try {
-			db.store(imageModel);
+			container.store(imageModel);
 		} catch (Exception ex) {
-			db.rollback();
+			container.rollback();
 			logger.error("", ex);
 		}
 	}
@@ -61,13 +65,14 @@ public class ImageModelService {
 
 		if (!CollectionUtils.isEmpty(imageModelList)) {
 
-			ObjectContainer db = db4O.getObjContainer();
+			ObjectContainer container = db4O.getObjContainer();
 			try {
 				for (ImageModel imgModel : imageModelList) {
-					db.store(imgModel);
+					if (controlDescriptors(imgModel))
+						container.store(imgModel);
 				}
 			} catch (Exception ex) {
-				db.rollback();
+				container.rollback();
 				logger.error("", ex);
 			}
 
@@ -77,16 +82,103 @@ public class ImageModelService {
 	public List<ImageModel> getImageModelList(final EDataType dataType,
 			final boolean isNegativeImage) {
 
-		ObjectContainer db = db4O.getObjContainer();
+		ObjectContainer container = db4O.getObjContainer();
 
-		List<ImageModel> imageModels = db.query(new Predicate<ImageModel>() {
-			@Override
-			public boolean match(ImageModel imageModel) {
-				return imageModel.isNegativeImg() == isNegativeImage
-						&& imageModel.getDataType() == dataType;
-			}
-		});
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.isNegativeImg() == isNegativeImage
+								&& imageModel.getDataType() == dataType;
+					}
+				});
 
 		return imageModels;
+	}
+
+	public List<ImageModel> getImageModelList(final EDataType dataType,
+			final String partName) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getDataType() == dataType
+								&& imageModel.getObjectPart().equals(partName);
+
+					}
+				});
+
+		return imageModels;
+	}
+
+	private List<ImageModel> getNegativeImageModelList(final EDataType dataType,
+			int amount, boolean randomize) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getDataType() == dataType
+								&& imageModel.isNegativeImg();
+
+					}
+				});
+
+		if (randomize) {
+
+            List<ImageModel> result = new ArrayList<ImageModel>();
+			amount = Math.min(imageModels.size(), amount);
+
+			int tmp = imageModels.size() - 1;
+
+			Random rnd = new Random();
+
+			while (result.size() < amount) {
+				result.add(imageModels.get(rnd.nextInt(tmp)));
+			}
+
+			imageModels = result;
+		}
+
+		return imageModels;
+
+	}
+
+	public List<ImageModel> getNegativeImageModelList(final EDataType dataType,
+			int amount) {
+
+		return getNegativeImageModelList(dataType, amount, false);
+	}
+
+	public List<ImageModel> getRandomNegativeImageModeList(
+			final EDataType dataType, int amount) {
+		return getNegativeImageModelList(dataType, amount, true);
+	}
+
+	private boolean controlDescriptors(ImageModel imgModel) {
+
+		boolean passed = true;
+
+		for (EDescriptorType type : EDescriptorType.values()) {
+			// TODO Gecici yapildi
+			if (type != EDescriptorType.HTD) {
+				Descriptor descriptor = imgModel.getDescriptor(type);
+				if (descriptor != null
+						&& !CollectionUtils.isEmpty(descriptor.getDataList())) {
+					continue;
+				} else {
+					passed = false;
+					break;
+				}
+			}
+
+		}
+
+		return passed;
 	}
 }

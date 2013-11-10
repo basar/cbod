@@ -67,6 +67,13 @@ public final class CBODConstants {
 	public static final String DB4O_FILE_PATH = "net.bsrc.cbod.db4o.filePath";
 
 	/**
+     * 
+     */
+	public static final String CAR_OBJECT_CLASS_TYPE = "car";
+	public static final String CAR_TIRE_PART = "tire";
+	public static final String CAR_WINDOW_PART = "window";
+
+	/**
 	 * To prevent object creation
 	 */
 	private CBODConstants() {
