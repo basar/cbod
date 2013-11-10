@@ -43,7 +43,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-	    //saveImageModelsToDB();
+	    saveImageModelsToDB();
 
 		// Edge histogram descriptors (best result for tire)
 		testSVM(EDescriptorType.EHD, CBODConstants.CAR_WINDOW_PART);
