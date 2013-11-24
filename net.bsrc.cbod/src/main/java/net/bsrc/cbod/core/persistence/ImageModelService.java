@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import net.bsrc.cbod.core.exception.CBODException;
 import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDataType;
 import net.bsrc.cbod.core.model.EDescriptorType;
@@ -114,8 +115,29 @@ public class ImageModelService {
 		return imageModels;
 	}
 
-	private List<ImageModel> getNegativeImageModelList(final EDataType dataType,
-			int amount, boolean randomize) {
+	public List<ImageModel> getImageModelList(final String partName) {
+		ObjectContainer container = db4O.getObjContainer();
+
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getObjectPart().equals(partName);
+
+					}
+				});
+
+		return imageModels;
+	}
+
+	private List<ImageModel> getNegativeImageModelList(
+			final EDataType dataType, int amount, boolean randomize) {
+
+		// TODO amount sadece randomize parametresi true olarak geldiginde
+		// kullaniliyor. Burasi duzenlenmeli!
+		if (amount > 0 && !randomize) {
+			throw new CBODException("Hatali parametre");
+		}
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -123,6 +145,9 @@ public class ImageModelService {
 				.query(new Predicate<ImageModel>() {
 					@Override
 					public boolean match(ImageModel imageModel) {
+						if (dataType == null) {
+							return true;
+						}
 						return imageModel.getDataType() == dataType
 								&& imageModel.isNegativeImg();
 
@@ -131,7 +156,7 @@ public class ImageModelService {
 
 		if (randomize) {
 
-            List<ImageModel> result = new ArrayList<ImageModel>();
+			List<ImageModel> result = new ArrayList<ImageModel>();
 			amount = Math.min(imageModels.size(), amount);
 
 			int tmp = imageModels.size() - 1;
@@ -158,6 +183,14 @@ public class ImageModelService {
 	public List<ImageModel> getRandomNegativeImageModeList(
 			final EDataType dataType, int amount) {
 		return getNegativeImageModelList(dataType, amount, true);
+	}
+
+	public List<ImageModel> getRandomNegativeImageModelList(int amount) {
+		return getNegativeImageModelList(null, amount, true);
+	}
+
+	public List<ImageModel> getNegativeImageModelList() {
+		return getNegativeImageModelList(null, 0, false);
 	}
 
 	private boolean controlDescriptors(ImageModel imgModel) {

@@ -86,7 +86,6 @@ public class LibSvm {
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
 
-
 		if (labelA == labelB)
 			throw new CBODException(
 					"LabelA and LabelB must have different values!");
@@ -127,6 +126,42 @@ public class LibSvm {
 			}
 
 			String line = formatData(labelB, imageModel.getDescriptor(descType)
+					.getDataList());
+			lines.add(line);
+		}
+
+		try {
+			FileUtils.writeLines(dataFile, lines);
+		} catch (IOException e) {
+			throw new CBODException(e);
+		}
+
+	}
+
+	/**
+	 * 
+	 * @param fileName
+	 * @param label
+	 * @param imageModelList
+	 */
+	public void createFormattedDataFile(String fileName, int label,
+			List<ImageModel> imageModelList, EDescriptorType descType) {
+
+		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
+				fileName));
+		List<String> lines = new ArrayList<String>();
+
+		for (ImageModel imageModel : imageModelList) {
+
+			Descriptor descriptor = imageModel.getDescriptor(descType);
+			if (descriptor == null) {
+				logger.error(
+						"descriptor couldn't be found for image model: {}",
+						imageModel.toString());
+				continue;
+			}
+
+			String line = formatData(label, imageModel.getDescriptor(descType)
 					.getDataList());
 			lines.add(line);
 		}

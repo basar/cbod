@@ -150,6 +150,10 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		// Fill descriptors
 		for (Map<String, List<Integer>> map : getDescriptors(descriptorFile)) {
 			for (ImageModel imgModel : imageModelList) {
+				if (imgModel.getImageName() == null)
+					throw new CBODException(
+							"Image model name cannot be null!:{}"
+									+ imgModel.toString());
 				List<Integer> descs = map.get(imgModel.getImageName());
 				if (descs != null) {
 

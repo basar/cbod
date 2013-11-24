@@ -47,6 +47,13 @@ public final class CBODUtil {
 		return getDefaultOutputDirectory().getAbsolutePath();
 	}
 
+	public static String getCbodTempDirectory() {
+
+		String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_TEMP_DIR);
+		return getDefaultOutputDirectoryPath().concat(tmp);
+
+	}
+
 	/**
 	 * 
 	 * @param dirPath

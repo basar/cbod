@@ -32,6 +32,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.management.resources.agent_it;
 
 public class Main {
 
@@ -43,23 +44,37 @@ public class Main {
 
 	public static void main(String[] args) {
 
-	    saveImageModelsToDB();
+		ImageModelService service = ImageModelService.getInstance();
 
-		// Edge histogram descriptors (best result for tire)
-		testSVM(EDescriptorType.EHD, CBODConstants.CAR_WINDOW_PART);
-		// Color layout descriptors
-		testSVM(EDescriptorType.CLD,CBODConstants.CAR_WINDOW_PART);
-		// Scalable color descriptors (best result for window)
-		testSVM(EDescriptorType.SCD,CBODConstants.CAR_WINDOW_PART);
-		// Color structure descriptors
-		testSVM(EDescriptorType.CSD,CBODConstants.CAR_WINDOW_PART);
-		// Dominant color descriptors
-		testSVM(EDescriptorType.DCD,CBODConstants.CAR_WINDOW_PART);
+		/**
+		 * List<ImageModel> tireImageModels = service
+		 * .getImageModelList(CBODConstants.CAR_TIRE_PART); List<ImageModel>
+		 * negativeImageModels = service
+		 * .getRandomNegativeImageModelList(tireImageModels.size());
+		 * 
+		 * 
+		 * 
+		 * String[] arr = CBODDemo.createScaledTrainFileAndRangeFile("DEMO_EHD",
+		 * EDescriptorType.EHD, tireImageModels, negativeImageModels);
+		 */
+
+		String modelFile = "DEMO_EHD.train.scale.model.txt";
+		String rangeFileName = "DEMO_EHD.range.txt";
+
+		CBODDemo.doPredict(modelFile, rangeFileName, CBODUtil
+				.getCbodTempDirectory().concat("/").concat("test_7.jpg"),
+				EDescriptorType.EHD);
 
 		DB4O.getInstance().close();
 
 	}
 
+	/**
+	 * For general testing purpose
+	 * 
+	 * @param descriptorType
+	 * @param objectPart
+	 */
 	private static void testSVM(EDescriptorType descriptorType,
 			String objectPart) {
 
@@ -83,16 +98,21 @@ public class Main {
 				.getNegativeImageModelList(EDataType.TEST,
 						testPositiveImageModelList.size());
 
-        CBODUtil.compareTwoImageModelCollection(positiveImageModelList,testPositiveImageModelList);
-        CBODUtil.compareTwoImageModelCollection(negativeImageModelList,testNegativeImageModelList);
+		CBODUtil.compareTwoImageModelCollection(positiveImageModelList,
+				testPositiveImageModelList);
+		CBODUtil.compareTwoImageModelCollection(negativeImageModelList,
+				testNegativeImageModelList);
 
 		LibSvm libSvm = LibSvm.getInstance();
 
 		String descName = descriptorType.getName();
 
-		String trainingFileName = descName + ".training.txt";
-		String testFileName = descName + ".test.txt";
-		String rangeFileName = descName + ".range.txt";
+		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
+				+ "." + CBODConstants.TXT_SUFFIX;
+		String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
+				+ CBODConstants.TXT_SUFFIX;
+		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
+				+ CBODConstants.TXT_SUFFIX;
 
 		libSvm.createFormattedDataFile(trainingFileName, 0,
 				negativeImageModelList, 1, positiveImageModelList,
