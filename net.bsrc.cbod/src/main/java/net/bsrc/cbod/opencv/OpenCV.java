@@ -90,6 +90,22 @@ public final class OpenCV {
 		Highgui.imwrite(imgPath, m);
 	}
 
+
+    public static void drawRect(Rect rect,Mat mat){
+
+        Point p1 = new Point(rect.x,rect.y);
+        Point p2 = new Point(rect.x+rect.width,rect.y);
+        Point p3 = new Point(rect.x+rect.width,rect.y+rect.height);
+        Point p4 = new Point(rect.x,rect.y+rect.height);
+
+        Scalar scalar = new Scalar(0,255,0);
+        Core.line(mat,p1,p2,scalar,2);
+        Core.line(mat,p2,p3,scalar,2);
+        Core.line(mat,p3,p4,scalar,2);
+        Core.line(mat,p4,p1,scalar,2);
+    }
+
+
 	/**
 	 * 
 	 * @param imagePath
@@ -138,6 +154,61 @@ public final class OpenCV {
 
 		return result;
 	}
+
+    /**
+     *
+     * @param imagePath
+     * @param mapFilePath
+     * @param isBlackBg
+     * @return
+     */
+    public static List<ImageModel> getSegmentedRegionsAsImageModels(String imagePath,
+                                                String mapFilePath, boolean isBlackBg) {
+
+
+        Mat org = getImageMat(imagePath);
+        RegionMap regionMap = RegionMapFactory.getRegionMap(imagePath,
+                mapFilePath);
+
+        List<ImageModel> result = new ArrayList<ImageModel>();
+
+        Mat map = regionMap.getMap();
+
+        for (Integer label : regionMap.getLabels()) {
+
+            List<Point> points = new ArrayList<Point>();
+
+            for (int i = 0; i < map.rows(); i++) {
+                for (int j = 0; j < map.cols(); j++) {
+
+                    double[] temp = map.get(i, j);
+                    if (temp[0] == label) {
+                        // Warning! col=x=j , row=y=i
+                        points.add(new Point(j, i));
+                    }
+                }
+            }
+
+            Point[] arr = points.toArray(new Point[points.size()]);
+            Rect rect = Imgproc.boundingRect(new MatOfPoint(arr));
+
+            Mat region;
+            if (isBlackBg) {
+                region = getImageWithBlackBg(org, points).submat(rect);
+            } else {
+                region = org.submat(rect);
+            }
+
+            ImageModel imgModel = new ImageModel();
+            imgModel.setMat(region);
+            imgModel.setRelativeToOrg(rect);
+
+            result.add(imgModel);
+        }
+
+        return result;
+    }
+
 
 	/**
 	 * Helper method

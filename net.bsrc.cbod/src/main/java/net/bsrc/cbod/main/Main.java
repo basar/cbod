@@ -62,7 +62,7 @@ public class Main {
 		String rangeFileName = "DEMO_EHD.range.txt";
 
 		CBODDemo.doPredict(modelFile, rangeFileName, CBODUtil
-				.getCbodTempDirectory().concat("/").concat("test_7.jpg"),
+				.getCbodTempDirectory().concat("/").concat("test_9.jpg"),
 				EDescriptorType.EHD);
 
 		DB4O.getInstance().close();

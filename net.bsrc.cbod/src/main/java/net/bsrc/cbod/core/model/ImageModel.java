@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 
 /**
  * User: bsr Date: 10/10/13 Time: 9:57 PM
@@ -39,6 +40,8 @@ public class ImageModel {
 	private boolean negativeImg = false;
 
 	private EDataType dataType;
+
+    private Rect relativeToOrg;
 
 	public ImageModel() {
 
@@ -140,6 +143,14 @@ public class ImageModel {
 	public void setObjectClassType(String objectClassType) {
 		this.objectClassType = objectClassType;
 	}
+
+    public Rect getRelativeToOrg() {
+        return relativeToOrg;
+    }
+
+    public void setRelativeToOrg(Rect relativeToOrg) {
+        this.relativeToOrg = relativeToOrg;
+    }
 
     @Override
     public String toString() {

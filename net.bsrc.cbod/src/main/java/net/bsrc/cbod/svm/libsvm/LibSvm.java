@@ -304,4 +304,17 @@ public class LibSvm {
 		return sb.toString();
 	}
 
+    public String getAbsoluteFilePath(String fileName){
+
+        Validate.notEmpty(fileName,"'fileName' must not be empty");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(svmDirectoryPath);
+        if(!fileName.startsWith("/")){
+            sb.append("/");
+        }
+        sb.append(fileName);
+        return sb.toString();
+    }
+
 }

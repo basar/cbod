@@ -12,8 +12,14 @@ import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +27,9 @@ import java.util.List;
  * User: bsr Date: 24/11/13 Time: 16:53
  */
 public class CBODDemo {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(CBODDemo.class);
 
 	public static final int NEGATIVE_LABEL = 0;
 	public static final int POSITIVE_LABEL = 1;
@@ -110,16 +119,14 @@ public class CBODDemo {
 
 		JSEG.getInstance().execute(jsegParam);
 
-		List<Mat> regions = OpenCV.getSegmentedRegions(imagePath, mapName,
-				true);
+		List<ImageModel> imageModels = OpenCV
+				.getSegmentedRegionsAsImageModels(imagePath, mapName, true);
 
-		List<ImageModel> imageModels = new ArrayList<ImageModel>();
 
-		// Resmin segmentleri
-		for (int i = 0; i < regions.size(); i++) {
+		//Orginal resmin segmentleri
+		for (int i = 0; i < imageModels.size(); i++) {
 
-			// Her bir segment diske yazilacak
-			Mat regionMat = regions.get(i);
+			ImageModel model = imageModels.get(i);
 			String regionName = cbodTempDir
 					.concat("/")
 					.concat(imageRawName)
@@ -127,14 +134,12 @@ public class CBODDemo {
 					.concat(CBODConstants.SEG_SUFFIX
 							+ CBODConstants.JPEG_SUFFIX);
 
-			ImageModel model = new ImageModel();
 			model.setImagePath(regionName);
 			model.setImageName(FilenameUtils.getName(regionName));
-			model.setMat(regionMat);
 
-			imageModels.add(i, model);
+            // Her bir segment diske yazilacak
 			// Save region file to disk
-			OpenCV.writeImage(regionMat, regionName);
+			OpenCV.writeImage(model.getMat(), regionName);
 		}
 
 		String testFileName = "TEST".concat(".")
@@ -154,8 +159,47 @@ public class CBODDemo {
 		scaleParameter.setRestoreFileName(rangeFile);
 		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
 
-		String predictFile = libSvm.doPredict(scaleTestFileName, modelFile,
+		String predictFilePath = libSvm.doPredict(scaleTestFileName, modelFile,
 				null);
+
+		//
+		List<ImageModel> candidateModels = new ArrayList<ImageModel>();
+
+		try {
+            File predictFile = FileUtils.getFile(libSvm
+                    .getAbsoluteFilePath(predictFilePath));
+			List<String> lines = FileUtils.readLines(predictFile);
+
+			for (int i = 0; i < lines.size(); i++) {
+
+				String line = lines.get(i);
+				int label = Integer.parseInt(line);
+
+				if (label == POSITIVE_LABEL) {
+					candidateModels.add(imageModels.get(i));
+				}
+			}
+
+		} catch (IOException e) {
+			logger.error("", e);
+			return;
+		}
+
+
+
+        //Orginal resim
+        Mat orgMat = OpenCV.getImageMat(imagePath);
+
+        for(ImageModel candidate:candidateModels){
+
+            Rect rect = candidate.getRelativeToOrg();
+            OpenCV.drawRect(rect,orgMat);
+
+        }
+
+        String outputImagePath = cbodTempDir.concat("/").concat(imageRawName).concat("_out").concat(CBODConstants.JPEG_SUFFIX);
+        OpenCV.writeImage(orgMat,outputImagePath);
+
 
 	}
 
