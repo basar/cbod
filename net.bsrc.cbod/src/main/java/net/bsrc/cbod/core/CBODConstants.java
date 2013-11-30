@@ -39,6 +39,7 @@ public final class CBODConstants {
 	 */
 	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.dir";
     public static final String CBOD_TEMP_DIR = "net.bsrc.cbod.temp.dir";
+    public static final String CBOD_INPUT_IMAGE_DIR = "net.bsrc.cbod.inputImage.dir";
 
 	/**
 	 * Pascal VOC

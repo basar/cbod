@@ -67,9 +67,7 @@ public class CBODDemo {
 		String scaleTrainFileName = libSvm.doScale(trainFileName,
 				scaleParameter);
 
-		String[] result = new String[] { scaleTrainFileName, rangeFileName };
-
-		return result;
+		return new String[] { scaleTrainFileName, rangeFileName };
 
 	}
 
@@ -90,15 +88,75 @@ public class CBODDemo {
 	 * 
 	 * @param modelFile
 	 * @param rangeFile
-	 * @param imagePath
 	 * @param descriptorType
 	 */
-	public static void doPredict(String modelFile, String rangeFile,
-			String imagePath, EDescriptorType descriptorType) {
+	public static List<ImageModel> doPredict(List<ImageModel> imageSegments,
+			String modelFile, String rangeFile, EDescriptorType descriptorType) {
 
 		BilMpeg7Fex mpeg7Fex = BilMpeg7Fex.getInstance();
 		LibSvm libSvm = LibSvm.getInstance();
 
+		String testFileName = "TEST".concat(".")
+				.concat(CBODConstants.SVM_TRAIN)
+				.concat(CBODConstants.TXT_SUFFIX);
+
+		if (descriptorType == EDescriptorType.EHD) {
+			mpeg7Fex.extractEdgeHistogramDescriptors(imageSegments);
+		}
+
+		if (descriptorType == EDescriptorType.SCD) {
+			mpeg7Fex.extractScalableColorDescriptors(imageSegments, 256);
+		}
+
+		if (descriptorType == EDescriptorType.CSD) {
+			mpeg7Fex.extractColorStructureDescriptors(imageSegments, 256);
+		}
+
+		if (descriptorType == EDescriptorType.CLD) {
+			mpeg7Fex.extractColorLayoutDescriptors(imageSegments, 64, 28);
+		}
+
+		// Test datasi tum veriler positifmis gibi olusturuluyor. (Ignore
+		// edilebilir)
+		libSvm.createFormattedDataFile(testFileName, POSITIVE_LABEL,
+				imageSegments, descriptorType);
+
+		// Test file scale edilmeli!!
+		ScaleParameter scaleParameter = new ScaleParameter();
+		scaleParameter.setRestoreFileName(rangeFile);
+		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+		String predictFilePath = libSvm.doPredict(scaleTestFileName, modelFile,
+				null);
+
+		//
+		List<ImageModel> candidateModels = new ArrayList<ImageModel>();
+
+		try {
+			File predictFile = FileUtils.getFile(libSvm
+					.getAbsoluteFilePath(predictFilePath));
+			List<String> lines = FileUtils.readLines(predictFile);
+
+			for (int i = 0; i < lines.size(); i++) {
+
+				String line = lines.get(i);
+				int label = Integer.parseInt(line);
+
+				if (label == POSITIVE_LABEL) {
+					candidateModels.add(imageSegments.get(i));
+				}
+			}
+
+		} catch (IOException e) {
+			logger.error("", e);
+			return null;
+		}
+
+		return candidateModels;
+
+	}
+
+	public static List<ImageModel> segmentImage(String imagePath) {
 		// Image raw name
 		String imageRawName = FilenameUtils.getBaseName(imagePath);
 		// OS temp dir
@@ -111,7 +169,7 @@ public class CBODDemo {
 
 		jsegParam.setRegionMapFileName(tempDirectory.concat("/").concat(
 				imageRawName + CBODConstants.MAP_SUFFIX));
-		jsegParam.setOutputFileImage(tempDirectory.concat("/")
+		jsegParam.setOutputFileImage(cbodTempDir.concat("/")
 				.concat(imageRawName)
 				.concat(CBODConstants.SEG_SUFFIX + CBODConstants.JPEG_SUFFIX));
 
@@ -119,15 +177,14 @@ public class CBODDemo {
 
 		JSEG.getInstance().execute(jsegParam);
 
-		List<ImageModel> imageModels = OpenCV
+		List<ImageModel> imageSegments = OpenCV
 				.getSegmentedRegionsAsImageModels(imagePath, mapName, true);
 
+		// Orginal resmin segmentleri
+		for (int i = 0; i < imageSegments.size(); i++) {
 
-		//Orginal resmin segmentleri
-		for (int i = 0; i < imageModels.size(); i++) {
-
-			ImageModel model = imageModels.get(i);
-			String regionName = cbodTempDir
+			ImageModel model = imageSegments.get(i);
+			String regionName = tempDirectory
 					.concat("/")
 					.concat(imageRawName)
 					.concat("." + i)
@@ -137,70 +194,12 @@ public class CBODDemo {
 			model.setImagePath(regionName);
 			model.setImageName(FilenameUtils.getName(regionName));
 
-            // Her bir segment diske yazilacak
+			// Her bir segment diske yazilacak
 			// Save region file to disk
 			OpenCV.writeImage(model.getMat(), regionName);
 		}
 
-		String testFileName = "TEST".concat(".")
-				.concat(CBODConstants.SVM_TRAIN)
-				.concat(CBODConstants.TXT_SUFFIX);
-
-		if (descriptorType == EDescriptorType.EHD) {
-			mpeg7Fex.extractEdgeHistogramDescriptors(imageModels);
-			// Test datasi tum veriler positifmis gibi olusturuluyor. (Ignore
-			// edilebilir)
-			libSvm.createFormattedDataFile(testFileName, POSITIVE_LABEL,
-					imageModels, EDescriptorType.EHD);
-		}
-
-		// Test file scale edilmeli
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setRestoreFileName(rangeFile);
-		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
-
-		String predictFilePath = libSvm.doPredict(scaleTestFileName, modelFile,
-				null);
-
-		//
-		List<ImageModel> candidateModels = new ArrayList<ImageModel>();
-
-		try {
-            File predictFile = FileUtils.getFile(libSvm
-                    .getAbsoluteFilePath(predictFilePath));
-			List<String> lines = FileUtils.readLines(predictFile);
-
-			for (int i = 0; i < lines.size(); i++) {
-
-				String line = lines.get(i);
-				int label = Integer.parseInt(line);
-
-				if (label == POSITIVE_LABEL) {
-					candidateModels.add(imageModels.get(i));
-				}
-			}
-
-		} catch (IOException e) {
-			logger.error("", e);
-			return;
-		}
-
-
-
-        //Orginal resim
-        Mat orgMat = OpenCV.getImageMat(imagePath);
-
-        for(ImageModel candidate:candidateModels){
-
-            Rect rect = candidate.getRelativeToOrg();
-            OpenCV.drawRect(rect,orgMat);
-
-        }
-
-        String outputImagePath = cbodTempDir.concat("/").concat(imageRawName).concat("_out").concat(CBODConstants.JPEG_SUFFIX);
-        OpenCV.writeImage(orgMat,outputImagePath);
-
-
+		return imageSegments;
 	}
 
 }

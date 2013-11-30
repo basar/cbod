@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
@@ -16,10 +17,13 @@ import org.opencv.core.Rect;
 public class ImageModel {
 
 	/**
-	 * Name with suffix
+	 * Name with suffix (eg: example.jpg)
 	 */
 	private String imageName;
 
+	/**
+	 * Image full path (eg: /usr/local/tmp/example.jpg)
+	 */
 	private String imagePath;
 
 	private String objectClassType;
@@ -27,7 +31,7 @@ public class ImageModel {
 	private String objectPart;
 
 	/**
-	 * image name without suffix
+	 * image name without suffix (eg: example)
 	 */
 	private String rawImageName;
 
@@ -41,7 +45,7 @@ public class ImageModel {
 
 	private EDataType dataType;
 
-    private Rect relativeToOrg;
+	private Rect relativeToOrg;
 
 	public ImageModel() {
 
@@ -144,24 +148,20 @@ public class ImageModel {
 		this.objectClassType = objectClassType;
 	}
 
-    public Rect getRelativeToOrg() {
-        return relativeToOrg;
-    }
+	public Rect getRelativeToOrg() {
+		return relativeToOrg;
+	}
 
-    public void setRelativeToOrg(Rect relativeToOrg) {
-        this.relativeToOrg = relativeToOrg;
-    }
+	public void setRelativeToOrg(Rect relativeToOrg) {
+		this.relativeToOrg = relativeToOrg;
+	}
 
-    @Override
-    public String toString() {
-        return "ImageModel{" +
-                "negativeImg=" + negativeImg +
-                ", dataType=" + dataType +
-                ", rawImageName='" + rawImageName + '\'' +
-                ", objectPart='" + objectPart + '\'' +
-                ", objectClassType='" + objectClassType + '\'' +
-                ", imageName='" + imageName + '\'' +
-                ", imagePath='" + imagePath + '\'' +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "ImageModel{" + "negativeImg=" + negativeImg + ", dataType="
+				+ dataType + ", rawImageName='" + rawImageName + '\''
+				+ ", objectPart='" + objectPart + '\'' + ", objectClassType='"
+				+ objectClassType + '\'' + ", imageName='" + imageName + '\''
+				+ ", imagePath='" + imagePath + '\'' + '}';
+	}
 }

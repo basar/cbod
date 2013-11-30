@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +52,13 @@ public final class CBODUtil {
 
 		String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_TEMP_DIR);
 		return getDefaultOutputDirectoryPath().concat(tmp);
-
 	}
+
+    public static String getCbodInputImageDirectory(){
+        String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_INPUT_IMAGE_DIR);
+        return getDefaultOutputDirectoryPath().concat(tmp);
+    }
+
 
 	/**
 	 * 

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.ImageModelFactory;
 import net.bsrc.cbod.core.model.EDataType;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
@@ -30,6 +31,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.Validate;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.management.resources.agent_it;
@@ -42,30 +45,86 @@ public class Main {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 
+	private final static String IMG_DIR = CBODUtil.getCbodInputImageDirectory()
+			+ "/";
+	private final static String TMP_DIR = CBODUtil.getCbodTempDirectory() + "/";
+
 	public static void main(String[] args) {
+
+        //Model file'lar olusturuluyor...
+		createModelFiles();
+
+        String tireModelFile = "EHD_TIRE.train.scale.model.txt";
+        String tireRangeFile = "EHD_TIRE.range.txt";
+        EDescriptorType tireDescriptorType =EDescriptorType.EHD;
+        
+		String windowModelFile = "SCD_WINDOW.train.scale.model.txt";
+		String windowRangeFileName = "SCD_WINDOW.range.txt";
+        EDescriptorType windowDescriptorType = EDescriptorType.SCD;
+
+        
+		// Test yapilacak image
+		ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR
+				+ "test_12.jpg", true);
+
+		// Image segmentlere ayriliyor
+		List<ImageModel> imageSegments = CBODDemo.segmentImage(imageModel
+				.getImagePath());
+
+
+        doPredict(imageModel,imageSegments,tireModelFile,tireRangeFile,tireDescriptorType,new Scalar(0,255,0));
+
+
+		DB4O.getInstance().close();
+	}
+
+	private static void doPredict(ImageModel imageModel,
+			List<ImageModel> imageSegments, String modelFile, String rangeFile,
+			EDescriptorType descriptorType, Scalar scalar) {
+
+		List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
+				modelFile, rangeFile, descriptorType);
+
+		for (ImageModel candidate : candidates) {
+			Rect rect = candidate.getRelativeToOrg();
+			OpenCV.drawRect(rect, imageModel.getMat(),scalar);
+		}
+
+		String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName()
+				+ ".out.jpg");
+		OpenCV.writeImage(imageModel.getMat(), outputImagePath);
+
+	}
+
+	private static void createModelFiles() {
+
+		EDescriptorType tireDescType = EDescriptorType.EHD;
+		EDescriptorType windowDescType = EDescriptorType.CLD;
+		String tireFilePreffix = "EHD_TIRE";
+		String windowFilePreffix = "CLD_WINDOW";
 
 		ImageModelService service = ImageModelService.getInstance();
 
-		/**
-		 * List<ImageModel> tireImageModels = service
-		 * .getImageModelList(CBODConstants.CAR_TIRE_PART); List<ImageModel>
-		 * negativeImageModels = service
-		 * .getRandomNegativeImageModelList(tireImageModels.size());
-		 * 
-		 * 
-		 * 
-		 * String[] arr = CBODDemo.createScaledTrainFileAndRangeFile("DEMO_EHD",
-		 * EDescriptorType.EHD, tireImageModels, negativeImageModels);
-		 */
+		List<ImageModel> imageModelsTire = service
+				.getImageModelList(CBODConstants.CAR_TIRE_PART);
+		List<ImageModel> negativeImageModelsTire = service
+				.getRandomNegativeImageModelList(imageModelsTire.size());
 
-		String modelFile = "DEMO_EHD.train.scale.model.txt";
-		String rangeFileName = "DEMO_EHD.range.txt";
+		List<ImageModel> imageModelsWindow = service
+				.getImageModelList(CBODConstants.CAR_WINDOW_PART);
+		List<ImageModel> negativeImageModelsWindow = service
+				.getRandomNegativeImageModelList(imageModelsWindow.size());
 
-		CBODDemo.doPredict(modelFile, rangeFileName, CBODUtil
-				.getCbodTempDirectory().concat("/").concat("test_9.jpg"),
-				EDescriptorType.EHD);
+		String[] arr = CBODDemo.createScaledTrainFileAndRangeFile(
+				tireFilePreffix, tireDescType, imageModelsTire,
+				negativeImageModelsTire);
 
-		DB4O.getInstance().close();
+		CBODDemo.createModelFile(arr[0]);
+
+		arr = CBODDemo.createScaledTrainFileAndRangeFile(windowFilePreffix,
+				windowDescType, imageModelsWindow, negativeImageModelsWindow);
+
+		CBODDemo.createModelFile(arr[0]);
 
 	}
 
