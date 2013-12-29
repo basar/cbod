@@ -51,49 +51,61 @@ public class Main {
 
 	public static void main(String[] args) {
 
-        //Model file'lar olusturuluyor...
-		createModelFiles();
+		// Model file'lar olusturuluyor...
+		// createModelFiles();
 
-        String tireModelFile = "EHD_TIRE.train.scale.model.txt";
-        String tireRangeFile = "EHD_TIRE.range.txt";
-        EDescriptorType tireDescriptorType =EDescriptorType.EHD;
-        
-		String windowModelFile = "SCD_WINDOW.train.scale.model.txt";
-		String windowRangeFileName = "SCD_WINDOW.range.txt";
-        EDescriptorType windowDescriptorType = EDescriptorType.SCD;
+		String imageName = "test_15.jpg";
 
-        
 		// Test yapilacak image
 		ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR
-				+ "test_12.jpg", true);
+				+ imageName, true);
 
 		// Image segmentlere ayriliyor
 		List<ImageModel> imageSegments = CBODDemo.segmentImage(imageModel
 				.getImagePath());
 
-
-        doPredict(imageModel,imageSegments,tireModelFile,tireRangeFile,tireDescriptorType,new Scalar(0,255,0));
-
+		findCandidateTires(imageModel, imageSegments);
+		findCandidateWindows(imageModel, imageSegments);
 
 		DB4O.getInstance().close();
 	}
 
-	private static void doPredict(ImageModel imageModel,
-			List<ImageModel> imageSegments, String modelFile, String rangeFile,
-			EDescriptorType descriptorType, Scalar scalar) {
 
-		List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
-				modelFile, rangeFile, descriptorType);
+    /**
+     *
+     * @param imageModel
+     * @param imageSegments
+     */
+	private static void findCandidateTires(ImageModel imageModel,
+			List<ImageModel> imageSegments) {
 
-		for (ImageModel candidate : candidates) {
-			Rect rect = candidate.getRelativeToOrg();
-			OpenCV.drawRect(rect, imageModel.getMat(),scalar);
-		}
+		Scalar green = new Scalar(0, 255, 0);
 
-		String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName()
-				+ ".out.jpg");
-		OpenCV.writeImage(imageModel.getMat(), outputImagePath);
+		String tireModelFile = "EHD_TIRE.train.scale.model.txt";
+		String tireRangeFile = "EHD_TIRE.range.txt";
+		EDescriptorType tireDescriptorType = EDescriptorType.EHD;
 
+		doPredict(imageModel, imageSegments, tireModelFile, tireRangeFile,
+				tireDescriptorType, green);
+
+	}
+
+    /**
+     *
+     * @param imageModel
+     * @param imageSegments
+     */
+	private static void findCandidateWindows(ImageModel imageModel,
+			List<ImageModel> imageSegments) {
+
+		Scalar blue = new Scalar(255, 195, 0);
+
+		String windowModelFile = "SCD_WINDOW.train.scale.model.txt";
+		String windowRangeFile = "SCD_WINDOW.range.txt";
+		EDescriptorType windowDescriptorType = EDescriptorType.SCD;
+
+		doPredict(imageModel, imageSegments, windowModelFile, windowRangeFile,
+				windowDescriptorType, blue);
 	}
 
 	private static void createModelFiles() {
@@ -128,6 +140,38 @@ public class Main {
 
 	}
 
+	private static void doPredict(ImageModel imageModel,
+			List<ImageModel> imageSegments, String modelFile, String rangeFile,
+			EDescriptorType descriptorType, Scalar scalar) {
+
+		List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
+				modelFile, rangeFile, descriptorType);
+
+        Mat copy = OpenCV.copyImage(imageModel.getMat());
+
+		for (ImageModel candidate : candidates) {
+			Rect rect = candidate.getRelativeToOrg();
+			OpenCV.drawRect(rect, copy, scalar);
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(imageModel.getRawImageName()).append(".");
+		sb.append(descriptorType.getName().toLowerCase()).append(".out.jpg");
+
+		String outputImagePath = TMP_DIR.concat(sb.toString());
+		OpenCV.writeImage(copy, outputImagePath);
+
+	}
+
+	private void testSVM() {
+
+		testSVM(EDescriptorType.EHD, CBODConstants.CAR_WINDOW_PART);
+		testSVM(EDescriptorType.CLD, CBODConstants.CAR_WINDOW_PART);
+		testSVM(EDescriptorType.SCD, CBODConstants.CAR_WINDOW_PART);
+		testSVM(EDescriptorType.CSD, CBODConstants.CAR_WINDOW_PART);
+		testSVM(EDescriptorType.DCD, CBODConstants.CAR_WINDOW_PART);
+	}
+
 	/**
 	 * For general testing purpose
 	 * 
@@ -145,8 +189,7 @@ public class Main {
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
 				EDataType.TRAIN, objectPart);
 		List<ImageModel> negativeImageModelList = service
-				.getNegativeImageModelList(EDataType.TRAIN,
-						positiveImageModelList.size());
+				.getNegativeImageModelList(EDataType.TRAIN, 0);
 
 		/**
 		 * Test verileri
@@ -154,8 +197,7 @@ public class Main {
 		List<ImageModel> testPositiveImageModelList = service
 				.getImageModelList(EDataType.TEST, objectPart);
 		List<ImageModel> testNegativeImageModelList = service
-				.getNegativeImageModelList(EDataType.TEST,
-						testPositiveImageModelList.size());
+				.getNegativeImageModelList(EDataType.TEST, 0);
 
 		CBODUtil.compareTwoImageModelCollection(positiveImageModelList,
 				testPositiveImageModelList);

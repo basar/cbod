@@ -211,6 +211,13 @@ public final class OpenCV {
 		return result;
 	}
 
+
+    public static Mat copyImage(Mat org){
+          Mat copy = new Mat();
+          org.copyTo(copy);
+          return copy;
+    }
+
 	/**
 	 * Helper method
 	 * 
