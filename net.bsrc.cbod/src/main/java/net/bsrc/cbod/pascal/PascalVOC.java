@@ -191,12 +191,12 @@ public class PascalVOC {
 
 	/**
 	 * 
-	 * @param imageName
+	 * @param rawImageName
 	 * @return
 	 */
-	public PascalAnnotation getAnnotation(String imageName) {
+	public PascalAnnotation getAnnotation(String rawImageName) {
 
-		String xml = getAnnotationXML(imageName);
+		String xml = getAnnotationXML(rawImageName);
 		return PascalXMLHelper.fromXML(xml);
 
 	}

@@ -1,12 +1,14 @@
 package net.bsrc.cbod.pascal.xml;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.bsrc.cbod.pascal.EPascalType;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import org.apache.commons.lang.ArrayUtils;
 
 @XStreamAlias("annotation")
 public class PascalAnnotation {
@@ -73,13 +75,26 @@ public class PascalAnnotation {
 	}
 
 	public List<PascalObject> getObjectList(EPascalType type) {
+		EPascalType[] types = new EPascalType[1];
+		types[0] = type;
+		return getObjectList(types);
+	}
+
+	public List<PascalObject> getObjectList(EPascalType... types) {
 		List<PascalObject> result = new ArrayList<PascalObject>();
 		for (PascalObject po : getObjectList()) {
-			if (po.getName() != null && po.getName().equals(type.getName())) {
-				result.add(po);
+			boolean control = false;
+			for (EPascalType type : types) {
+				if (po.getName() != null && po.getName().equals(type.getName())) {
+					control = true;
+					break;
+				}
 			}
+			if (control)
+				result.add(po);
 		}
 		return result;
+
 	}
 
 	public void setObjectList(List<PascalObject> objectList) {

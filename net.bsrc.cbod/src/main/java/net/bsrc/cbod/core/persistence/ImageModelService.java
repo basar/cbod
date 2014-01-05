@@ -10,6 +10,7 @@ import net.bsrc.cbod.core.model.EDataType;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 
+import net.bsrc.cbod.pascal.EPascalType;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +98,21 @@ public class ImageModelService {
 		return imageModels;
 	}
 
+	public List<ImageModel> getImageModelListByClassType(final String objectClassType) {
+		ObjectContainer container = db4O.getObjContainer();
+
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getObjectClassType().equals(
+								objectClassType);
+					}
+				});
+
+		return imageModels;
+	}
+
 	public List<ImageModel> getImageModelList(final EDataType dataType,
 			final String partName) {
 
@@ -128,6 +144,26 @@ public class ImageModelService {
 				});
 
 		return imageModels;
+	}
+
+	public List<ImageModel> getImageModelListByClassType(
+			final EDataType dataType, final String objectClassType) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getDataType() == dataType
+								&& imageModel.getObjectClassType().equals(
+										objectClassType);
+
+					}
+				});
+
+		return imageModels;
+
 	}
 
 	private List<ImageModel> getNegativeImageModelList(

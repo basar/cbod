@@ -13,6 +13,7 @@ import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.experiment.CbodExperiment;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
 import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
@@ -51,10 +52,14 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		// Model file'lar olusturuluyor...
-		// createModelFiles();
+        CbodExperiment.testWithWholePositiveImages(EDescriptorType.EHD);
+        CbodExperiment.testWithWholePositiveImages(EDescriptorType.CSD);
 
-		String imageName = "test_15.jpg";
+
+		DB4O.getInstance().close();
+	}
+
+	private static void testObjectDetection(String imageName) {
 
 		// Test yapilacak image
 		ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR
@@ -65,17 +70,15 @@ public class Main {
 				.getImagePath());
 
 		findCandidateTires(imageModel, imageSegments);
-		findCandidateWindows(imageModel, imageSegments);
+		// findCandidateWindows(imageModel, imageSegments);
 
-		DB4O.getInstance().close();
 	}
 
-
-    /**
-     *
-     * @param imageModel
-     * @param imageSegments
-     */
+	/**
+	 * 
+	 * @param imageModel
+	 * @param imageSegments
+	 */
 	private static void findCandidateTires(ImageModel imageModel,
 			List<ImageModel> imageSegments) {
 
@@ -90,11 +93,11 @@ public class Main {
 
 	}
 
-    /**
-     *
-     * @param imageModel
-     * @param imageSegments
-     */
+	/**
+	 * 
+	 * @param imageModel
+	 * @param imageSegments
+	 */
 	private static void findCandidateWindows(ImageModel imageModel,
 			List<ImageModel> imageSegments) {
 
@@ -147,7 +150,7 @@ public class Main {
 		List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
 				modelFile, rangeFile, descriptorType);
 
-        Mat copy = OpenCV.copyImage(imageModel.getMat());
+		Mat copy = OpenCV.copyImage(imageModel.getMat());
 
 		for (ImageModel candidate : candidates) {
 			Rect rect = candidate.getRelativeToOrg();
@@ -160,83 +163,6 @@ public class Main {
 
 		String outputImagePath = TMP_DIR.concat(sb.toString());
 		OpenCV.writeImage(copy, outputImagePath);
-
-	}
-
-	private void testSVM() {
-
-		testSVM(EDescriptorType.EHD, CBODConstants.CAR_WINDOW_PART);
-		testSVM(EDescriptorType.CLD, CBODConstants.CAR_WINDOW_PART);
-		testSVM(EDescriptorType.SCD, CBODConstants.CAR_WINDOW_PART);
-		testSVM(EDescriptorType.CSD, CBODConstants.CAR_WINDOW_PART);
-		testSVM(EDescriptorType.DCD, CBODConstants.CAR_WINDOW_PART);
-	}
-
-	/**
-	 * For general testing purpose
-	 * 
-	 * @param descriptorType
-	 * @param objectPart
-	 */
-	private static void testSVM(EDescriptorType descriptorType,
-			String objectPart) {
-
-		ImageModelService service = ImageModelService.getInstance();
-
-		/**
-		 * Egitim verileri
-		 */
-		List<ImageModel> positiveImageModelList = service.getImageModelList(
-				EDataType.TRAIN, objectPart);
-		List<ImageModel> negativeImageModelList = service
-				.getNegativeImageModelList(EDataType.TRAIN, 0);
-
-		/**
-		 * Test verileri
-		 */
-		List<ImageModel> testPositiveImageModelList = service
-				.getImageModelList(EDataType.TEST, objectPart);
-		List<ImageModel> testNegativeImageModelList = service
-				.getNegativeImageModelList(EDataType.TEST, 0);
-
-		CBODUtil.compareTwoImageModelCollection(positiveImageModelList,
-				testPositiveImageModelList);
-		CBODUtil.compareTwoImageModelCollection(negativeImageModelList,
-				testNegativeImageModelList);
-
-		LibSvm libSvm = LibSvm.getInstance();
-
-		String descName = descriptorType.getName();
-
-		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
-				+ "." + CBODConstants.TXT_SUFFIX;
-		String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
-				+ CBODConstants.TXT_SUFFIX;
-		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
-				+ CBODConstants.TXT_SUFFIX;
-
-		libSvm.createFormattedDataFile(trainingFileName, 0,
-				negativeImageModelList, 1, positiveImageModelList,
-				descriptorType);
-
-		libSvm.createFormattedDataFile(testFileName, 0,
-				testNegativeImageModelList, 1, testPositiveImageModelList,
-				descriptorType);
-
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setSaveFileName(rangeFileName);
-
-		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
-				scaleParameter);
-
-		scaleParameter.setSaveFileName(null);
-		scaleParameter.setRestoreFileName(rangeFileName);
-
-		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
-
-		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
-
-		libSvm.doPredict(scaleTestFileName, modelFileName, null);
 
 	}
 
@@ -364,6 +290,199 @@ public class Main {
 		service.saveImageModelList(negativeImageModelList);
 		service.saveImageModelList(testPositiveImageModelList);
 		service.saveImageModelList(testNegativeImageModelList);
+
+	}
+
+	private static void saveWholeImageModelsToDB() {
+
+		PascalVOC pascalVOC = PascalVOC.getInstance();
+
+		List<ImageModel> trainCarImages = pascalVOC.getImageModels(
+				EPascalType.CAR, 0, 1);
+		List<ImageModel> testCarImages = pascalVOC.getImageModels(
+				EPascalType.CAR, 1, 1);
+		List<ImageModel> trainNegativeImages = pascalVOC.getImageModels(
+				EPascalType.CAR, 0, -1);
+		List<ImageModel> testNegativeImages = pascalVOC.getImageModels(
+				EPascalType.CAR, 1, -1);
+
+		List<ImageModel> positiveTrainImageModels = new ArrayList<ImageModel>();
+		List<ImageModel> negativeTrainImageModels = new ArrayList<ImageModel>();
+        List<ImageModel> positiveTestImageModels = new ArrayList<ImageModel>();
+        List<ImageModel> negativeTestImageModels = new ArrayList<ImageModel>();
+
+		for (ImageModel imageModel : trainCarImages) {
+
+			PascalAnnotation ann = pascalVOC.getAnnotation(imageModel
+					.getRawImageName());
+			List<PascalObject> objectList = ann.getObjectList(EPascalType.CAR);
+			for (int i = 0; i < objectList.size(); i++) {
+				PascalObject po = objectList.get(i);
+				if (!po.isDifficult() && !po.isTruncated() && !po.isOccluded()) {
+					Mat crop = OpenCV.getImageMat(imageModel.getImagePath(),
+							po.getBndbox());
+
+					ImageModel temp = new ImageModel();
+					temp.setMat(crop);
+					String rawImageName = imageModel.getRawImageName() + "_"
+							+ i;
+					temp.setRawImageName(rawImageName);
+					temp.setImageName(rawImageName.concat(".jpg"));
+					temp.setDataType(EDataType.TRAIN);
+					temp.setNegativeImg(false);
+					temp.setObjectClassType(EPascalType.CAR.getName());
+					temp.setImagePath(TMP_DIR.concat(temp.getImageName()));
+
+					positiveTrainImageModels.add(temp);
+				}
+			}
+
+		}
+
+		for (ImageModel imageModel : testCarImages) {
+
+			PascalAnnotation ann = pascalVOC.getAnnotation(imageModel
+					.getRawImageName());
+			List<PascalObject> objectList = ann.getObjectList(EPascalType.CAR);
+			for (int i = 0; i < objectList.size(); i++) {
+				PascalObject po = objectList.get(i);
+				if (!po.isDifficult() && !po.isTruncated() && !po.isOccluded()) {
+					Mat crop = OpenCV.getImageMat(imageModel.getImagePath(),
+							po.getBndbox());
+
+					ImageModel temp = new ImageModel();
+					temp.setMat(crop);
+					String rawImageName = imageModel.getRawImageName() + "_"
+							+ i;
+					temp.setRawImageName(rawImageName);
+					temp.setImageName(rawImageName.concat(".jpg"));
+					temp.setDataType(EDataType.TEST);
+					temp.setNegativeImg(false);
+					temp.setObjectClassType(EPascalType.CAR.getName());
+					temp.setImagePath(TMP_DIR.concat(temp.getImageName()));
+
+					positiveTestImageModels.add(temp);
+				}
+			}
+
+		}
+
+		for (ImageModel imageModel : trainNegativeImages) {
+
+			PascalAnnotation ann = pascalVOC.getAnnotation(imageModel
+					.getRawImageName());
+			List<PascalObject> objectList = ann.getObjectList(
+					EPascalType.PERSON, EPascalType.AEROPLANE,
+					EPascalType.BOAT, EPascalType.COW, EPascalType.HORSE,
+					EPascalType.POTTED_PLANT,EPascalType.TV_MONITOR);
+            for(int i=0;i<objectList.size();i++){
+                PascalObject po = objectList.get(i);
+
+                Mat crop = OpenCV.getImageMat(imageModel.getImagePath(),po.getBndbox());
+
+                ImageModel temp = new ImageModel();
+                temp.setMat(crop);
+                String rawImageName = imageModel.getRawImageName() + "_"
+                        + i;
+                temp.setRawImageName(rawImageName);
+                temp.setImageName(rawImageName.concat(".jpg"));
+                temp.setDataType(EDataType.TRAIN);
+                temp.setNegativeImg(true);
+                temp.setObjectClassType(po.getName());
+                temp.setImagePath(TMP_DIR.concat(temp.getImageName()));
+
+                negativeTrainImageModels.add(temp);
+            }
+
+		}
+
+        for (ImageModel imageModel : testNegativeImages) {
+
+            PascalAnnotation ann = pascalVOC.getAnnotation(imageModel
+                    .getRawImageName());
+            List<PascalObject> objectList = ann.getObjectList(
+                    EPascalType.PERSON, EPascalType.AEROPLANE,
+                    EPascalType.BOAT, EPascalType.COW, EPascalType.HORSE,
+                    EPascalType.POTTED_PLANT,EPascalType.TV_MONITOR);
+            for(int i=0;i<objectList.size();i++){
+                PascalObject po = objectList.get(i);
+
+                Mat crop = OpenCV.getImageMat(imageModel.getImagePath(),po.getBndbox());
+
+                ImageModel temp = new ImageModel();
+                temp.setMat(crop);
+                String rawImageName = imageModel.getRawImageName() + "_"
+                        + i;
+                temp.setRawImageName(rawImageName);
+                temp.setImageName(rawImageName.concat(".jpg"));
+                temp.setDataType(EDataType.TEST);
+                temp.setNegativeImg(true);
+                temp.setObjectClassType(po.getName());
+                temp.setImagePath(TMP_DIR.concat(temp.getImageName()));
+
+                negativeTestImageModels.add(temp);
+            }
+
+        }
+
+
+		for (ImageModel imageModel : positiveTrainImageModels) {
+			OpenCV.writeImage(imageModel.getMat(), imageModel.getImagePath());
+		}
+
+        for(ImageModel imageModel:negativeTrainImageModels){
+            OpenCV.writeImage(imageModel.getMat(),imageModel.getImagePath());
+        }
+
+        for (ImageModel imageModel : positiveTestImageModels) {
+            OpenCV.writeImage(imageModel.getMat(), imageModel.getImagePath());
+        }
+
+        for(ImageModel imageModel:negativeTestImageModels){
+            OpenCV.writeImage(imageModel.getMat(),imageModel.getImagePath());
+        }
+
+
+
+		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+
+		mpegFex.extractColorStructureDescriptors(positiveTrainImageModels, 256);
+		mpegFex.extractScalableColorDescriptors(positiveTrainImageModels, 256);
+		mpegFex.extractColorLayoutDescriptors(positiveTrainImageModels, 64, 28);
+		mpegFex.extractDominantColorDescriptors(positiveTrainImageModels, 1, 0, 1,
+				32, 32, 32);
+		mpegFex.extractEdgeHistogramDescriptors(positiveTrainImageModels);
+
+        mpegFex.extractColorStructureDescriptors(negativeTrainImageModels, 256);
+        mpegFex.extractScalableColorDescriptors(negativeTrainImageModels, 256);
+        mpegFex.extractColorLayoutDescriptors(negativeTrainImageModels, 64, 28);
+        mpegFex.extractDominantColorDescriptors(negativeTrainImageModels, 1, 0, 1,
+                32, 32, 32);
+        mpegFex.extractEdgeHistogramDescriptors(negativeTrainImageModels);
+
+        mpegFex.extractColorStructureDescriptors(positiveTestImageModels, 256);
+        mpegFex.extractScalableColorDescriptors(positiveTestImageModels, 256);
+        mpegFex.extractColorLayoutDescriptors(positiveTestImageModels, 64, 28);
+        mpegFex.extractDominantColorDescriptors(positiveTestImageModels, 1, 0, 1,
+                32, 32, 32);
+        mpegFex.extractEdgeHistogramDescriptors(positiveTestImageModels);
+
+        mpegFex.extractColorStructureDescriptors(negativeTestImageModels, 256);
+        mpegFex.extractScalableColorDescriptors(negativeTestImageModels, 256);
+        mpegFex.extractColorLayoutDescriptors(negativeTestImageModels, 64, 28);
+        mpegFex.extractDominantColorDescriptors(negativeTestImageModels, 1, 0, 1,
+                32, 32, 32);
+        mpegFex.extractEdgeHistogramDescriptors(negativeTestImageModels);
+
+
+		ImageModelService service = ImageModelService.getInstance();
+
+
+		service.saveImageModelList(positiveTrainImageModels);
+        service.saveImageModelList(negativeTrainImageModels);
+        service.saveImageModelList(positiveTestImageModels);
+        service.saveImageModelList(negativeTestImageModels);
+
 
 	}
 
