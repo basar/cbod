@@ -4,6 +4,13 @@ import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.IProcessExecute;
 import net.bsrc.cbod.core.util.ConfigurationUtil;
 import net.bsrc.cbod.core.util.ProcessUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 /**
  * JSEG image operations
@@ -12,6 +19,8 @@ import net.bsrc.cbod.core.util.ProcessUtil;
  * 
  */
 public class JSEG implements IProcessExecute {
+
+	private static final Logger logger = LoggerFactory.getLogger(JSEG.class);
 
 	private static JSEG instance = null;
 
@@ -35,6 +44,10 @@ public class JSEG implements IProcessExecute {
 		}
 
 		return instance;
+	}
+
+	public static void doSegmentation(JSEGParameter parameter) {
+		JSEG.getInstance().execute(parameter);
 	}
 
 	private void initialize() {
@@ -64,7 +77,7 @@ public class JSEG implements IProcessExecute {
 		sb.append(executeCommand);
 		sb.append(" ");
 		sb.append(parameter);
-		ProcessUtil.execute(sb.toString(),null);
+		ProcessUtil.execute(sb.toString(), null);
 	}
 
 }

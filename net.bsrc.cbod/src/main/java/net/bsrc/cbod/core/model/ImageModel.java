@@ -156,7 +156,24 @@ public class ImageModel {
 		this.relativeToOrg = relativeToOrg;
 	}
 
-	@Override
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ImageModel that = (ImageModel) o;
+
+        if (rawImageName != null ? !rawImageName.equals(that.rawImageName) : that.rawImageName != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return rawImageName != null ? rawImageName.hashCode() : 0;
+    }
+
+    @Override
 	public String toString() {
 		return "ImageModel{" + "negativeImg=" + negativeImg + ", dataType="
 				+ dataType + ", rawImageName='" + rawImageName + '\''

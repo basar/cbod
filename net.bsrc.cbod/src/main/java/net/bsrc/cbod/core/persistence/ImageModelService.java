@@ -70,8 +70,7 @@ public class ImageModelService {
 			ObjectContainer container = db4O.getObjContainer();
 			try {
 				for (ImageModel imgModel : imageModelList) {
-					if (controlDescriptors(imgModel))
-						container.store(imgModel);
+					container.store(imgModel);
 				}
 			} catch (Exception ex) {
 				container.rollback();
@@ -228,6 +227,10 @@ public class ImageModelService {
 	public List<ImageModel> getNegativeImageModelList() {
 		return getNegativeImageModelList(null, 0, false);
 	}
+
+    public List<ImageModel> getNegativeImageModelList(EDataType dataType){
+        return getNegativeImageModelList(dataType, 0, false);
+    }
 
 	private boolean controlDescriptors(ImageModel imgModel) {
 

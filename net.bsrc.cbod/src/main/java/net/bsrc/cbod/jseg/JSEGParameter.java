@@ -87,9 +87,9 @@ public class JSEGParameter {
 	private Integer colorQuantizationThreshold = null;
 
 	/**
-	 * Region merge threshold, 0-1.0,
-	 * <p>
-	 * default value is 0.4.
+	 * Region merge threshold specify values 0.0-0.7, leave blank for default
+	 * value 0.4. If there are two neighboring regions having identical color,
+	 * try smaller values to avoid the merging.
 	 */
 	private Double regionMergeThreshold = null;
 
@@ -115,6 +115,10 @@ public class JSEGParameter {
 						+ CBODConstants.JPEG_SUFFIX);
 		this.regionMapFileName = inputFileName.replaceAll(
 				CBODConstants.JPEG_SUFFIX, CBODConstants.MAP_SUFFIX);
+	}
+
+	public JSEGParameter() {
+
 	}
 
 	public String getInputFileName() {

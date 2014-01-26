@@ -6,6 +6,7 @@ import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.pascal.EPascalType;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
@@ -17,18 +18,23 @@ import java.util.List;
  */
 public class CbodExperiment {
 
-	public static void testWithWholePositiveImages(
-			EDescriptorType descriptorType) {
+	public static void testWithWholePositiveImages(EDescriptorType descriptorType) {
 
 		ImageModelService service = ImageModelService.getInstance();
-
-
 		/**
 		 * Egitim verileri
 		 */
 		List<ImageModel> trainPositiveImageModelList = service
 				.getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
-        List<ImageModel> trainNegativeImageModelList = service.getRandomNegativeImageModeList(EDataType.TRAIN,250);
+        List<ImageModel> trainNegativeImageModelList = service
+                .getNegativeImageModelList(EDataType.TRAIN);
+
+        for(ImageModel imgModel:trainPositiveImageModelList){
+            OpenCV.writeImage(imgModel.getMat(),CBODUtil.getCbodTempDirectory()+"/positive/"+imgModel.getImageName());
+        }
+
+        System.out.println(trainNegativeImageModelList.size());
+        System.out.println(trainPositiveImageModelList.size());
 
         /**
          * Test verileri
@@ -70,6 +76,120 @@ public class CbodExperiment {
         libSvm.doPredict(scaleTestFileName, modelFileName, null);
 
 	}
+
+
+    public static void testWithWholeNegativeImages(EDescriptorType descriptorType){
+
+        ImageModelService service = ImageModelService.getInstance();
+        /**
+         * Egitim verileri
+         */
+        List<ImageModel> trainPositiveImageModelList = service
+                .getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
+        List<ImageModel> trainNegativeImageModelList = service
+                .getNegativeImageModelList(EDataType.TRAIN);
+
+        /**
+         * Test verileri
+         */
+        List<ImageModel> testNegativeImageModelList = service.getNegativeImageModelList(EDataType.TEST);
+
+
+        LibSvm libSvm = LibSvm.getInstance();
+
+        String descName = descriptorType.getName();
+
+        String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
+                + "." + CBODConstants.TXT_SUFFIX;
+        String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
+                + CBODConstants.TXT_SUFFIX;
+        String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
+                + CBODConstants.TXT_SUFFIX;
+
+        libSvm.createFormattedDataFile(trainingFileName, 0,
+                trainNegativeImageModelList, 1, trainPositiveImageModelList,
+                descriptorType);
+
+        libSvm.createFormattedDataFile(testFileName, 0,
+                testNegativeImageModelList, descriptorType);
+
+        ScaleParameter scaleParameter = new ScaleParameter();
+        scaleParameter.setSaveFileName(rangeFileName);
+
+        String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+                scaleParameter);
+
+        scaleParameter.setSaveFileName(null);
+        scaleParameter.setRestoreFileName(rangeFileName);
+
+        String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+        String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+        libSvm.doPredict(scaleTestFileName, modelFileName, null);
+
+
+    }
+
+    public static void testWithWholeBothNegativeAndPositiveImages(EDescriptorType descriptorType){
+
+        ImageModelService service = ImageModelService.getInstance();
+
+        /**
+         * Egitim verileri
+         */
+        /**
+         * Egitim verileri
+         */
+        List<ImageModel> trainPositiveImageModelList = service
+                .getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
+        List<ImageModel> trainNegativeImageModelList = service
+                .getNegativeImageModelList(EDataType.TRAIN);
+
+        /**
+         * Test verileri
+         */
+        List<ImageModel> testPositiveImageModelList = service.getImageModelListByClassType(EDataType.TEST,EPascalType.CAR.getName());
+        List<ImageModel> testNegativeImageModelList = service.getNegativeImageModelList(EDataType.TEST);
+
+
+
+        LibSvm libSvm = LibSvm.getInstance();
+
+        String descName = descriptorType.getName();
+
+        String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
+                + "." + CBODConstants.TXT_SUFFIX;
+        String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
+                + CBODConstants.TXT_SUFFIX;
+        String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
+                + CBODConstants.TXT_SUFFIX;
+
+        libSvm.createFormattedDataFile(trainingFileName, 0,
+                trainNegativeImageModelList, 1, trainPositiveImageModelList,
+                descriptorType);
+
+        libSvm.createFormattedDataFile(testFileName, 0,
+                testNegativeImageModelList, 1, testPositiveImageModelList,
+                descriptorType);
+
+        ScaleParameter scaleParameter = new ScaleParameter();
+        scaleParameter.setSaveFileName(rangeFileName);
+
+        String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+                scaleParameter);
+
+        scaleParameter.setSaveFileName(null);
+        scaleParameter.setRestoreFileName(rangeFileName);
+
+        String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+        String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+        libSvm.doPredict(scaleTestFileName, modelFileName, null);
+
+
+    }
 
 	public static void testWithPositiveImages(EDescriptorType descriptorType,
 			String objectPart) {
