@@ -33,6 +33,27 @@ public final class CBODUtil {
 
 	}
 
+	public static byte[] getFileData(String filePath) {
+
+		Validate.notEmpty(filePath);
+		File file = FileUtils.getFile(filePath);
+
+		if (!file.exists())
+			throw new CBODException("File could not be found. Path: "
+					+ filePath);
+
+		byte[] result = null;
+
+		try {
+			result = FileUtils.readFileToByteArray(file);
+		} catch (IOException e) {
+			logger.error("", e);
+			result = null;
+		}
+
+		return result;
+	}
+
 	public static File getDefaultOutputDirectory() {
 
 		String outputDirPath = ConfigurationUtil
@@ -54,11 +75,11 @@ public final class CBODUtil {
 		return getDefaultOutputDirectoryPath().concat(tmp);
 	}
 
-    public static String getCbodInputImageDirectory(){
-        String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_INPUT_IMAGE_DIR);
-        return getDefaultOutputDirectoryPath().concat(tmp);
-    }
-
+	public static String getCbodInputImageDirectory() {
+		String tmp = ConfigurationUtil
+				.getString(CBODConstants.CBOD_INPUT_IMAGE_DIR);
+		return getDefaultOutputDirectoryPath().concat(tmp);
+	}
 
 	/**
 	 * 

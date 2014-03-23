@@ -1,20 +1,21 @@
 package net.bsrc.cbod.core.model;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
  * User: bsr Date: 10/10/13 Time: 9:57 PM
  */
-public class ImageModel {
+@SuppressWarnings("serial")
+public class ImageModel implements Serializable {
 
 	/**
 	 * Name with suffix (eg: example.jpg)
@@ -26,9 +27,7 @@ public class ImageModel {
 	 */
 	private String imagePath;
 
-	private String objectClassType;
-
-	private String objectPart;
+	private EObjectType objectType;
 
 	/**
 	 * image name without suffix (eg: example)
@@ -39,11 +38,11 @@ public class ImageModel {
 
 	private Mat mat;
 
+	private byte[] data;
+
 	private List<Descriptor> descriptors = new ArrayList<Descriptor>();
 
-	private boolean negativeImg = false;
-
-	private EDataType dataType;
+	private boolean testImage = false;
 
 	private Rect relativeToOrg;
 
@@ -57,6 +56,14 @@ public class ImageModel {
 
 	public void setMat(Mat mat) {
 		this.mat = mat;
+	}
+
+	public byte[] getData() {
+		return data;
+	}
+
+	public void setData(byte[] data) {
+		this.data = data;
 	}
 
 	public String getImageName() {
@@ -97,22 +104,6 @@ public class ImageModel {
 		return rawImageName;
 	}
 
-	public boolean isNegativeImg() {
-		return negativeImg;
-	}
-
-	public void setNegativeImg(boolean negativeImg) {
-		this.negativeImg = negativeImg;
-	}
-
-	public EDataType getDataType() {
-		return dataType;
-	}
-
-	public void setDataType(EDataType dataType) {
-		this.dataType = dataType;
-	}
-
 	public Descriptor getDescriptor(EDescriptorType type) {
 		if (type == null)
 			return null;
@@ -124,28 +115,12 @@ public class ImageModel {
 		return null;
 	}
 
-	public String getObjectPart() {
-		return objectPart;
-	}
-
-	public void setObjectPart(String objectPart) {
-		this.objectPart = objectPart;
-	}
-
 	public void setRawImageName(String rawImageName) {
 		this.rawImageName = rawImageName;
 	}
 
 	public void setFile(File file) {
 		this.file = file;
-	}
-
-	public String getObjectClassType() {
-		return objectClassType;
-	}
-
-	public void setObjectClassType(String objectClassType) {
-		this.objectClassType = objectClassType;
 	}
 
 	public Rect getRelativeToOrg() {
@@ -156,29 +131,50 @@ public class ImageModel {
 		this.relativeToOrg = relativeToOrg;
 	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ImageModel that = (ImageModel) o;
-
-        if (rawImageName != null ? !rawImageName.equals(that.rawImageName) : that.rawImageName != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return rawImageName != null ? rawImageName.hashCode() : 0;
-    }
-
-    @Override
-	public String toString() {
-		return "ImageModel{" + "negativeImg=" + negativeImg + ", dataType="
-				+ dataType + ", rawImageName='" + rawImageName + '\''
-				+ ", objectPart='" + objectPart + '\'' + ", objectClassType='"
-				+ objectClassType + '\'' + ", imageName='" + imageName + '\''
-				+ ", imagePath='" + imagePath + '\'' + '}';
+	public EObjectType getObjectType() {
+		return objectType;
 	}
+
+	public void setObjectType(EObjectType objectType) {
+		this.objectType = objectType;
+	}
+
+	public boolean isTestImage() {
+		return testImage;
+	}
+
+	public void setTestImage(boolean testImage) {
+		this.testImage = testImage;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		ImageModel that = (ImageModel) o;
+
+		if (rawImageName != null ? !rawImageName.equals(that.rawImageName)
+				: that.rawImageName != null)
+			return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return rawImageName != null ? rawImageName.hashCode() : 0;
+	}
+
+	@Override
+	public String toString() {
+		return "ImageModel [imageName=" + imageName + ", imagePath="
+				+ imagePath + ", objectType=" + objectType + ", testImage="
+				+ testImage + "]";
+	}
+
+	
+
 }

@@ -1,6 +1,5 @@
 package net.bsrc.cbod.core.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

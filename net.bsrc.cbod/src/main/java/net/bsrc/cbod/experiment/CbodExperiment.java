@@ -1,4 +1,4 @@
-package net.bsrc.cbod.experiment;
+/*package net.bsrc.cbod.experiment;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.model.EDataType;
@@ -13,17 +13,17 @@ import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 
 import java.util.List;
 
-/**
+*//**
  * The class contains experiments methods
- */
+ *//*
 public class CbodExperiment {
 
 	public static void testWithWholePositiveImages(EDescriptorType descriptorType) {
 
 		ImageModelService service = ImageModelService.getInstance();
-		/**
+		*//**
 		 * Egitim verileri
-		 */
+		 *//*
 		List<ImageModel> trainPositiveImageModelList = service
 				.getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
         List<ImageModel> trainNegativeImageModelList = service
@@ -36,9 +36,9 @@ public class CbodExperiment {
         System.out.println(trainNegativeImageModelList.size());
         System.out.println(trainPositiveImageModelList.size());
 
-        /**
+        *//**
          * Test verileri
-         */
+         *//*
         List<ImageModel> testPositiveImageModelList = service.getImageModelListByClassType(EDataType.TEST,EPascalType.CAR.getName());
 
 
@@ -81,17 +81,17 @@ public class CbodExperiment {
     public static void testWithWholeNegativeImages(EDescriptorType descriptorType){
 
         ImageModelService service = ImageModelService.getInstance();
-        /**
+        *//**
          * Egitim verileri
-         */
+         *//*
         List<ImageModel> trainPositiveImageModelList = service
                 .getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
         List<ImageModel> trainNegativeImageModelList = service
                 .getNegativeImageModelList(EDataType.TRAIN);
 
-        /**
+        *//**
          * Test verileri
-         */
+         *//*
         List<ImageModel> testNegativeImageModelList = service.getNegativeImageModelList(EDataType.TEST);
 
 
@@ -135,20 +135,20 @@ public class CbodExperiment {
 
         ImageModelService service = ImageModelService.getInstance();
 
-        /**
+        *//**
          * Egitim verileri
-         */
-        /**
+         *//*
+        *//**
          * Egitim verileri
-         */
+         *//*
         List<ImageModel> trainPositiveImageModelList = service
                 .getImageModelListByClassType(EDataType.TRAIN, EPascalType.CAR.getName());
         List<ImageModel> trainNegativeImageModelList = service
                 .getNegativeImageModelList(EDataType.TRAIN);
 
-        /**
+        *//**
          * Test verileri
-         */
+         *//*
         List<ImageModel> testPositiveImageModelList = service.getImageModelListByClassType(EDataType.TEST,EPascalType.CAR.getName());
         List<ImageModel> testNegativeImageModelList = service.getNegativeImageModelList(EDataType.TEST);
 
@@ -196,9 +196,9 @@ public class CbodExperiment {
 
 		ImageModelService service = ImageModelService.getInstance();
 
-		/**
+		*//**
 		 * Egitim verileri
-		 */
+		 *//*
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
 				EDataType.TRAIN, objectPart);
 		List<ImageModel> negativeImageModelList = service
@@ -247,9 +247,9 @@ public class CbodExperiment {
 
 		ImageModelService service = ImageModelService.getInstance();
 
-		/**
+		*//**
 		 * Egitim verileri
-		 */
+		 *//*
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
 				EDataType.TRAIN, objectPart);
 		List<ImageModel> negativeImageModelList = service
@@ -298,17 +298,17 @@ public class CbodExperiment {
 
 		ImageModelService service = ImageModelService.getInstance();
 
-		/**
+		*//**
 		 * Egitim verileri
-		 */
+		 *//*
 		List<ImageModel> positiveImageModelList = service.getImageModelList(
 				EDataType.TRAIN, objectPart);
 		List<ImageModel> negativeImageModelList = service
 				.getNegativeImageModelList(EDataType.TRAIN, 0);
 
-		/**
+		*//**
 		 * Test verileri
-		 */
+		 *//*
 		List<ImageModel> testPositiveImageModelList = service
 				.getImageModelList(EDataType.TEST, objectPart);
 		List<ImageModel> testNegativeImageModelList = service
@@ -355,3 +355,4 @@ public class CbodExperiment {
 	}
 
 }
+*/
