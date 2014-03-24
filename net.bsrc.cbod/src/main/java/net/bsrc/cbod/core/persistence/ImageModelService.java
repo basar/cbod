@@ -36,7 +36,6 @@ public class ImageModelService {
 				if (instance == null) {
 					instance = new ImageModelService();
 					instance.initialize();
-
 				}
 			}
 		}

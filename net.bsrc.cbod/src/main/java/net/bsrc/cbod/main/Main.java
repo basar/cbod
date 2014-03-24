@@ -1,19 +1,15 @@
 package net.bsrc.cbod.main;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.ImageModelFactory;
 import net.bsrc.cbod.core.model.EDescriptorType;
-import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.DB4O;
+import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
-import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
 
-import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -39,18 +35,8 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
-		String cbodDirPath = CBODUtil.getDefaultOutputDirectoryPath();
 		
 		
-		String wheelTrainImagePath = cbodDirPath
-				.concat("/image_db/wheel/train");
-		String wheelTestImagePath = cbodDirPath.concat("/image_db/wheel/test");
-		String tailLightTrainImagePath = cbodDirPath.concat("/image_db/tail_light/train");
-		
-		
-		//createImageModels(wheelTrainImagePath,false, EObjectType.WHEEL);
-		createImageModels(tailLightTrainImagePath,false,EObjectType.TAIL_LIGHT);
 		
 		
 		// JSEGParameter param =
@@ -65,36 +51,7 @@ public class Main {
 		DB4O.getInstance().close();
 	}
 
-	private static List<ImageModel> createImageModels(final String imageFolderPath,
-			final boolean isTestImage,final EObjectType objectType) {
-
-		List<ImageModel> resultList = new ArrayList<ImageModel>();
-
-		for (String filePath : CBODUtil.getFileList(imageFolderPath,
-				CBODConstants.JPEG_SUFFIX)) {
-
-			ImageModel imgModel = new ImageModel();
-			imgModel.setImagePath(filePath);
-			imgModel.setImageName(FilenameUtils.getName(filePath));
-			imgModel.setData(CBODUtil.getFileData(filePath));
-
-			imgModel.setTestImage(isTestImage);
-			imgModel.setObjectType(objectType);
-
-			resultList.add(imgModel);
-		}
-
-		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
-
-		mpegFex.extractColorStructureDescriptors(resultList, 256);
-		mpegFex.extractScalableColorDescriptors(resultList, 256);
-		mpegFex.extractColorLayoutDescriptors(resultList, 64, 28);
-		mpegFex.extractDominantColorDescriptors(resultList, 1, 0, 1, 32, 32, 32);
-		mpegFex.extractEdgeHistogramDescriptors(resultList);
-
-		return resultList;
-
-	}
+	
 
 	private static void testObjectDetection(String imageName) {
 
@@ -203,121 +160,6 @@ public class Main {
 
 	}
 
-	/*
-	 * private static void saveImageModelsToDB() {
-	 * 
-	 * String cbodDirPath = CBODUtil.getDefaultOutputDirectoryPath();
-	 * 
-	 * List<ImageModel> positiveImageModelList = new ArrayList<ImageModel>();
-	 * List<ImageModel> negativeImageModelList = new ArrayList<ImageModel>();
-	 * 
-	 * List<ImageModel> testPositiveImageModelList = new
-	 * ArrayList<ImageModel>(); List<ImageModel> testNegativeImageModelList =
-	 * new ArrayList<ImageModel>();
-	 * 
-	 * String tireImageDirPath = cbodDirPath.concat("/train_data/tire"); String
-	 * windowImageDirPath = cbodDirPath.concat("/train_data/window"); String
-	 * negativeImageDirPath = cbodDirPath .concat("/train_data/negative");
-	 * 
-	 * List<String> fileList = CBODUtil.getFileList(tireImageDirPath,
-	 * CBODConstants.JPEG_SUFFIX);
-	 * 
-	 * for (int i = 0; i < fileList.size(); i++) {
-	 * 
-	 * String imgPath = fileList.get(i);
-	 * 
-	 * ImageModel imgModel = new ImageModel(); imgModel.setImagePath(imgPath);
-	 * imgModel.setImageName(FilenameUtils.getName(imgPath));
-	 * imgModel.setObjectClassType(CBODConstants.CAR_OBJECT_CLASS_TYPE);
-	 * imgModel.setObjectPart(CBODConstants.CAR_TIRE_PART);
-	 * 
-	 * if (i % 4 == 0) { imgModel.setDataType(EDataType.TEST);
-	 * testPositiveImageModelList.add(imgModel); } else {
-	 * imgModel.setDataType(EDataType.TRAIN);
-	 * positiveImageModelList.add(imgModel); }
-	 * 
-	 * }
-	 * 
-	 * fileList = CBODUtil.getFileList(windowImageDirPath,
-	 * CBODConstants.JPEG_SUFFIX);
-	 * 
-	 * for (int i = 0; i < fileList.size(); i++) {
-	 * 
-	 * String imgPath = fileList.get(i);
-	 * 
-	 * ImageModel imgModel = new ImageModel(); imgModel.setImagePath(imgPath);
-	 * imgModel.setImageName(FilenameUtils.getName(imgPath));
-	 * imgModel.setObjectClassType(CBODConstants.CAR_OBJECT_CLASS_TYPE);
-	 * imgModel.setObjectPart(CBODConstants.CAR_WINDOW_PART);
-	 * 
-	 * if (i % 4 == 0) { imgModel.setDataType(EDataType.TEST);
-	 * testPositiveImageModelList.add(imgModel); } else {
-	 * imgModel.setDataType(EDataType.TRAIN);
-	 * positiveImageModelList.add(imgModel); }
-	 * 
-	 * }
-	 * 
-	 * fileList = CBODUtil.getFileList(negativeImageDirPath,
-	 * CBODConstants.JPEG_SUFFIX);
-	 * 
-	 * for (int i = 0; i < fileList.size(); i++) {
-	 * 
-	 * String imgPath = fileList.get(i);
-	 * 
-	 * ImageModel imgModel = new ImageModel(); imgModel.setImagePath(imgPath);
-	 * imgModel.setImageName(FilenameUtils.getName(imgPath));
-	 * imgModel.setNegativeImg(true);
-	 * 
-	 * if (i % 4 == 0) { imgModel.setDataType(EDataType.TEST);
-	 * testNegativeImageModelList.add(imgModel); } else {
-	 * imgModel.setDataType(EDataType.TRAIN);
-	 * negativeImageModelList.add(imgModel); }
-	 * 
-	 * }
-	 * 
-	 * BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
-	 * 
-	 * mpegFex.extractColorStructureDescriptors(positiveImageModelList, 256);
-	 * mpegFex.extractColorStructureDescriptors(testPositiveImageModelList,
-	 * 256); mpegFex.extractColorStructureDescriptors(negativeImageModelList,
-	 * 256);
-	 * mpegFex.extractColorStructureDescriptors(testNegativeImageModelList,
-	 * 256);
-	 * 
-	 * mpegFex.extractScalableColorDescriptors(positiveImageModelList, 256);
-	 * mpegFex.extractScalableColorDescriptors(testPositiveImageModelList, 256);
-	 * mpegFex.extractScalableColorDescriptors(negativeImageModelList, 256);
-	 * mpegFex.extractScalableColorDescriptors(testNegativeImageModelList, 256);
-	 * 
-	 * mpegFex.extractColorLayoutDescriptors(positiveImageModelList, 64, 28);
-	 * mpegFex.extractColorLayoutDescriptors(testPositiveImageModelList, 64,
-	 * 28); mpegFex.extractColorLayoutDescriptors(negativeImageModelList, 64,
-	 * 28); mpegFex.extractColorLayoutDescriptors(testNegativeImageModelList,
-	 * 64, 28);
-	 * 
-	 * mpegFex.extractDominantColorDescriptors(positiveImageModelList, 1, 0, 1,
-	 * 32, 32, 32);
-	 * mpegFex.extractDominantColorDescriptors(testPositiveImageModelList, 1, 0,
-	 * 1, 32, 32, 32);
-	 * mpegFex.extractDominantColorDescriptors(negativeImageModelList, 1, 0, 1,
-	 * 32, 32, 32);
-	 * mpegFex.extractDominantColorDescriptors(testNegativeImageModelList, 1, 0,
-	 * 1, 32, 32, 32);
-	 * 
-	 * mpegFex.extractEdgeHistogramDescriptors(positiveImageModelList);
-	 * mpegFex.extractEdgeHistogramDescriptors(testPositiveImageModelList);
-	 * mpegFex.extractEdgeHistogramDescriptors(negativeImageModelList);
-	 * mpegFex.extractEdgeHistogramDescriptors(testNegativeImageModelList);
-	 * 
-	 * ImageModelService service = ImageModelService.getInstance();
-	 * 
-	 * service.saveImageModelList(positiveImageModelList);
-	 * service.saveImageModelList(negativeImageModelList);
-	 * service.saveImageModelList(testPositiveImageModelList);
-	 * service.saveImageModelList(testNegativeImageModelList);
-	 * 
-	 * }
-	 */
 
 	/*
 	 * private static void saveWholeImageModelsToDB() {
