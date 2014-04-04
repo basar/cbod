@@ -112,6 +112,9 @@ public class ImageModelService {
 
 		return imageModels;
 	}
+	
+	
+	
 
 	
 	private boolean controlDescriptors(ImageModel imgModel) {

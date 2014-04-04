@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.bsrc.cbod.core.ImageModelFactory;
 import net.bsrc.cbod.core.model.EDescriptorType;
+import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
@@ -12,10 +13,16 @@ import net.bsrc.cbod.opencv.OpenCV;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.javacv.cpp.opencv_core.CvMat;
 
 public class Main {
 
@@ -38,7 +45,36 @@ public class Main {
 		
 		
 		
+		ImageModel imgModel = ImageModelService.getInstance()
+				.getImageModelList(EObjectType.TAIL_LIGHT).get(0);
 		
+		CvMat mat = new CvMat(20);
+		
+		System.out.println(mat.capacity());
+		
+		
+		//Mat imageMat = OpenCV.getImageMatAsGrayScale(imgModel);
+
+		//Create SIFT feature detector
+		//FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+		//Create SIFT descriptor extractor
+		//DescriptorExtractor extractor = DescriptorExtractor
+		//		.create(DescriptorExtractor.SIFT);
+		//Key points in the image
+		//MatOfKeyPoint keyPoints = new MatOfKeyPoint();
+		
+		//detect key points in the image
+		//detector.detect(imageMat, keyPoints);
+		
+		
+		//Mat descriptors = new Mat();
+		
+		
+		
+		//extractor.compute(imageMat, keyPoints, descriptors);
+		
+		//System.out.println(descriptors.total());
+
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR
 		// + "/test_4.jpg", CBODUtil.getCbodTempDirectory());
@@ -50,8 +86,6 @@ public class Main {
 
 		DB4O.getInstance().close();
 	}
-
-	
 
 	private static void testObjectDetection(String imageName) {
 
@@ -159,7 +193,6 @@ public class Main {
 		OpenCV.writeImage(copy, outputImagePath);
 
 	}
-
 
 	/*
 	 * private static void saveWholeImageModelsToDB() {

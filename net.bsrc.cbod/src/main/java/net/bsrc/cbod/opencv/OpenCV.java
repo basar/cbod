@@ -36,6 +36,12 @@ public final class OpenCV {
 		Mat mat = Highgui.imread(imgPath);
 		return mat;
 	}
+	
+	
+	public static Mat getImageMatAsGrayScale(String imgPath){
+		Mat mat = Highgui.imread(imgPath,Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+		return mat;
+	}
 
 	/**
 	 * 
@@ -45,6 +51,12 @@ public final class OpenCV {
 	public static Mat getImageMat(ImageModel imageModel) {
 		Validate.notNull(imageModel, "Imagemodel must not be null");
 		return getImageMat(imageModel.getImagePath());
+	}
+	
+	
+	public static Mat getImageMatAsGrayScale(ImageModel imageModel){
+		Validate.notNull(imageModel, "Imagemodel must not be null");
+		return getImageMatAsGrayScale(imageModel.getImagePath());
 	}
 
 	/**
