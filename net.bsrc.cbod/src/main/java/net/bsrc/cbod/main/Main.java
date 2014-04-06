@@ -16,13 +16,18 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.javacpp.Pointer;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
+import com.googlecode.javacv.cpp.opencv_core.CvTermCriteria;
+import com.googlecode.javacv.cpp.opencv_features2d.BOWKMeansTrainer;
+import com.googlecode.javacv.cpp.opencv_nonfree.SIFT;
+
+import static com.googlecode.javacv.cpp.opencv_core.*;
+import static com.googlecode.javacv.cpp.opencv_features2d.*;
+import static com.googlecode.javacv.cpp.opencv_highgui.*;
 
 public class Main {
 
@@ -42,38 +47,72 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
-		
-		
-		ImageModel imgModel = ImageModelService.getInstance()
-				.getImageModelList(EObjectType.TAIL_LIGHT).get(0);
-		
-		CvMat mat = new CvMat(20);
-		
-		System.out.println(mat.capacity());
-		
-		
-		//Mat imageMat = OpenCV.getImageMatAsGrayScale(imgModel);
 
-		//Create SIFT feature detector
-		//FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
-		//Create SIFT descriptor extractor
-		//DescriptorExtractor extractor = DescriptorExtractor
-		//		.create(DescriptorExtractor.SIFT);
-		//Key points in the image
-		//MatOfKeyPoint keyPoints = new MatOfKeyPoint();
+		List<ImageModel> imgModelList = ImageModelService.getInstance()
+				.getImageModelList(EObjectType.TAIL_LIGHT);
+
+		// Create SIFT feature detector
+		org.opencv.features2d.FeatureDetector detector = org.opencv.features2d.FeatureDetector
+				.create(org.opencv.features2d.FeatureDetector.SIFT);
+		// Create SIFT descriptor extractor
+		org.opencv.features2d.DescriptorExtractor extractor = org.opencv.features2d.DescriptorExtractor
+				.create(org.opencv.features2d.DescriptorExtractor.SIFT);
+
+		Mat allDescriptors = new Mat();
+
+		for (int i = 0; i < imgModelList.size(); i++) {
+
+			ImageModel imgModel = imgModelList.get(i);
+			Mat imageMat = OpenCV.getImageMatAsGrayScale(imgModel);
+			// Key points in the image
+			MatOfKeyPoint keyPoints = new MatOfKeyPoint();
+			// detect key points in the image
+			detector.detect(imageMat, keyPoints);
+
+			Mat descriptors = new Mat();
+			extractor.compute(imageMat, keyPoints, descriptors);
+
+			allDescriptors.push_back(descriptors);
+		}
+
+		// It must be CV_32F type
+		CvMat descriptorsTemp = CvMat.create(allDescriptors.rows(),
+				allDescriptors.cols(), CV_32F);
+
+		for (int i = 0; i < allDescriptors.rows(); i++) {
+			for (int j = 0; j < allDescriptors.cols(); j++) {
+				descriptorsTemp.put(i, j, allDescriptors.get(i, j)[0]);
+			}
+		}
+
+		int dictionarySize = 200;
+		int flags = 2/* KMEANS_PP_CENTER */;
+
+		CvTermCriteria termCriteria = new CvTermCriteria(CV_TERMCRIT_ITER, 100,
+				0.001);
+		BOWKMeansTrainer bowKMeansTrainer = new BOWKMeansTrainer(
+				dictionarySize, termCriteria, 1, flags);
+		CvMat dictionary = bowKMeansTrainer.cluster(descriptorsTemp);
+
+		DescriptorMatcher descMatcher = new FlannBasedMatcher();
+
+		SIFT sift = new SIFT();
+		DescriptorExtractor descExt = sift.getDescriptorExtractor();
+
+		BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
+				descExt, descMatcher);
+		bowDE.setVocabulary(dictionary);
+
+		CvMat testImg = cvLoadImageM(imgModelList.get(0).getImagePath(),
+				CV_LOAD_IMAGE_GRAYSCALE);
 		
-		//detect key points in the image
-		//detector.detect(imageMat, keyPoints);
+		KeyPoint keyPoints = new KeyPoint();
+		sift.detect(testImg,null,keyPoints);
 		
-		
-		//Mat descriptors = new Mat();
-		
-		
-		
-		//extractor.compute(imageMat, keyPoints, descriptors);
-		
-		//System.out.println(descriptors.total());
+		CvMat outputImgDesc = new CvMat();
+		bowDE.compute(testImg,keyPoints,outputImgDesc, null, null);
+
+		System.out.println(outputImgDesc.length());
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR
