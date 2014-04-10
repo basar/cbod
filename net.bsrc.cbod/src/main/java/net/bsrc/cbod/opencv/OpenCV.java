@@ -16,6 +16,9 @@ import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import com.googlecode.javacv.cpp.opencv_core;
+import com.googlecode.javacv.cpp.opencv_core.CvMat;
+
 /**
  * 
  * @author bsr
@@ -36,10 +39,9 @@ public final class OpenCV {
 		Mat mat = Highgui.imread(imgPath);
 		return mat;
 	}
-	
-	
-	public static Mat getImageMatAsGrayScale(String imgPath){
-		Mat mat = Highgui.imread(imgPath,Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+
+	public static Mat getImageMatAsGrayScale(String imgPath) {
+		Mat mat = Highgui.imread(imgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
 		return mat;
 	}
 
@@ -52,9 +54,8 @@ public final class OpenCV {
 		Validate.notNull(imageModel, "Imagemodel must not be null");
 		return getImageMat(imageModel.getImagePath());
 	}
-	
-	
-	public static Mat getImageMatAsGrayScale(ImageModel imageModel){
+
+	public static Mat getImageMatAsGrayScale(ImageModel imageModel) {
 		Validate.notNull(imageModel, "Imagemodel must not be null");
 		return getImageMatAsGrayScale(imageModel.getImagePath());
 	}
@@ -223,12 +224,11 @@ public final class OpenCV {
 		return result;
 	}
 
-
-    public static Mat copyImage(Mat org){
-          Mat copy = new Mat();
-          org.copyTo(copy);
-          return copy;
-    }
+	public static Mat copyImage(Mat org) {
+		Mat copy = new Mat();
+		org.copyTo(copy);
+		return copy;
+	}
 
 	/**
 	 * Helper method
@@ -248,6 +248,26 @@ public final class OpenCV {
 		}
 
 		return region;
-
 	}
+
+	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
+			int index) {
+		if (descriptorsList.size() == (index + 1)) {
+			return descriptorsList.get(index);
+		} else {
+			CvMat head = descriptorsList.get(index);
+			CvMat next = concatenateDescriptors(descriptorsList, index + 1);
+			CvMat desc = opencv_core.cvCreateMat(head.rows() + next.rows(),
+					head.cols(), next.type());
+			desc.put(head);
+			int offset = head.rows();
+			for (int i = offset; i < desc.rows(); i++) {
+				for (int j = 0; j < desc.cols(); j++) {
+					desc.put(i, j, next.get(i - offset, j));
+				}
+			}
+			return desc;
+		}
+	}
+
 }

@@ -41,13 +41,13 @@
 			<artifactId>javacpp</artifactId>
 			<version>0.7</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
 			<version>0.7</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.googlecode.javacv</groupId>
 			<artifactId>javacv</artifactId>
@@ -77,6 +77,18 @@
 			<groupId>com.db4o</groupId>
 			<artifactId>db4o-full-java5</artifactId>
 			<version>8.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.googlecode.javacv</groupId>
+			<artifactId>opencv-2.4.8-macosx-x86_64</artifactId>
+			<version>2.4.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.googlecode.javacv</groupId>
+			<artifactId>ffmpeg-2.1.1-macosx-x86_64</artifactId>
+			<version>2.1.1</version>
 		</dependency>
 
 

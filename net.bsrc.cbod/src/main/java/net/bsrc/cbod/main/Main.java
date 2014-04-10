@@ -1,5 +1,6 @@
 package net.bsrc.cbod.main;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.ImageModelFactory;
@@ -19,10 +20,12 @@ import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.javacpp.Loader;
 import com.googlecode.javacpp.Pointer;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
 import com.googlecode.javacv.cpp.opencv_core.CvTermCriteria;
 import com.googlecode.javacv.cpp.opencv_features2d.BOWKMeansTrainer;
+import com.googlecode.javacv.cpp.opencv_nonfree;
 import com.googlecode.javacv.cpp.opencv_nonfree.SIFT;
 
 import static com.googlecode.javacv.cpp.opencv_core.*;
@@ -50,69 +53,59 @@ public class Main {
 
 		List<ImageModel> imgModelList = ImageModelService.getInstance()
 				.getImageModelList(EObjectType.TAIL_LIGHT);
+		
+		SIFT sift = new SIFT();
+		DescriptorExtractor extractor = sift.getDescriptorExtractor();
+		FeatureDetector detector = sift.getFeatureDetector();
 
-		// Create SIFT feature detector
-		org.opencv.features2d.FeatureDetector detector = org.opencv.features2d.FeatureDetector
-				.create(org.opencv.features2d.FeatureDetector.SIFT);
-		// Create SIFT descriptor extractor
-		org.opencv.features2d.DescriptorExtractor extractor = org.opencv.features2d.DescriptorExtractor
-				.create(org.opencv.features2d.DescriptorExtractor.SIFT);
+		List<CvMat> cvMatList = new ArrayList<CvMat>();
+			
+		for(int i=0;i<imgModelList.size();i++){
 
-		Mat allDescriptors = new Mat();
-
-		for (int i = 0; i < imgModelList.size(); i++) {
-
-			ImageModel imgModel = imgModelList.get(i);
-			Mat imageMat = OpenCV.getImageMatAsGrayScale(imgModel);
-			// Key points in the image
-			MatOfKeyPoint keyPoints = new MatOfKeyPoint();
-			// detect key points in the image
-			detector.detect(imageMat, keyPoints);
-
-			Mat descriptors = new Mat();
-			extractor.compute(imageMat, keyPoints, descriptors);
-
-			allDescriptors.push_back(descriptors);
-		}
-
-		// It must be CV_32F type
-		CvMat descriptorsTemp = CvMat.create(allDescriptors.rows(),
-				allDescriptors.cols(), CV_32F);
-
-		for (int i = 0; i < allDescriptors.rows(); i++) {
-			for (int j = 0; j < allDescriptors.cols(); j++) {
-				descriptorsTemp.put(i, j, allDescriptors.get(i, j)[0]);
-			}
-		}
-
+			ImageModel imgModel = imgModelList.get(0);
+			CvMat imageMat = cvLoadImageM(imgModel.getImagePath(),CV_LOAD_IMAGE_GRAYSCALE);
+			
+			KeyPoint keyPoints = new KeyPoint();
+			//detect key points in the image
+			detector.detect(imageMat,keyPoints,null);
+			
+			CvMat descriptors = new CvMat(null);
+			//extractor descriptor for each keypoint
+			extractor.compute(imageMat,keyPoints,descriptors);
+			
+			cvMatList.add(descriptors);
+		}	
+		
+		CvMat totalDescriptors = OpenCV.concatenateDescriptors(cvMatList, 0);
+		
 		int dictionarySize = 200;
-		int flags = 2/* KMEANS_PP_CENTER */;
+		//KMEANS_PP_CENTER
+		int flags = 2;
 
 		CvTermCriteria termCriteria = new CvTermCriteria(CV_TERMCRIT_ITER, 100,
 				0.001);
 		BOWKMeansTrainer bowKMeansTrainer = new BOWKMeansTrainer(
 				dictionarySize, termCriteria, 1, flags);
-		CvMat dictionary = bowKMeansTrainer.cluster(descriptorsTemp);
-
+		CvMat dictionary = bowKMeansTrainer.cluster(totalDescriptors);
+		
 		DescriptorMatcher descMatcher = new FlannBasedMatcher();
-
-		SIFT sift = new SIFT();
-		DescriptorExtractor descExt = sift.getDescriptorExtractor();
-
+		
 		BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
-				descExt, descMatcher);
+				extractor, descMatcher);
 		bowDE.setVocabulary(dictionary);
-
-		CvMat testImg = cvLoadImageM(imgModelList.get(0).getImagePath(),
+		
+		CvMat testImg = cvLoadImageM(imgModelList.get(2).getImagePath(),
 				CV_LOAD_IMAGE_GRAYSCALE);
 		
 		KeyPoint keyPoints = new KeyPoint();
-		sift.detect(testImg,null,keyPoints);
+		detector.detect(testImg,keyPoints,null);
 		
-		CvMat outputImgDesc = new CvMat();
-		bowDE.compute(testImg,keyPoints,outputImgDesc, null, null);
-
-		System.out.println(outputImgDesc.length());
+		CvMat outputImgDesc = new CvMat(null);
+		CvMat temp = new CvMat(null);
+		IntVectorVector intVectorVector = new IntVectorVector();
+		bowDE.compute(testImg,keyPoints,outputImgDesc, intVectorVector, temp);
+		
+		
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR
