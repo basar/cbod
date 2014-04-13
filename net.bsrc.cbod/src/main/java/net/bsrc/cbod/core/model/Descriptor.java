@@ -9,7 +9,7 @@ public class Descriptor {
 
 	private EDescriptorType type;
 
-	private List<Integer> dataList;
+	private List<Double> dataList;
 
 	public Descriptor() {
 
@@ -19,7 +19,7 @@ public class Descriptor {
 		this.type = type;
 	}
 
-	public Descriptor(EDescriptorType type, List<Integer> dataList) {
+	public Descriptor(EDescriptorType type, List<Double> dataList) {
 		this.type = type;
 		this.dataList = dataList;
 	}
@@ -32,11 +32,11 @@ public class Descriptor {
 		this.type = type;
 	}
 
-	public List<Integer> getDataList() {
+	public List<Double> getDataList() {
 		return dataList;
 	}
 
-	public void setDataList(List<Integer> dataList) {
+	public void setDataList(List<Double> dataList) {
 		this.dataList = dataList;
 	}
 }

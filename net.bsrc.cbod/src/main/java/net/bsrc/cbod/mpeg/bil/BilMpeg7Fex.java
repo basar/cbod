@@ -148,14 +148,14 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		execute(parameter.toString());
 
 		// Fill descriptors
-		for (Map<String, List<Integer>> map : getDescriptors(descriptorFile)) {
+		for (Map<String, List<Double>> map : getDescriptors(descriptorFile)) {
 			for (ImageModel imgModel : imageModelList) {
 			
 				if (imgModel.getImageName() == null)
 					throw new CBODException(
 							"Image model name cannot be null!:{}"
 									+ imgModel.toString());
-				List<Integer> descs = map.get(imgModel.getImageName());
+				List<Double> descs = map.get(imgModel.getImageName());
 				if (descs != null) {
 
 					Descriptor descriptor = new Descriptor(descType);
@@ -180,9 +180,9 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		return descriptorFile.getAbsolutePath();
 	}
 
-	private List<Map<String, List<Integer>>> getDescriptors(String fileName) {
+	private List<Map<String, List<Double>>> getDescriptors(String fileName) {
 
-		List<Map<String, List<Integer>>> resultMap = new ArrayList<Map<String, List<Integer>>>();
+		List<Map<String, List<Double>>> resultMap = new ArrayList<Map<String, List<Double>>>();
 
 		File file = FileUtils.getFile(fileName);
 
@@ -193,7 +193,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 			for (String line : lines) {
 
 				String imageName = null;
-				List<Integer> descDataList = new ArrayList<Integer>();
+				List<Double> descDataList = new ArrayList<Double>();
 
 				String[] arr = StringUtils.split(line, " ");
 
@@ -204,10 +204,10 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 						continue;
 					}
 					// other elements are the descriptors
-					descDataList.add(Integer.valueOf(arr[i]));
+					descDataList.add(Double.valueOf(arr[i]));
 				}
 
-				Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
+				Map<String, List<Double>> map = new HashMap<String, List<Double>>();
 				map.put(imageName, descDataList);
 
 				resultMap.add(map);

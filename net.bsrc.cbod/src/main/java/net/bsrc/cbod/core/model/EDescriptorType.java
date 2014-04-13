@@ -11,7 +11,8 @@ public enum EDescriptorType {
 	CLD("CLD"), // Color layout descriptors
 	DCD("DCD"), // Dominant color descriptors
 	HTD("HTD"), // Homogeneus texture descriptors
-	EHD("EHD");// Edge histogram descriptors
+	EHD("EHD"),// Edge histogram descriptors
+	SIFT("SIFT");
 
 	private String name;
 

@@ -15,9 +15,15 @@ import org.apache.commons.lang.Validate;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.googlecode.javacpp.Pointer;
 import com.googlecode.javacv.cpp.opencv_core;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
+
+import static com.googlecode.javacv.cpp.opencv_core.*;
+
 
 /**
  * 
@@ -25,6 +31,8 @@ import com.googlecode.javacv.cpp.opencv_core.CvMat;
  * 
  */
 public final class OpenCV {
+
+	private static final Logger logger = LoggerFactory.getLogger(OpenCV.class);
 
 	private OpenCV() {
 
@@ -76,12 +84,11 @@ public final class OpenCV {
 				new Point(box.getXmax() - 1, box.getYmin()),
 				new Point(box.getXmax() - 1, box.getYmax() - 1) };
 		try {
-
 			Rect r = Imgproc.boundingRect(new MatOfPoint(arr));
 			result = org.submat(r);
 
 		} catch (CvException ex) {
-			System.out.println(ex);
+			logger.error("",ex);
 		}
 
 		return result;
@@ -257,7 +264,7 @@ public final class OpenCV {
 		} else {
 			CvMat head = descriptorsList.get(index);
 			CvMat next = concatenateDescriptors(descriptorsList, index + 1);
-			CvMat desc = opencv_core.cvCreateMat(head.rows() + next.rows(),
+			CvMat desc = cvCreateMat(head.rows() + next.rows(),
 					head.cols(), next.type());
 			desc.put(head);
 			int offset = head.rows();
@@ -269,5 +276,31 @@ public final class OpenCV {
 			return desc;
 		}
 	}
+	
+	
+	public static void storeCvMatToFile(String filePath,String varName,CvMat mat){
+		
+		CvFileStorage fileStorage=cvOpenFileStorage(filePath,null,CV_STORAGE_WRITE,null);
+		cvWrite(fileStorage,varName,mat);
+		cvReleaseFileStorage(fileStorage);
+	}
+	
+	public static CvMat loadCvMatFromFile(String filePath,String varName){
+		
+		CvMat result = null;
+		
+		CvFileStorage fileStorage = cvOpenFileStorage(filePath,null,CV_STORAGE_READ,null);
+		if(fileStorage==null){
+			logger.error("File could not be opened:{}",filePath);
+			return null;
+		}
+		
+		Pointer pointer = cvReadByName(fileStorage, null, varName);
+		result = new CvMat(pointer);
+
+		return result;
+	}
+	
+
 
 }
