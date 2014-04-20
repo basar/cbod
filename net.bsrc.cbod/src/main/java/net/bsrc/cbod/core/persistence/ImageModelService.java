@@ -75,10 +75,8 @@ public class ImageModelService {
 		}
 	}
 
-
-
-	public List<ImageModel> getImageModelList(final boolean isTestImage,
-			final EObjectType objectType) {
+	public List<ImageModel> getImageModelList(final EObjectType objectType,
+			final boolean isTestImage) {
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -97,7 +95,7 @@ public class ImageModelService {
 	}
 
 	public List<ImageModel> getImageModelList(final EObjectType objectType) {
-		
+
 		ObjectContainer container = db4O.getObjContainer();
 
 		@SuppressWarnings("serial")
@@ -112,11 +110,7 @@ public class ImageModelService {
 
 		return imageModels;
 	}
-	
-	
-	
 
-	
 	private boolean controlDescriptors(ImageModel imgModel) {
 
 		boolean passed = true;

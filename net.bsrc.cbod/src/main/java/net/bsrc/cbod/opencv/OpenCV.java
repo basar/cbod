@@ -24,7 +24,6 @@ import com.googlecode.javacv.cpp.opencv_core.CvMat;
 
 import static com.googlecode.javacv.cpp.opencv_core.*;
 
-
 /**
  * 
  * @author bsr
@@ -88,7 +87,7 @@ public final class OpenCV {
 			result = org.submat(r);
 
 		} catch (CvException ex) {
-			logger.error("",ex);
+			logger.error("", ex);
 		}
 
 		return result;
@@ -257,15 +256,15 @@ public final class OpenCV {
 		return region;
 	}
 
-	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
+/*	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
 			int index) {
 		if (descriptorsList.size() == (index + 1)) {
 			return descriptorsList.get(index);
 		} else {
 			CvMat head = descriptorsList.get(index);
 			CvMat next = concatenateDescriptors(descriptorsList, index + 1);
-			CvMat desc = cvCreateMat(head.rows() + next.rows(),
-					head.cols(), next.type());
+			CvMat desc = cvCreateMat(head.rows() + next.rows(), head.cols(),
+					next.type());
 			desc.put(head);
 			int offset = head.rows();
 			for (int i = offset; i < desc.rows(); i++) {
@@ -275,32 +274,66 @@ public final class OpenCV {
 			}
 			return desc;
 		}
-	}
-	
-	
-	public static void storeCvMatToFile(String filePath,String varName,CvMat mat){
+	}*/
+
+	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,int type) {
+
+		CvMat concated = null;
+		int maxCol = 0;
+		int totalRow = 0;
 		
-		CvFileStorage fileStorage=cvOpenFileStorage(filePath,null,CV_STORAGE_WRITE,null);
-		cvWrite(fileStorage,varName,mat);
-		cvReleaseFileStorage(fileStorage);
-	}
-	
-	public static CvMat loadCvMatFromFile(String filePath,String varName){
-		
-		CvMat result = null;
-		
-		CvFileStorage fileStorage = cvOpenFileStorage(filePath,null,CV_STORAGE_READ,null);
-		if(fileStorage==null){
-			logger.error("File could not be opened:{}",filePath);
-			return null;
+		for (CvMat mat : descriptorsList) {
+			totalRow = totalRow + mat.rows();
+			if (maxCol == 0) {
+				maxCol = mat.cols();
+				continue;
+			}
+			if (maxCol < mat.cols())
+				maxCol = mat.cols();
 		}
 		
+		int rows = totalRow;
+		int cols = maxCol;
+	
+		concated = CvMat.create(rows, cols,type);
+		
+		int globalRows = 0;
+		for(CvMat mat: descriptorsList){
+			for(int i=0;i<mat.rows();i++){
+				for(int j=0;j<mat.cols();j++){
+					concated.put(globalRows,j,mat.get(i, j));
+				}
+				globalRows++;
+			}
+		}
+		
+		return concated;
+	}
+
+	public static void storeCvMatToFile(String filePath, String varName,
+			CvMat mat) {
+
+		CvFileStorage fileStorage = cvOpenFileStorage(filePath, null,
+				CV_STORAGE_WRITE, null);
+		cvWrite(fileStorage, varName, mat);
+		cvReleaseFileStorage(fileStorage);
+	}
+
+	public static CvMat loadCvMatFromFile(String filePath, String varName) {
+
+		CvMat result = null;
+
+		CvFileStorage fileStorage = cvOpenFileStorage(filePath, null,
+				CV_STORAGE_READ, null);
+		if (fileStorage == null) {
+			logger.error("File could not be opened:{}", filePath);
+			return null;
+		}
+
 		Pointer pointer = cvReadByName(fileStorage, null, varName);
 		result = new CvMat(pointer);
 
 		return result;
 	}
-	
-
 
 }

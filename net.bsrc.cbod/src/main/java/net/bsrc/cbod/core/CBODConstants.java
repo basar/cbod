@@ -76,6 +76,12 @@ public final class CBODConstants {
 	 */
 	public static final String DB4O_FILE_PATH = "net.bsrc.cbod.db4o.filePath";
 	
+	
+	/**
+	 * SIFT 
+	 */
+	public static final String SIFT_DICTIONARY_FILE_NAME="cbod_sift.xml";
+	
 	/**
 	 * To prevent object creation
 	 */

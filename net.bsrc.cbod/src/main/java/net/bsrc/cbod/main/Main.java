@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.CBODSift;
 import net.bsrc.cbod.core.ImageModelFactory;
+import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
@@ -12,26 +14,17 @@ import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.opencv.OpenCV;
+import net.bsrc.cbod.svm.libsvm.LibSvm;
+import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.javacpp.Loader;
-import com.googlecode.javacpp.Pointer;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
-import com.googlecode.javacv.cpp.opencv_core.CvTermCriteria;
-import com.googlecode.javacv.cpp.opencv_features2d.BOWKMeansTrainer;
-import com.googlecode.javacv.cpp.opencv_nonfree;
-import com.googlecode.javacv.cpp.opencv_nonfree.SIFT;
-
-import static com.googlecode.javacv.cpp.opencv_core.*;
-import static com.googlecode.javacv.cpp.opencv_features2d.*;
-import static com.googlecode.javacv.cpp.opencv_highgui.*;
 
 public class Main {
 
@@ -52,7 +45,92 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
+		ImageModelService service = ImageModelService.getInstance();
+
+		List<ImageModel> wheelList = service
+				.getImageModelList(EObjectType.WHEEL);
+		List<ImageModel> headLightList = service
+				.getImageModelList(EObjectType.HEAD_LIGHT);
+
+		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
+		imageModelList.addAll(wheelList);
+		imageModelList.addAll(headLightList);
+
+		CvMat dictionary=CBODSift.createDictionary(imageModelList,125);
+		//OpenCV.storeCvMatToFile(TMP_DIR.concat("sift_dict.xml"),"sift_dict",dictionary);
+
+		//CvMat dictionary = OpenCV.loadCvMatFromFile(TMP_DIR.concat("sift_dict.xml"), "sift_dict");
+
+		List<ImageModel> trainingWheel = service.getImageModelList(
+				EObjectType.WHEEL, false);
+		List<ImageModel> trainingHeadLight = service.getImageModelList(
+				EObjectType.HEAD_LIGHT, false);
+		List<ImageModel> testWheel = service.getImageModelList(
+				EObjectType.WHEEL, true);
+		List<ImageModel> testHeadLight = service.getImageModelList(
+				EObjectType.HEAD_LIGHT, true);
+
 		
+		
+		List<ImageModel> wheelAll = new ArrayList<ImageModel>();
+		wheelAll.addAll(testWheel);
+		wheelAll.addAll(trainingWheel);
+		
+		List<ImageModel> headLightAll = new ArrayList<ImageModel>();
+		
+		headLightAll.addAll(trainingHeadLight);
+		headLightAll.addAll(testHeadLight);
+
+		for (ImageModel imageModel : wheelAll) {
+			Descriptor desc = new Descriptor();
+			desc.setType(EDescriptorType.SIFT);
+			desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
+					dictionary));
+			imageModel.getDescriptors().add(desc);
+		}
+		
+		for (ImageModel imageModel : headLightAll) {
+			Descriptor desc = new Descriptor();
+			desc.setType(EDescriptorType.SIFT);
+			desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
+					dictionary));
+			imageModel.getDescriptors().add(desc);
+		}
+
+		LibSvm libSvm = LibSvm.getInstance();
+
+		String descName = EDescriptorType.SIFT.getName();
+
+		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
+				+ "." + CBODConstants.TXT_SUFFIX;
+		String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
+				+ CBODConstants.TXT_SUFFIX;
+		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
+				+ CBODConstants.TXT_SUFFIX;
+
+		libSvm.createFormattedDataFile(trainingFileName, 0, trainingHeadLight,
+				1, trainingWheel, EDescriptorType.SIFT);
+
+		libSvm.createFormattedDataFile(testFileName, 0, testHeadLight, 1,
+				testWheel, EDescriptorType.SIFT);
+
+		ScaleParameter scaleParameter = new ScaleParameter();
+		scaleParameter.setSaveFileName(rangeFileName);
+		//scaleParameter.setLower(-1);
+
+		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+				scaleParameter);
+
+		scaleParameter.setSaveFileName(null);
+		scaleParameter.setRestoreFileName(rangeFileName);
+
+		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+		libSvm.doPredict(scaleTestFileName, modelFileName, null);
+
+
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR

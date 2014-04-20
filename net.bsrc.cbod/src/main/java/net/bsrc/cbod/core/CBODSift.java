@@ -1,5 +1,6 @@
 package net.bsrc.cbod.core;
 
+import static com.googlecode.javacv.cpp.opencv_core.CV_32F;
 import static com.googlecode.javacv.cpp.opencv_core.CV_TERMCRIT_ITER;
 import static com.googlecode.javacv.cpp.opencv_highgui.CV_LOAD_IMAGE_GRAYSCALE;
 import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImageM;
@@ -24,11 +25,11 @@ import com.googlecode.javacv.cpp.opencv_nonfree.SIFT;
 
 public class CBODSift {
 
-	
-	public static CvMat createDictionary(List<ImageModel> imageModelList,int dictionarySize){
-		
+	public static CvMat createDictionary(List<ImageModel> imageModelList,
+			int dictionarySize) {
+
 		CvMat dictionary = null;
-		
+
 		SIFT sift = new SIFT();
 		DescriptorExtractor extractor = sift.getDescriptorExtractor();
 		FeatureDetector detector = sift.getFeatureDetector();
@@ -48,13 +49,15 @@ public class CBODSift {
 			CvMat descriptors = new CvMat(null);
 			// extractor descriptor for each keypoint
 			extractor.compute(imageMat, keyPoints, descriptors);
-			//Descriptor is not null
+			// Descriptor is not null
 			if (!descriptors.isNull()) {
 				cvMatList.add(descriptors);
 			}
 		}
-		
-		CvMat totalDescriptors = OpenCV.concatenateDescriptors(cvMatList, 0);
+
+		CvMat totalDescriptors = OpenCV.concatenateDescriptors(cvMatList,
+				CV_32F);
+
 		// KMEANS_PP_CENTER
 		int flags = 2;
 
@@ -64,40 +67,53 @@ public class CBODSift {
 				dictionarySize, termCriteria, 1, flags);
 
 		dictionary = bowKMeansTrainer.cluster(totalDescriptors);
-		
+
 		return dictionary;
-		
+
 	}
-	
-	
-	
-	public static CvMat extractSIFTDescriptor(ImageModel imgModel,CvMat dictionary){
-		
+
+	public static CvMat extractSIFTDescriptor(ImageModel imgModel,
+			CvMat dictionary) {
+
 		SIFT sift = new SIFT();
 		DescriptorExtractor extractor = sift.getDescriptorExtractor();
 		FeatureDetector detector = sift.getFeatureDetector();
-		
+
 		DescriptorMatcher descMatcher = new FlannBasedMatcher();
+		//DescriptorMatcher descMatcher = new BFMatcher();
 
 		BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
 				extractor, descMatcher);
 		bowDE.setVocabulary(dictionary);
-		
-		
+
 		CvMat imageMat = cvLoadImageM(imgModel.getImagePath(),
 				CV_LOAD_IMAGE_GRAYSCALE);
-		
+
 		KeyPoint keyPoints = new KeyPoint();
 		detector.detect(imageMat, keyPoints, null);
 
 		CvMat outputImgDesc = new CvMat(null);
 		CvMat temp = new CvMat(null);
 		IntVectorVector intVectorVector = new IntVectorVector();
-		bowDE.compute(imageMat, keyPoints, outputImgDesc, intVectorVector,
-				temp);
-		
+		bowDE.compute(imageMat, keyPoints, outputImgDesc, intVectorVector, temp);
+
 		return outputImgDesc;
 	}
-	
-	
+
+	public static List<Double> extractSIFTDescriptorAsList(ImageModel imgModel,
+			CvMat dictionary) {
+
+		CvMat mat = extractSIFTDescriptor(imgModel, dictionary);
+
+		List<Double> list = new ArrayList<Double>();
+		if (!mat.isNull()) {
+			for (int i = 0; i < mat.rows(); i++) {
+				for (int j = 0; j < mat.cols(); j++) {
+					list.add(mat.get(i, j));
+				}
+			}
+		}
+		return list;
+	}
+
 }
