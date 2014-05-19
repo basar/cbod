@@ -1,9 +1,13 @@
 package net.bsrc.cbod.main;
 
+import static com.googlecode.javacv.cpp.opencv_highgui.*;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.CBODHog;
 import net.bsrc.cbod.core.CBODSift;
 import net.bsrc.cbod.core.ImageModelFactory;
 import net.bsrc.cbod.core.model.Descriptor;
@@ -13,6 +17,7 @@ import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.core.util.DBInitializeUtil;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
@@ -24,7 +29,12 @@ import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.javacpp.FloatPointer;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
+import com.googlecode.javacv.cpp.opencv_core.CvPoint;
+import com.googlecode.javacv.cpp.opencv_core.CvSize;
+import com.googlecode.javacv.cpp.opencv_core.IplImage;
+import com.googlecode.javacv.cpp.opencv_objdetect.HOGDescriptor;
 
 public class Main {
 
@@ -56,67 +66,48 @@ public class Main {
 		imageModelList.addAll(wheelList);
 		imageModelList.addAll(headLightList);
 
-		CvMat dictionary=CBODSift.createDictionary(imageModelList,125);
-		//OpenCV.storeCvMatToFile(TMP_DIR.concat("sift_dict.xml"),"sift_dict",dictionary);
-
-		//CvMat dictionary = OpenCV.loadCvMatFromFile(TMP_DIR.concat("sift_dict.xml"), "sift_dict");
+		// CvMat dictionary =
+		// OpenCV.loadCvMatFromFile(TMP_DIR.concat("sift_dict.xml"),
+		// "sift_dict");
 
 		List<ImageModel> trainingWheel = service.getImageModelList(
-				EObjectType.WHEEL, false);
-		List<ImageModel> trainingHeadLight = service.getImageModelList(
 				EObjectType.HEAD_LIGHT, false);
+		List<ImageModel> trainingHeadLight = service.getImageModelList(
+				EObjectType.NONE_CAR_PART, false);
 		List<ImageModel> testWheel = service.getImageModelList(
-				EObjectType.WHEEL, true);
-		List<ImageModel> testHeadLight = service.getImageModelList(
 				EObjectType.HEAD_LIGHT, true);
+		List<ImageModel> testHeadLight = service.getImageModelList(
+				EObjectType.NONE_CAR_PART, true);
 
-		
-		
 		List<ImageModel> wheelAll = new ArrayList<ImageModel>();
 		wheelAll.addAll(testWheel);
 		wheelAll.addAll(trainingWheel);
-		
+
 		List<ImageModel> headLightAll = new ArrayList<ImageModel>();
-		
+
 		headLightAll.addAll(trainingHeadLight);
 		headLightAll.addAll(testHeadLight);
 
-		for (ImageModel imageModel : wheelAll) {
-			Descriptor desc = new Descriptor();
-			desc.setType(EDescriptorType.SIFT);
-			desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
-					dictionary));
-			imageModel.getDescriptors().add(desc);
-		}
-		
-		for (ImageModel imageModel : headLightAll) {
-			Descriptor desc = new Descriptor();
-			desc.setType(EDescriptorType.SIFT);
-			desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
-					dictionary));
-			imageModel.getDescriptors().add(desc);
-		}
-
 		LibSvm libSvm = LibSvm.getInstance();
 
-		String descName = EDescriptorType.SIFT.getName();
+		String descName = EDescriptorType.HOG.getName();
 
 		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
-				+ "." + CBODConstants.TXT_SUFFIX;
-		String testFileName = descName + "." + CBODConstants.SVM_TEST + "."
 				+ CBODConstants.TXT_SUFFIX;
-		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE + "."
+		String testFileName = descName + "." + CBODConstants.SVM_TEST
+				+ CBODConstants.TXT_SUFFIX;
+		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE
 				+ CBODConstants.TXT_SUFFIX;
 
 		libSvm.createFormattedDataFile(trainingFileName, 0, trainingHeadLight,
-				1, trainingWheel, EDescriptorType.SIFT);
+				1, trainingWheel, EDescriptorType.HOG);
 
 		libSvm.createFormattedDataFile(testFileName, 0, testHeadLight, 1,
-				testWheel, EDescriptorType.SIFT);
+				testWheel, EDescriptorType.HOG);
 
 		ScaleParameter scaleParameter = new ScaleParameter();
 		scaleParameter.setSaveFileName(rangeFileName);
-		//scaleParameter.setLower(-1);
+		// scaleParameter.setLower(-1);
 
 		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
 				scaleParameter);
@@ -129,8 +120,6 @@ public class Main {
 		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
 
 		libSvm.doPredict(scaleTestFileName, modelFileName, null);
-
-
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR

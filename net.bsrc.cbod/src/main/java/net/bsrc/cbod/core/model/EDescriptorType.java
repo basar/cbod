@@ -12,7 +12,8 @@ public enum EDescriptorType {
 	DCD("DCD"), // Dominant color descriptors
 	HTD("HTD"), // Homogeneus texture descriptors
 	EHD("EHD"),// Edge histogram descriptors
-	SIFT("SIFT");
+	SIFT("SIFT"),//SIFT descriptors
+	HOG("HOG");// Histogram of Gradient Descriptors
 
 	private String name;
 
