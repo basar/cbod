@@ -18,6 +18,7 @@ import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.core.util.DBInitializeUtil;
+import net.bsrc.cbod.experiment.CbodExperiment;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
@@ -55,71 +56,9 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		ImageModelService service = ImageModelService.getInstance();
-
-		List<ImageModel> wheelList = service
-				.getImageModelList(EObjectType.WHEEL);
-		List<ImageModel> headLightList = service
-				.getImageModelList(EObjectType.HEAD_LIGHT);
-
-		List<ImageModel> imageModelList = new ArrayList<ImageModel>();
-		imageModelList.addAll(wheelList);
-		imageModelList.addAll(headLightList);
-
-		// CvMat dictionary =
-		// OpenCV.loadCvMatFromFile(TMP_DIR.concat("sift_dict.xml"),
-		// "sift_dict");
-
-		List<ImageModel> trainingWheel = service.getImageModelList(
-				EObjectType.HEAD_LIGHT, false);
-		List<ImageModel> trainingHeadLight = service.getImageModelList(
-				EObjectType.NONE_CAR_PART, false);
-		List<ImageModel> testWheel = service.getImageModelList(
-				EObjectType.HEAD_LIGHT, true);
-		List<ImageModel> testHeadLight = service.getImageModelList(
-				EObjectType.NONE_CAR_PART, true);
-
-		List<ImageModel> wheelAll = new ArrayList<ImageModel>();
-		wheelAll.addAll(testWheel);
-		wheelAll.addAll(trainingWheel);
-
-		List<ImageModel> headLightAll = new ArrayList<ImageModel>();
-
-		headLightAll.addAll(trainingHeadLight);
-		headLightAll.addAll(testHeadLight);
-
-		LibSvm libSvm = LibSvm.getInstance();
-
-		String descName = EDescriptorType.HOG.getName();
-
-		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
-				+ CBODConstants.TXT_SUFFIX;
-		String testFileName = descName + "." + CBODConstants.SVM_TEST
-				+ CBODConstants.TXT_SUFFIX;
-		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE
-				+ CBODConstants.TXT_SUFFIX;
-
-		libSvm.createFormattedDataFile(trainingFileName, 0, trainingHeadLight,
-				1, trainingWheel, EDescriptorType.HOG);
-
-		libSvm.createFormattedDataFile(testFileName, 0, testHeadLight, 1,
-				testWheel, EDescriptorType.HOG);
-
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setSaveFileName(rangeFileName);
-		// scaleParameter.setLower(-1);
-
-		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
-				scaleParameter);
-
-		scaleParameter.setSaveFileName(null);
-		scaleParameter.setRestoreFileName(rangeFileName);
-
-		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
-
-		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
-
-		libSvm.doPredict(scaleTestFileName, modelFileName, null);
+		CbodExperiment.doExperiment(EObjectType.HEAD_LIGHT,
+				EObjectType.NONE_CAR_PART, EObjectType.NONE_CAR_PART, 400, 100,
+				EDescriptorType.SCD);
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR

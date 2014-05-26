@@ -93,6 +93,25 @@ public class ImageModelService {
 
 		return imageModels;
 	}
+	
+	public List<ImageModel> getImageModelList(final EObjectType objectType,
+			final boolean isTestImage,int count) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		@SuppressWarnings("serial")
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.isTestImage() == isTestImage
+								&& imageModel.getObjectType() == objectType;
+
+					}
+				});
+		
+		return imageModels.subList(0, count);
+	}
 
 	public List<ImageModel> getImageModelList(final EObjectType objectType) {
 
