@@ -93,9 +93,9 @@ public class ImageModelService {
 
 		return imageModels;
 	}
-	
+
 	public List<ImageModel> getImageModelList(final EObjectType objectType,
-			final boolean isTestImage,int count) {
+			final boolean isTestImage, int count) {
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -109,8 +109,11 @@ public class ImageModelService {
 
 					}
 				});
-		
-		return imageModels.subList(0, count);
+
+		if (count > imageModels.size())
+			return imageModels;
+		else
+			return imageModels.subList(0, count);
 	}
 
 	public List<ImageModel> getImageModelList(final EObjectType objectType) {
@@ -128,6 +131,26 @@ public class ImageModelService {
 				});
 
 		return imageModels;
+	}
+	
+	public List<ImageModel> getImageModelList(final EObjectType objectType,int count) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		@SuppressWarnings("serial")
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getObjectType() == objectType;
+
+					}
+				});
+
+		if (count > imageModels.size())
+			return imageModels;
+		else
+			return imageModels.subList(0, count);
 	}
 
 	private boolean controlDescriptors(ImageModel imgModel) {

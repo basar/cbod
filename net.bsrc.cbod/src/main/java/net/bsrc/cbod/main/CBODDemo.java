@@ -1,15 +1,19 @@
 package net.bsrc.cbod.main;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.CBODHog;
+import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
+import net.bsrc.cbod.jseg.JSEGParameterFactory;
 import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Core;
@@ -115,6 +119,16 @@ public class CBODDemo {
 		if (descriptorType == EDescriptorType.CLD) {
 			mpeg7Fex.extractColorLayoutDescriptors(imageSegments, 64, 28);
 		}
+		
+		if(descriptorType == EDescriptorType.HOG){
+			// HOG descriptors
+			for (ImageModel imageModel : imageSegments) {
+				Descriptor hogDesc = new Descriptor();
+				hogDesc.setType(EDescriptorType.HOG);
+				hogDesc.setDataList(CBODHog.extractHogDescriptor(imageModel));
+				imageModel.getDescriptors().add(hogDesc);
+			}
+		}
 
 		// Test datasi tum veriler positifmis gibi olusturuluyor. (Ignore
 		// edilebilir)
@@ -156,7 +170,7 @@ public class CBODDemo {
 
 	}
 
-	public static List<ImageModel> segmentImage(String imagePath) {
+	public static List<ImageModel> segmentImage(String imagePath,JSEGParameter jsegParam) {
 		// Image raw name
 		String imageRawName = FilenameUtils.getBaseName(imagePath);
 		// OS temp dir
@@ -165,7 +179,9 @@ public class CBODDemo {
 		String cbodTempDir = CBODUtil.getCbodTempDirectory();
 
 		// Ilk olarak gelen image segmentlerine ayrilmali!
-		JSEGParameter jsegParam = new JSEGParameter(imagePath);
+		if(jsegParam==null){
+			jsegParam = new JSEGParameter(imagePath);
+		}
 
 		jsegParam.setRegionMapFileName(tempDirectory.concat("/").concat(
 				imageRawName + CBODConstants.MAP_SUFFIX));

@@ -114,7 +114,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 	@Override
 	public void extractEdgeHistogramDescriptors(List<ImageModel> imageModelList) {
 
-		extractDescriptors(EDescriptorType.EHD, imageModelList, null);
+		extractDescriptors(EDescriptorType.EHD, imageModelList, new Object[]{});
 	}
 
 	/**
@@ -132,7 +132,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		StringBuilder parameter = new StringBuilder();
 		parameter.append(descType).append(" ");
 
-		if (params != null) {
+		if (params != null && params.length>0) {
 			for (T t : params) {
 				if (t != null)
 					parameter.append(t).append(" ");
@@ -146,9 +146,11 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		parameter.append(descriptorFile);
 
 		execute(parameter.toString());
-
+		
+		
+		List<Map<String,List<Double>>> descriptors = getDescriptors(descriptorFile);
 		// Fill descriptors
-		for (Map<String, List<Double>> map : getDescriptors(descriptorFile)) {
+		for (Map<String, List<Double>> map : descriptors) {
 			for (ImageModel imgModel : imageModelList) {
 			
 				if (imgModel.getImageName() == null)
@@ -156,6 +158,7 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 							"Image model name cannot be null!:{}"
 									+ imgModel.toString());
 				List<Double> descs = map.get(imgModel.getImageName());
+				
 				if (descs != null) {
 
 					Descriptor descriptor = new Descriptor(descType);
@@ -166,6 +169,8 @@ public class BilMpeg7Fex implements IMpegFex, IProcessExecute {
 		}
 
 	}
+	
+	
 
 	private String getDescriptorFile(String desciptorName) {
 

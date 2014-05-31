@@ -150,13 +150,61 @@ public class DBInitializeUtil {
 		}
 
 		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
+		// mpegFex.extractEdgeHistogramDescriptors(imageModelList);
+		// mpegFex.extractColorStructureDescriptors(imageModelList.subList(fromIndex,
+		// toIndex), 256);
+		// mpegFex.extractScalableColorDescriptors(imageModelList, 256);
+		// mpegFex.extractColorLayoutDescriptors(imageModelList, 64, 28);
+		// mpegFex.extractDominantColorDescriptors(imageModelList, 1, 0, 1, 32,
+		// 32, 32);
 
-		mpegFex.extractColorStructureDescriptors(imageModelList, 256);
-		mpegFex.extractScalableColorDescriptors(imageModelList, 256);
-		mpegFex.extractColorLayoutDescriptors(imageModelList, 64, 28);
-		mpegFex.extractDominantColorDescriptors(imageModelList, 1, 0, 1, 32,
-				32, 32);
-		mpegFex.extractEdgeHistogramDescriptors(imageModelList);
+		int interval = 100;
+		int intervalCount = imageModelList.size() / interval;
+		int kalan = imageModelList.size() % interval;
+
+		int count = 0;
+		int fromIndex = 0;
+		int toIndex = 0;
+
+		// Not: wine cok fazla veri islerken hata veriyor. bu nedenle image
+		// listesi bolunerek islemlere tabi tutuluyor
+		while (count < intervalCount * interval) {
+
+			fromIndex = count;
+			toIndex = count + interval;
+
+			mpegFex.extractEdgeHistogramDescriptors(imageModelList.subList(
+					fromIndex, toIndex));
+			mpegFex.extractScalableColorDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 256);
+			mpegFex.extractColorLayoutDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 64, 28);
+			mpegFex.extractDominantColorDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 1, 0, 1, 32,
+					32, 32);
+			mpegFex.extractColorStructureDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 256);
+
+			count = count + interval;
+		}
+
+		// kalan kisim
+		if (kalan != 0) {
+			fromIndex = count;
+			toIndex = count + kalan;
+			mpegFex.extractEdgeHistogramDescriptors(imageModelList.subList(
+					fromIndex, toIndex));
+			mpegFex.extractScalableColorDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 256);
+			mpegFex.extractColorLayoutDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 64, 28);
+			mpegFex.extractDominantColorDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 1, 0, 1, 32,
+					32, 32);
+			mpegFex.extractColorStructureDescriptors(
+					imageModelList.subList(fromIndex, toIndex), 256);
+
+		}
 
 	}
 

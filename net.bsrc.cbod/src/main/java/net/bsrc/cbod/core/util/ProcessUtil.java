@@ -51,6 +51,7 @@ public class ProcessUtil {
 			bre.close();
 
 			p.waitFor();
+			p.destroy();
 
 			logger.info("Process finished");
 
