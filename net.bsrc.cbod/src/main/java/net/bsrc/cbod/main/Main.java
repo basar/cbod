@@ -40,7 +40,7 @@ public class Main {
 		
 		
 		//createModelFiles();
-		testObjectDetection("test_21.jpg");
+		testObjectDetection("test_32.jpg");
 	
 		// CbodExperiment.doExperiment(EObjectType.TAIL_LIGHT,
 		// EObjectType.NONE_CAR_PART, EObjectType.NONE_CAR_PART, 400, 100,
@@ -72,10 +72,10 @@ public class Main {
 		
 		// Image segmentlere ayriliyor
 		List<ImageModel> imageSegments = CBODDemo.segmentImage(imageModel
-				.getImagePath(),jsegParam);
+				.getImagePath(),null);
 
-		//findCandidateWheels(imageModel, imageSegments);
-		findCandidateHeadlights(imageModel, imageSegments);
+		findCandidateWheels(imageModel, imageSegments);
+		//findCandidateHeadlights(imageModel, imageSegments);
 		//findCandidateTaillights(imageModel, imageSegments);
 
 	}
@@ -107,7 +107,7 @@ public class Main {
 	private static void findCandidateHeadlights(ImageModel imageModel,
 			List<ImageModel> imageSegments) {
 
-		Scalar yellow = new Scalar(0,255,255);
+		Scalar blue = new Scalar(255, 195, 0);
 	
 
 		String headlightModelFile = "HOG_HEADLIGHT.train.scale.model.txt";
@@ -115,7 +115,7 @@ public class Main {
 		EDescriptorType hog = EDescriptorType.HOG;
 
 		doPredict(imageModel, imageSegments, headlightModelFile, headlightRangeFile,
-				hog, yellow);
+				hog, blue);
 	}
 	
 	/**
@@ -126,14 +126,14 @@ public class Main {
 	private static void findCandidateTaillights(ImageModel imageModel,
 			List<ImageModel> imageSegments) {
 
-		Scalar blue = new Scalar(255, 195, 0);
-
+		Scalar yellow = new Scalar(0,255,255);
+		
 		String taillightModelFile = "SCD_TAILLIGHT.train.scale.model.txt";
 		String taillightRangeFile = "SCD_TAILLIGHT.range.txt";
 		EDescriptorType scd = EDescriptorType.SCD;
 
 		doPredict(imageModel, imageSegments, taillightModelFile, taillightRangeFile,
-				scd, blue);
+				scd,yellow);
 	}
 
 	private static void createModelFiles() {

@@ -211,7 +211,14 @@ public final class OpenCV {
 			}
 
 			Point[] arr = points.toArray(new Point[points.size()]);
-			Rect rect = Imgproc.boundingRect(new MatOfPoint(arr));
+			
+			Rect rect = null;
+			try {
+				rect = Imgproc.boundingRect(new MatOfPoint(arr));
+			} catch (Exception ex) {
+				logger.error("", ex);
+				continue;
+			}
 
 			Mat region;
 			if (isBlackBg) {
@@ -256,32 +263,25 @@ public final class OpenCV {
 		return region;
 	}
 
-/*	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
-			int index) {
-		if (descriptorsList.size() == (index + 1)) {
-			return descriptorsList.get(index);
-		} else {
-			CvMat head = descriptorsList.get(index);
-			CvMat next = concatenateDescriptors(descriptorsList, index + 1);
-			CvMat desc = cvCreateMat(head.rows() + next.rows(), head.cols(),
-					next.type());
-			desc.put(head);
-			int offset = head.rows();
-			for (int i = offset; i < desc.rows(); i++) {
-				for (int j = 0; j < desc.cols(); j++) {
-					desc.put(i, j, next.get(i - offset, j));
-				}
-			}
-			return desc;
-		}
-	}*/
+	/*
+	 * public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
+	 * int index) { if (descriptorsList.size() == (index + 1)) { return
+	 * descriptorsList.get(index); } else { CvMat head =
+	 * descriptorsList.get(index); CvMat next =
+	 * concatenateDescriptors(descriptorsList, index + 1); CvMat desc =
+	 * cvCreateMat(head.rows() + next.rows(), head.cols(), next.type());
+	 * desc.put(head); int offset = head.rows(); for (int i = offset; i <
+	 * desc.rows(); i++) { for (int j = 0; j < desc.cols(); j++) { desc.put(i,
+	 * j, next.get(i - offset, j)); } } return desc; } }
+	 */
 
-	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,int type) {
+	public static CvMat concatenateDescriptors(List<CvMat> descriptorsList,
+			int type) {
 
 		CvMat concated = null;
 		int maxCol = 0;
 		int totalRow = 0;
-		
+
 		for (CvMat mat : descriptorsList) {
 			totalRow = totalRow + mat.rows();
 			if (maxCol == 0) {
@@ -291,22 +291,22 @@ public final class OpenCV {
 			if (maxCol < mat.cols())
 				maxCol = mat.cols();
 		}
-		
+
 		int rows = totalRow;
 		int cols = maxCol;
-	
-		concated = CvMat.create(rows, cols,type);
-		
+
+		concated = CvMat.create(rows, cols, type);
+
 		int globalRows = 0;
-		for(CvMat mat: descriptorsList){
-			for(int i=0;i<mat.rows();i++){
-				for(int j=0;j<mat.cols();j++){
-					concated.put(globalRows,j,mat.get(i, j));
+		for (CvMat mat : descriptorsList) {
+			for (int i = 0; i < mat.rows(); i++) {
+				for (int j = 0; j < mat.cols(); j++) {
+					concated.put(globalRows, j, mat.get(i, j));
 				}
 				globalRows++;
 			}
 		}
-		
+
 		return concated;
 	}
 

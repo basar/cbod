@@ -115,6 +115,47 @@ public class ImageModelService {
 		else
 			return imageModels.subList(0, count);
 	}
+	
+	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType,
+			final boolean isTestImage, int count) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		@SuppressWarnings("serial")
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.isTestImage() == isTestImage
+								&& imageModel.getObjectType() != objectType;
+
+					}
+				});
+
+		if (count > imageModels.size())
+			return imageModels;
+		else
+			return imageModels.subList(0, count);
+	}
+	
+	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType,
+			final boolean isTestImage) {
+
+		ObjectContainer container = db4O.getObjContainer();
+
+		@SuppressWarnings("serial")
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.isTestImage() == isTestImage
+								&& imageModel.getObjectType() != objectType;
+
+					}
+				});
+
+		return imageModels;
+	}
 
 	public List<ImageModel> getImageModelList(final EObjectType objectType) {
 
@@ -126,6 +167,23 @@ public class ImageModelService {
 					@Override
 					public boolean match(ImageModel imageModel) {
 						return imageModel.getObjectType() == objectType;
+
+					}
+				});
+
+		return imageModels;
+	}
+	
+	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType){
+		
+		ObjectContainer container = db4O.getObjContainer();
+
+		@SuppressWarnings("serial")
+		List<ImageModel> imageModels = container
+				.query(new Predicate<ImageModel>() {
+					@Override
+					public boolean match(ImageModel imageModel) {
+						return imageModel.getObjectType() != objectType;
 
 					}
 				});
