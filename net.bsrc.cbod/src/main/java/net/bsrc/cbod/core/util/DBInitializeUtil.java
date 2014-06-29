@@ -20,10 +20,15 @@ import com.googlecode.javacv.cpp.opencv_core.CvMat;
 
 public class DBInitializeUtil {
 
-	private final static boolean SAVE_WHEEL = true;
-	private final static boolean SAVE_HEAD_LIGHT = true;
-	private final static boolean SAVE_TAIL_LIGHT = true;
-	private final static boolean SAVE_NONE_CAR_PART = true;
+	private final static boolean SAVE_WHEEL = false;
+	private final static boolean SAVE_HEAD_LIGHT = false;
+	private final static boolean SAVE_TAIL_LIGHT = false;
+	private final static boolean SAVE_NONE_CAR_PART = false;
+	private final static boolean SAVE_CAR = true;
+	private final static boolean SAVE_NONE_CAR = true;
+
+
+	private final static boolean CREATE_DICT_FOR_NONE_PARTS = true;
 
 	public static void saveImageModelstoDB() {
 
@@ -94,11 +99,52 @@ public class DBInitializeUtil {
 					true, EObjectType.NONE_CAR_PART));
 		}
 
-		// Create sift dictionary
-		CvMat siftDictionary = CBODSift.createDictionary(saveImageModels, 125);
-		String tempDir = CBODUtil.getCbodTempDirectory() + "/";
-		OpenCV.storeCvMatToFile(tempDir.concat("sift_dict.xml"), "sift_dict",
-				siftDictionary);
+		if (SAVE_CAR) {
+
+			String carTrainImagePath = cbodDirPath
+					.concat("/image_db/car/train");
+			String carTestImagePath = cbodDirPath.concat("/image_db/car/test");
+
+			saveImageModels.addAll(createImageModels(carTrainImagePath, false,
+					EObjectType.CAR));
+
+			saveImageModels.addAll(createImageModels(carTestImagePath, true,
+					EObjectType.CAR));
+		}
+		
+		if(SAVE_NONE_CAR){
+			
+			String noneCarTrainImagePath = cbodDirPath
+					.concat("/image_db/none_car/train");
+			String noneCarTestImagePath = cbodDirPath.concat("/image_db/none_car/test");
+
+			saveImageModels.addAll(createImageModels(noneCarTrainImagePath, false,
+					EObjectType.NONE_CAR));
+
+			saveImageModels.addAll(createImageModels(noneCarTestImagePath, true,
+					EObjectType.NONE_CAR));
+			
+		}
+
+		CvMat siftDictionary = null;
+		
+		if (!CREATE_DICT_FOR_NONE_PARTS) {
+			// Create sift dictionary
+			siftDictionary = CBODSift.createDictionary(saveImageModels,
+					125);
+			String tempDir = CBODUtil.getCbodTempDirectory() + "/";
+			OpenCV.storeCvMatToFile(tempDir.concat("sift_dict.xml"),
+					"sift_dict", siftDictionary);
+
+		}else{
+			
+			siftDictionary = CBODSift.createDictionary(saveImageModels,
+					125);
+			String tempDir = CBODUtil.getCbodTempDirectory() + "/";
+			OpenCV.storeCvMatToFile(tempDir.concat("sift_dict_none_car_part.xml"),
+					"sift_dict_none_car_part", siftDictionary);
+			
+		}
 
 		extractFeatureVectors(saveImageModels, siftDictionary);
 
