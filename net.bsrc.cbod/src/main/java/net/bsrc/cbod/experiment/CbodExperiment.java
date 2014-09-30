@@ -9,6 +9,7 @@ import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
+import org.apache.commons.io.FileUtils;
 
 /**
  * The class contains experiments methods
@@ -94,5 +95,51 @@ public class CbodExperiment {
 		libSvm.doPredict(scaleTestFileName, modelFileName, null);
 
 	}
+
+	public static void doExperiment(String expName,
+			List<List<Double>> positiveTrainDataLists,
+			List<List<Double>> negativeTrainDataLists,
+			List<List<Double>> testDataLists, boolean isTestDataPositive) {
+
+		String trainingFileName = expName + "." + CBODConstants.SVM_TRAIN
+				+ CBODConstants.TXT_SUFFIX;
+		String testFileName = expName + "." + CBODConstants.SVM_TEST
+				+ CBODConstants.TXT_SUFFIX;
+		String rangeFileName = expName + "." + CBODConstants.SVM_RANGE
+				+ CBODConstants.TXT_SUFFIX;
+
+		int positiveLabel = 0;
+		int negativeLabel = 1;
+
+		int testLabel = 1;
+
+		if (isTestDataPositive)
+			testLabel = positiveLabel;
+
+		LibSvm libSvm = LibSvm.getInstance();
+
+		libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
+				positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
+		libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
+
+		ScaleParameter scaleParameter = new ScaleParameter();
+		scaleParameter.setSaveFileName(rangeFileName);
+		// scaleParameter.setLower(-1);
+
+		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
+				scaleParameter);
+
+        scaleParameter.setSaveFileName(null);
+        scaleParameter.setRestoreFileName(rangeFileName);
+
+        String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+
+        String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
+
+        libSvm.doPredict(scaleTestFileName, modelFileName, null);
+	}
+
+
+
 
 }

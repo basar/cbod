@@ -86,55 +86,38 @@ public class LibSvm {
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
 
-		if (labelA == labelB)
-			throw new CBODException(
-					"LabelA and LabelB must have different values!");
+        List<List<Double>> dataListsA = new ArrayList<List<Double>>();
 
-		if (CollectionUtils.isEmpty(imageModelListA)
-				|| CollectionUtils.isEmpty(imageModelListB))
-			throw new CBODException(
-					"Imagemodel lists must not be null or empty");
+        for (ImageModel imageModel : imageModelListA) {
 
-		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
-				fileName));
-		List<String> lines = new ArrayList<String>();
+            Descriptor descriptor = imageModel.getDescriptor(descType);
+            if (descriptor == null) {
+                logger.error(
+                        "descriptor couldn't be found for image model: {}",
+                        imageModel.toString());
+                continue;
+            }
 
-		for (ImageModel imageModel : imageModelListA) {
+            dataListsA.add(imageModel.getDescriptor(descType).getDataList());
 
-			Descriptor descriptor = imageModel.getDescriptor(descType);
-			if (descriptor == null) {
-				logger.error(
-						"descriptor couldn't be found for image model: {}",
-						imageModel.toString());
-				continue;
-			}
+        }
 
-			String line = formatData(labelA, imageModel.getDescriptor(descType)
-					.getDataList());
-			lines.add(line);
+        List<List<Double>> dataListsB = new ArrayList<List<Double>>();
 
-		}
+        for (ImageModel imageModel : imageModelListB) {
 
-		for (ImageModel imageModel : imageModelListB) {
+            Descriptor descriptor = imageModel.getDescriptor(descType);
+            if (descriptor == null) {
+                logger.error(
+                        "descriptor couldn't be found for image model: {}",
+                        imageModel.toString());
+                continue;
+            }
 
-			Descriptor descriptor = imageModel.getDescriptor(descType);
-			if (descriptor == null) {
-				logger.error(
-						"descriptor couldn't be found for image model: {}",
-						imageModel.toString());
-				continue;
-			}
+            dataListsB.add(imageModel.getDescriptor(descType).getDataList());
+        }
 
-			String line = formatData(labelB, imageModel.getDescriptor(descType)
-					.getDataList());
-			lines.add(line);
-		}
-
-		try {
-			FileUtils.writeLines(dataFile, lines);
-		} catch (IOException e) {
-			throw new CBODException(e);
-		}
+        createFormattedDataFile(fileName,labelA,dataListsA,labelB,dataListsB);
 
 	}
 
@@ -147,10 +130,7 @@ public class LibSvm {
 	public void createFormattedDataFile(String fileName, int label,
 			List<ImageModel> imageModelList, EDescriptorType descType) {
 
-		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
-				fileName));
-		List<String> lines = new ArrayList<String>();
-
+	    List<List<Double>> dataLists = new ArrayList<List<Double>>();
 		for (ImageModel imageModel : imageModelList) {
 
 			Descriptor descriptor = imageModel.getDescriptor(descType);
@@ -161,8 +141,54 @@ public class LibSvm {
 				continue;
 			}
 
-			String line = formatData(label, imageModel.getDescriptor(descType)
-					.getDataList());
+			dataLists.add(imageModel.getDescriptor(descType).getDataList());
+		}
+
+		createFormattedDataFile(fileName,label,dataLists);
+	}
+
+	public void createFormattedDataFile(String fileName, int labelA,
+			List<List<Double>> dataListsA, int labelB,
+			List<List<Double>> dataListsB) {
+
+		if (labelA == labelB)
+			throw new CBODException(
+					"LabelA and LabelB must have different values!");
+
+		if (CollectionUtils.isEmpty(dataListsA)
+				|| CollectionUtils.isEmpty(dataListsB))
+			throw new CBODException("data lists must not be null or empty");
+
+		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
+				fileName));
+		List<String> lines = new ArrayList<String>();
+
+		for (List<Double> dataList : dataListsA) {
+			String line = formatData(labelA, dataList);
+			lines.add(line);
+		}
+
+		for (List<Double> dataList : dataListsB) {
+			String line = formatData(labelB, dataList);
+			lines.add(line);
+		}
+
+		try {
+			FileUtils.writeLines(dataFile, lines);
+		} catch (IOException e) {
+			throw new CBODException(e);
+		}
+	}
+
+	public void createFormattedDataFile(String fileName, int label,
+			List<List<Double>> dataLists) {
+
+		File dataFile = FileUtils.getFile(svmDirectoryPath.concat("/").concat(
+				fileName));
+		List<String> lines = new ArrayList<String>();
+
+		for (List<Double> dataList : dataLists) {
+			String line = formatData(label, dataList);
 			lines.add(line);
 		}
 
@@ -304,17 +330,17 @@ public class LibSvm {
 		return sb.toString();
 	}
 
-    public String getAbsoluteFilePath(String fileName){
+	public String getAbsoluteFilePath(String fileName) {
 
-        Validate.notEmpty(fileName,"'fileName' must not be empty");
+		Validate.notEmpty(fileName, "'fileName' must not be empty");
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(svmDirectoryPath);
-        if(!fileName.startsWith("/")){
-            sb.append("/");
-        }
-        sb.append(fileName);
-        return sb.toString();
-    }
+		StringBuilder sb = new StringBuilder();
+		sb.append(svmDirectoryPath);
+		if (!fileName.startsWith("/")) {
+			sb.append("/");
+		}
+		sb.append(fileName);
+		return sb.toString();
+	}
 
 }

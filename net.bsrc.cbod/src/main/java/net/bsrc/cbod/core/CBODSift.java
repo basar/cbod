@@ -1,14 +1,19 @@
 package net.bsrc.cbod.core;
 
-import static com.googlecode.javacv.cpp.opencv_core.CV_32F;
-import static com.googlecode.javacv.cpp.opencv_core.CV_TERMCRIT_ITER;
+import static com.googlecode.javacv.cpp.opencv_core.*;
 import static com.googlecode.javacv.cpp.opencv_highgui.CV_LOAD_IMAGE_GRAYSCALE;
 import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImageM;
+import static com.googlecode.javacv.cpp.opencv_features2d.drawKeypoints;
+import static com.googlecode.javacv.cpp.opencv_highgui.cvSaveImage;
+import static com.googlecode.javacv.cpp.opencv_imgproc.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.googlecode.javacv.cpp.opencv_core;
+import com.googlecode.javacv.cpp.opencv_features2d;
 import net.bsrc.cbod.core.model.ImageModel;
+import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.opencv.OpenCV;
 
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
@@ -115,5 +120,39 @@ public class CBODSift {
 		}
 		return list;
 	}
+
+
+    public static void drawKeypointsFromImageModel(ImageModel imageModel){
+
+
+        KeyPoint keyPoint = new KeyPoint();
+
+        SIFT sift = new SIFT();
+        //SIFT sift = new SIFT(0,3,0.04,5,1.2);
+        FeatureDetector detector = sift.getFeatureDetector();
+
+        //Orginal image
+        CvMat orginalImg=cvLoadImageM(imageModel.getImagePath());
+        //Gray image
+        CvMat grayImg = CvMat.create(orginalImg.rows(),orginalImg.cols(),CV_8U);
+        //Fill gray image
+        cvCvtColor(orginalImg,grayImg,CV_BGR2GRAY);
+
+        // detect key points in the image
+        detector.detect(grayImg, keyPoint, null);
+
+        CvMat outputImgDesc = CvMat.create(orginalImg.rows(),orginalImg.cols(),orginalImg.type());
+
+        drawKeypoints(orginalImg,keyPoint,outputImgDesc, opencv_core.CvScalar.YELLOW, opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
+        // App temp dir
+        String cbodTempDir = CBODUtil.getCbodTempDirectory();
+
+        String path=cbodTempDir.concat("/")
+                .concat(imageModel.getRawImageName())
+                .concat("_key_points" + CBODConstants.JPEG_SUFFIX);
+
+        cvSaveImage(path,outputImgDesc);
+
+    }
 
 }

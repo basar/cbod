@@ -1,8 +1,11 @@
 package net.bsrc.cbod.main;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import net.bsrc.cbod.core.CBODSift;
 import net.bsrc.cbod.core.ImageModelFactory;
+import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
@@ -43,15 +46,45 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
+		ImageModelService service = ImageModelService.getInstance();
 
-		//DBInitializeUtil.saveImageModelstoDB();
+		// training images
+		List<ImageModel> trainPositiveImageList = service.getImageModelList(
+				EObjectType.WHEEL, false, 400);
+		List<ImageModel> trainNegativeImageList = service.getImageModelList(
+				EObjectType.NONE_CAR_PART, false, 400);
+
+		// test images
+		List<ImageModel> testImageList = service.getImageModelList(
+				EObjectType.WHEEL, true, 100);
+
+		List<List<Double>> trainPositive = new ArrayList<List<Double>>();
+		List<List<Double>> trainNegative = new ArrayList<List<Double>>();
+		List<List<Double>> testList = new ArrayList<List<Double>>();
+
+		for (ImageModel imageModel : trainPositiveImageList) {
+            trainPositive.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
+		}
+
+        for (ImageModel imageModel : trainNegativeImageList) {
+            trainNegative.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
+        }
+
+        for (ImageModel imageModel : testImageList) {
+            testList.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
+        }
+
+        CbodExperiment.doExperiment("test_1",trainPositive,trainNegative,testList,true);
+
+
+		// DBInitializeUtil.saveImageModelstoDB();
 
 		// createModelFiles();
 		// testObjectDetection("test_32.jpg");
 
-		CbodExperiment.doExperiment(EObjectType.CAR,
-		EObjectType.NONE_CAR, EObjectType.CAR, 400, 100,
-		EDescriptorType.DCD);
+		// CbodExperiment.doExperiment(EObjectType.WHEEL,
+		// EObjectType.NONE_CAR_PART, EObjectType.WHEEL, 400, 100,
+		// EDescriptorType.HOG);
 
 		// JSEGParameter param =
 		// JSEGParameterFactory.createJSEGParameter(IMG_DIR
