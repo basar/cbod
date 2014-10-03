@@ -3,18 +3,21 @@ package net.bsrc.cbod.core.util;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 import net.bsrc.cbod.core.model.ImageModel;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,5 +285,47 @@ public final class CBODUtil {
 		return result;
 
 	}
+
+	public static void applyMinMaxNormalization(List<Double> dataList) {
+
+		double[] dataArr = ArrayUtils.toPrimitive(dataList
+				.toArray(new Double[dataList.size()]));
+		final double min = StatUtils.min(dataArr);
+		final double max = StatUtils.max(dataArr);
+
+		for (int i = 0; i < dataList.size(); i++) {
+			double x = dataList.get(i);
+			dataList.set(i, (x - min) / (max - min));
+		}
+
+	}
+
+	public static void applyMinMaxNormalizations(List<List<Double>> dataLists) {
+
+		for (List<Double> dataList : dataLists) {
+			applyMinMaxNormalization(dataList);
+		}
+	}
+
+	public static void applyZScoreNormalization(List<Double> dataList) {
+
+        double[] dataArr = ArrayUtils.toPrimitive(dataList.toArray(new Double[dataList.size()]));
+        final double mean = StatUtils.mean(dataArr);
+        final double standartDeviation = Math.sqrt(StatUtils.variance(dataArr));
+
+        for (int i = 0; i < dataList.size(); i++) {
+            double x = dataList.get(i);
+            double z = (x-mean)/standartDeviation;
+            dataList.set(i,z);
+        }
+
+    }
+    
+    
+    public static void applyZScoreNormalizations(List<List<Double>> dataLists){
+        for (List<Double> dataList : dataLists) {
+            applyZScoreNormalization(dataList);
+        }
+    }
 
 }

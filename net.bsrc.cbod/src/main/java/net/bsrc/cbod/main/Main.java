@@ -3,9 +3,7 @@ package net.bsrc.cbod.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.CBODSift;
 import net.bsrc.cbod.core.ImageModelFactory;
-import net.bsrc.cbod.core.model.Descriptor;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
@@ -46,36 +44,8 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-		ImageModelService service = ImageModelService.getInstance();
 
-		// training images
-		List<ImageModel> trainPositiveImageList = service.getImageModelList(
-				EObjectType.WHEEL, false, 400);
-		List<ImageModel> trainNegativeImageList = service.getImageModelList(
-				EObjectType.NONE_CAR_PART, false, 400);
-
-		// test images
-		List<ImageModel> testImageList = service.getImageModelList(
-				EObjectType.WHEEL, true, 100);
-
-		List<List<Double>> trainPositive = new ArrayList<List<Double>>();
-		List<List<Double>> trainNegative = new ArrayList<List<Double>>();
-		List<List<Double>> testList = new ArrayList<List<Double>>();
-
-		for (ImageModel imageModel : trainPositiveImageList) {
-            trainPositive.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
-		}
-
-        for (ImageModel imageModel : trainNegativeImageList) {
-            trainNegative.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
-        }
-
-        for (ImageModel imageModel : testImageList) {
-            testList.add(imageModel.getDescriptor(EDescriptorType.HOG).getDataList());
-        }
-
-        CbodExperiment.doExperiment("test_1",trainPositive,trainNegative,testList,true);
-
+        doTest();
 
 		// DBInitializeUtil.saveImageModelstoDB();
 
@@ -97,6 +67,39 @@ public class Main {
 
 		DB4O.getInstance().close();
 	}
+
+
+    private static void doTest(){
+
+        ImageModelService service = ImageModelService.getInstance();
+
+        EDescriptorType descriptorType = EDescriptorType.SCD;
+        EObjectType positiveObjType = EObjectType.WHEEL;
+        EObjectType negativeObjType = EObjectType.NONE_CAR_PART;
+        EObjectType testObjType = EObjectType.WHEEL;
+
+        // training data
+        List<List<Double>> trainPositive = ImageModel.getDescriptorDataLists(service.getImageModelList(
+                positiveObjType, false, 400), descriptorType);
+        List<List<Double>> trainNegative = ImageModel.getDescriptorDataLists(service.getImageModelList(
+                negativeObjType, false, 400), descriptorType);
+        // test data
+        List<List<Double>> testList = ImageModel.getDescriptorDataLists(service.getImageModelList(
+                testObjType, true, 100),descriptorType);
+
+        //CBODUtil.applyMinMaxNormalizations(trainPositive);
+        //CBODUtil.applyMinMaxNormalizations(trainNegative);
+        //CBODUtil.applyMinMaxNormalizations(testList);
+
+        CBODUtil.applyZScoreNormalizations(trainPositive);
+        CBODUtil.applyZScoreNormalizations(trainNegative);
+        CBODUtil.applyZScoreNormalizations(testList);
+
+        CbodExperiment.doExperiment("test_1",trainPositive,trainNegative,testList,(positiveObjType == testObjType),true);
+
+    }
+
+
 
 	private static void testObjectDetection(String imageName) {
 

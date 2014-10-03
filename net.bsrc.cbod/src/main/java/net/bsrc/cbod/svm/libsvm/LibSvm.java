@@ -86,39 +86,10 @@ public class LibSvm {
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
 
-        List<List<Double>> dataListsA = new ArrayList<List<Double>>();
-
-        for (ImageModel imageModel : imageModelListA) {
-
-            Descriptor descriptor = imageModel.getDescriptor(descType);
-            if (descriptor == null) {
-                logger.error(
-                        "descriptor couldn't be found for image model: {}",
-                        imageModel.toString());
-                continue;
-            }
-
-            dataListsA.add(imageModel.getDescriptor(descType).getDataList());
-
-        }
-
-        List<List<Double>> dataListsB = new ArrayList<List<Double>>();
-
-        for (ImageModel imageModel : imageModelListB) {
-
-            Descriptor descriptor = imageModel.getDescriptor(descType);
-            if (descriptor == null) {
-                logger.error(
-                        "descriptor couldn't be found for image model: {}",
-                        imageModel.toString());
-                continue;
-            }
-
-            dataListsB.add(imageModel.getDescriptor(descType).getDataList());
-        }
+        List<List<Double>> dataListsA = ImageModel.getDescriptorDataLists(imageModelListA, descType);
+        List<List<Double>> dataListsB = ImageModel.getDescriptorDataLists(imageModelListB, descType);
 
         createFormattedDataFile(fileName,labelA,dataListsA,labelB,dataListsB);
-
 	}
 
 	/**

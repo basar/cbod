@@ -99,7 +99,8 @@ public class CbodExperiment {
 	public static void doExperiment(String expName,
 			List<List<Double>> positiveTrainDataLists,
 			List<List<Double>> negativeTrainDataLists,
-			List<List<Double>> testDataLists, boolean isTestDataPositive) {
+			List<List<Double>> testDataLists, boolean isTestDataPositive,
+			boolean doScale) {
 
 		String trainingFileName = expName + "." + CBODConstants.SVM_TRAIN
 				+ CBODConstants.TXT_SUFFIX;
@@ -122,24 +123,22 @@ public class CbodExperiment {
 				positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
 		libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
 
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setSaveFileName(rangeFileName);
-		// scaleParameter.setLower(-1);
+		if (doScale) {
 
-		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
-				scaleParameter);
+			ScaleParameter scaleParameter = new ScaleParameter();
+			scaleParameter.setSaveFileName(rangeFileName);
+			// scaleParameter.setLower(-1);
 
-        scaleParameter.setSaveFileName(null);
-        scaleParameter.setRestoreFileName(rangeFileName);
+			trainingFileName = libSvm.doScale(trainingFileName,
+					scaleParameter);
+			scaleParameter.setSaveFileName(null);
+			scaleParameter.setRestoreFileName(rangeFileName);
+            testFileName = libSvm.doScale(testFileName, scaleParameter);
+		}
 
-        String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
+		String modelFileName = libSvm.doTrain(trainingFileName, null);
 
-        String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
-
-        libSvm.doPredict(scaleTestFileName, modelFileName, null);
+		libSvm.doPredict(testFileName, modelFileName, null);
 	}
-
-
-
 
 }

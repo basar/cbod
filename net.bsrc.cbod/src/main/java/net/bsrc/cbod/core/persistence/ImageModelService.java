@@ -115,6 +115,8 @@ public class ImageModelService {
 		else
 			return imageModels.subList(0, count);
 	}
+
+
 	
 	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType,
 			final boolean isTestImage, int count) {
@@ -211,25 +213,5 @@ public class ImageModelService {
 			return imageModels.subList(0, count);
 	}
 
-	private boolean controlDescriptors(ImageModel imgModel) {
 
-		boolean passed = true;
-
-		for (EDescriptorType type : EDescriptorType.values()) {
-			// TODO Gecici yapildi
-			if (type != EDescriptorType.HTD) {
-				Descriptor descriptor = imgModel.getDescriptor(type);
-				if (descriptor != null
-						&& !CollectionUtils.isEmpty(descriptor.getDataList())) {
-					continue;
-				} else {
-					passed = false;
-					break;
-				}
-			}
-
-		}
-
-		return passed;
-	}
 }

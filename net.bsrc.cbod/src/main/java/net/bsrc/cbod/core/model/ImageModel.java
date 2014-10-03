@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
@@ -115,6 +116,33 @@ public class ImageModel implements Serializable {
 		return null;
 	}
 
+	public List<Double> getDescriptorDataList(EDescriptorType type) {
+
+        Validate.notNull(type);
+
+        List<Double> dataList = null;
+		Descriptor descriptor = getDescriptor(type);
+		if (descriptor != null) {
+			dataList = descriptor.getDataList();
+		}
+
+		return dataList != null ? dataList : new ArrayList<Double>();
+	}
+
+	public static List<List<Double>> getDescriptorDataLists(
+            List<ImageModel> modelList, EDescriptorType type) {
+
+        Validate.notEmpty(modelList);
+
+		List<List<Double>> result = new ArrayList<List<Double>>();
+
+        for (ImageModel imageModel : modelList) {
+            result.add(imageModel.getDescriptorDataList(type));
+        }
+
+        return result;
+	}
+
 	public void setRawImageName(String rawImageName) {
 		this.rawImageName = rawImageName;
 	}
@@ -174,7 +202,5 @@ public class ImageModel implements Serializable {
 				+ imagePath + ", objectType=" + objectType + ", testImage="
 				+ testImage + "]";
 	}
-
-	
 
 }
