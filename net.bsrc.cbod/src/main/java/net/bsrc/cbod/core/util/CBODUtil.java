@@ -5,18 +5,24 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
 
+import com.googlecode.javacv.JavaCV;
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
 import net.bsrc.cbod.core.model.ImageModel;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -286,46 +292,43 @@ public final class CBODUtil {
 
 	}
 
-	public static void applyMinMaxNormalization(List<Double> dataList) {
+	public static List<Double> concatDataList(List<Double>... dataLists) {
 
-		double[] dataArr = ArrayUtils.toPrimitive(dataList
-				.toArray(new Double[dataList.size()]));
-		final double min = StatUtils.min(dataArr);
-		final double max = StatUtils.max(dataArr);
-
-		for (int i = 0; i < dataList.size(); i++) {
-			double x = dataList.get(i);
-			dataList.set(i, (x - min) / (max - min));
-		}
-
-	}
-
-	public static void applyMinMaxNormalizations(List<List<Double>> dataLists) {
+		List<Double> result = new ArrayList<Double>();
 
 		for (List<Double> dataList : dataLists) {
-			applyMinMaxNormalization(dataList);
+			result.addAll(dataList);
 		}
+
+		return result;
 	}
 
-	public static void applyZScoreNormalization(List<Double> dataList) {
+	public static List<List<Double>> concatDataLists(
+			List<List<Double>>... dataLists) {
 
-        double[] dataArr = ArrayUtils.toPrimitive(dataList.toArray(new Double[dataList.size()]));
-        final double mean = StatUtils.mean(dataArr);
-        final double standartDeviation = Math.sqrt(StatUtils.variance(dataArr));
+		if (dataLists == null || dataLists.length == 0)
+			throw new CBODException("dataLists cannot be empty");
 
-        for (int i = 0; i < dataList.size(); i++) {
-            double x = dataList.get(i);
-            double z = (x-mean)/standartDeviation;
-            dataList.set(i,z);
-        }
+		final int size = dataLists[0].size();
 
-    }
-    
-    
-    public static void applyZScoreNormalizations(List<List<Double>> dataLists){
-        for (List<Double> dataList : dataLists) {
-            applyZScoreNormalization(dataList);
-        }
-    }
+		for (int i = 0; i < dataLists.length; i++) {
+			if (size != dataLists[i].size()) {
+				throw new CBODException("All data list must be same size");
+			}
+		}
+
+		List<List<Double>> result = new ArrayList<List<Double>>();
+
+		for (int i = 0; i < size; i++) {
+			List<Double> temp = new ArrayList<Double>();
+			for (int j = 0; j < dataLists.length; j++) {
+				temp.addAll(dataLists[j].get(i));
+			}
+			result.add(temp);
+		}
+
+		return result;
+
+	}
 
 }

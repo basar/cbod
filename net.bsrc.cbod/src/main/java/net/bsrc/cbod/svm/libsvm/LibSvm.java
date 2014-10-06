@@ -279,6 +279,53 @@ public class LibSvm {
 		return predictFileName;
 	}
 
+
+    public void doClassification(String classificationId,
+                                    List<List<Double>> positiveTrainDataLists,
+                                    List<List<Double>> negativeTrainDataLists,
+                                    List<List<Double>> testDataLists, boolean isTestDataPositive,
+                                    boolean doScale){
+
+        String trainingFileName = classificationId + "." + CBODConstants.SVM_TRAIN
+                + CBODConstants.TXT_SUFFIX;
+        String testFileName = classificationId + "." + CBODConstants.SVM_TEST
+                + CBODConstants.TXT_SUFFIX;
+        String rangeFileName = classificationId + "." + CBODConstants.SVM_RANGE
+                + CBODConstants.TXT_SUFFIX;
+
+        int positiveLabel = 0;
+        int negativeLabel = 1;
+
+        int testLabel = 1;
+
+        if (isTestDataPositive)
+            testLabel = positiveLabel;
+
+        LibSvm libSvm = LibSvm.getInstance();
+
+        libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
+                positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
+        libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
+
+        if (doScale) {
+
+            ScaleParameter scaleParameter = new ScaleParameter();
+            scaleParameter.setSaveFileName(rangeFileName);
+            // scaleParameter.setLower(-1);
+
+            trainingFileName = libSvm.doScale(trainingFileName,
+                    scaleParameter);
+            scaleParameter.setSaveFileName(null);
+            scaleParameter.setRestoreFileName(rangeFileName);
+            testFileName = libSvm.doScale(testFileName, scaleParameter);
+        }
+
+        String modelFileName = libSvm.doTrain(trainingFileName, null);
+
+        libSvm.doPredict(testFileName, modelFileName, null);
+
+    }
+
 	private <T> String formatData(int label, List<T> data) {
 
 		StringBuilder sb = new StringBuilder();

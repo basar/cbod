@@ -3,7 +3,7 @@ package net.bsrc.cbod.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.ImageModelFactory;
+import net.bsrc.cbod.core.*;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
@@ -18,6 +18,7 @@ import net.bsrc.cbod.pascal.PascalVOC;
 import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalObject;
 
+import net.bsrc.cbod.svm.libsvm.LibSvm;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -44,8 +45,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-
-        doTest();
+        CbodExperiment.doExperiment(new MedianNormalization(),EObjectType.TAIL_LIGHT,EObjectType.NONE_CAR_PART,EObjectType.TAIL_LIGHT,EDescriptorType.SCD,EDescriptorType.HOG,EDescriptorType.EHD);
 
 		// DBInitializeUtil.saveImageModelstoDB();
 
@@ -67,38 +67,6 @@ public class Main {
 
 		DB4O.getInstance().close();
 	}
-
-
-    private static void doTest(){
-
-        ImageModelService service = ImageModelService.getInstance();
-
-        EDescriptorType descriptorType = EDescriptorType.SCD;
-        EObjectType positiveObjType = EObjectType.WHEEL;
-        EObjectType negativeObjType = EObjectType.NONE_CAR_PART;
-        EObjectType testObjType = EObjectType.WHEEL;
-
-        // training data
-        List<List<Double>> trainPositive = ImageModel.getDescriptorDataLists(service.getImageModelList(
-                positiveObjType, false, 400), descriptorType);
-        List<List<Double>> trainNegative = ImageModel.getDescriptorDataLists(service.getImageModelList(
-                negativeObjType, false, 400), descriptorType);
-        // test data
-        List<List<Double>> testList = ImageModel.getDescriptorDataLists(service.getImageModelList(
-                testObjType, true, 100),descriptorType);
-
-        //CBODUtil.applyMinMaxNormalizations(trainPositive);
-        //CBODUtil.applyMinMaxNormalizations(trainNegative);
-        //CBODUtil.applyMinMaxNormalizations(testList);
-
-        CBODUtil.applyZScoreNormalizations(trainPositive);
-        CBODUtil.applyZScoreNormalizations(trainNegative);
-        CBODUtil.applyZScoreNormalizations(testList);
-
-        CbodExperiment.doExperiment("test_1",trainPositive,trainNegative,testList,(positiveObjType == testObjType),true);
-
-    }
-
 
 
 	private static void testObjectDetection(String imageName) {

@@ -1,12 +1,16 @@
 package net.bsrc.cbod.experiment;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.INormalization;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.ImageModelService;
+import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 import org.apache.commons.io.FileUtils;
@@ -16,129 +20,53 @@ import org.apache.commons.io.FileUtils;
  */
 public class CbodExperiment {
 
-	/**
-	 * 
-	 * @param trainPositiveObjType
-	 *            positive image type
-	 * @param trainNegativeObjType
-	 *            negative image type
-	 * @param testObjType
-	 *            test image type
-	 * @param countTrain
-	 *            number of training images
-	 * @param countTest
-	 *            number of test images
-	 * @param descriptorType
-	 *            descriptor type
-	 */
-	public static void doExperiment(EObjectType trainPositiveObjType,
-			EObjectType trainNegativeObjType, EObjectType testObjType,
-			int countTrain, int countTest, EDescriptorType descriptorType) {
+
+	@SuppressWarnings("unchecked")
+    public static void doExperiment(INormalization normalization,
+			EObjectType positiveObjType, EObjectType negativeObjType,
+			EObjectType testObjType, EDescriptorType... descriptorTypes) {
 
 		ImageModelService service = ImageModelService.getInstance();
 
-		// training images
-		List<ImageModel> trainPositiveImageList = service.getImageModelList(
-				trainPositiveObjType, false, countTrain);
-		List<ImageModel> trainNegativeImageList = service.getImageModelList(
-				trainNegativeObjType, false, countTrain);
+		List<List<Double>>[] trainPositiveDataArr = new List[descriptorTypes.length];
+		List<List<Double>>[] trainNegativeDataArr = new List[descriptorTypes.length];
+		List<List<Double>>[] testDataArr = new List[descriptorTypes.length];
 
-		// test images
-		List<ImageModel> testImageList = service.getImageModelList(testObjType,
-				true, countTest);
+		for (int i = 0; i < descriptorTypes.length; i++) {
 
-		LibSvm libSvm = LibSvm.getInstance();
+			EDescriptorType descriptorType = descriptorTypes[i];
 
-		String descName = descriptorType.getName();
+			List<List<Double>> trainPositive = ImageModel
+					.getDescriptorDataLists(service.getImageModelList(
+                            positiveObjType, false, 400), descriptorType);
+			List<List<Double>> trainNegative = ImageModel
+					.getDescriptorDataLists(service.getImageModelList(
+                            negativeObjType, false, 400), descriptorType);
+			// test data
+			List<List<Double>> testList = ImageModel.getDescriptorDataLists(
+					service.getImageModelList(testObjType, true, 100),
+					descriptorType);
 
-		String trainingFileName = descName + "." + CBODConstants.SVM_TRAIN
-				+ CBODConstants.TXT_SUFFIX;
-		String testFileName = descName + "." + CBODConstants.SVM_TEST
-				+ CBODConstants.TXT_SUFFIX;
-		String rangeFileName = descName + "." + CBODConstants.SVM_RANGE
-				+ CBODConstants.TXT_SUFFIX;
-
-		int positiveLabel = 0;
-		int negativeLabel = 1;
-
-		libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
-				trainPositiveImageList, negativeLabel, trainNegativeImageList,
-				descriptorType);
-
-		int testLabel = -1;
-		if (testObjType.equals(trainPositiveObjType))
-			testLabel = positiveLabel;
-		if (testObjType.equals(trainNegativeObjType))
-			testLabel = negativeLabel;
-
-		if (testLabel == -1)
-			throw new IllegalArgumentException(
-					"testObjectType must be equal trainPositiveObjType or trainNegativeObjType");
-
-		libSvm.createFormattedDataFile(testFileName, testLabel, testImageList,
-				descriptorType);
-
-		ScaleParameter scaleParameter = new ScaleParameter();
-		scaleParameter.setSaveFileName(rangeFileName);
-		// scaleParameter.setLower(-1);
-
-		String scaleTrainingFileName = libSvm.doScale(trainingFileName,
-				scaleParameter);
-
-		scaleParameter.setSaveFileName(null);
-		scaleParameter.setRestoreFileName(rangeFileName);
-
-		String scaleTestFileName = libSvm.doScale(testFileName, scaleParameter);
-
-		String modelFileName = libSvm.doTrain(scaleTrainingFileName, null);
-
-		libSvm.doPredict(scaleTestFileName, modelFileName, null);
-
-	}
-
-	public static void doExperiment(String expName,
-			List<List<Double>> positiveTrainDataLists,
-			List<List<Double>> negativeTrainDataLists,
-			List<List<Double>> testDataLists, boolean isTestDataPositive,
-			boolean doScale) {
-
-		String trainingFileName = expName + "." + CBODConstants.SVM_TRAIN
-				+ CBODConstants.TXT_SUFFIX;
-		String testFileName = expName + "." + CBODConstants.SVM_TEST
-				+ CBODConstants.TXT_SUFFIX;
-		String rangeFileName = expName + "." + CBODConstants.SVM_RANGE
-				+ CBODConstants.TXT_SUFFIX;
-
-		int positiveLabel = 0;
-		int negativeLabel = 1;
-
-		int testLabel = 1;
-
-		if (isTestDataPositive)
-			testLabel = positiveLabel;
-
-		LibSvm libSvm = LibSvm.getInstance();
-
-		libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
-				positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
-		libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
-
-		if (doScale) {
-
-			ScaleParameter scaleParameter = new ScaleParameter();
-			scaleParameter.setSaveFileName(rangeFileName);
-			// scaleParameter.setLower(-1);
-
-			trainingFileName = libSvm.doScale(trainingFileName,
-					scaleParameter);
-			scaleParameter.setSaveFileName(null);
-			scaleParameter.setRestoreFileName(rangeFileName);
-            testFileName = libSvm.doScale(testFileName, scaleParameter);
+			trainPositiveDataArr[i] = trainPositive;
+			trainNegativeDataArr[i] = trainNegative;
+			testDataArr[i] = testList;
 		}
 
-		String modelFileName = libSvm.doTrain(trainingFileName, null);
+        List<List<Double>> positiveConcatList=CBODUtil.concatDataLists(trainPositiveDataArr);
+        List<List<Double>> negativeConcatList=CBODUtil.concatDataLists(trainNegativeDataArr);
+        List<List<Double>> testConcatList=CBODUtil.concatDataLists(testDataArr);
 
-		libSvm.doPredict(testFileName, modelFileName, null);
-	}
+
+        normalization.applyNormalizations(positiveConcatList);
+        normalization.applyNormalizations(negativeConcatList);
+        normalization.applyNormalizations(testConcatList);
+
+        LibSvm svm=LibSvm.getInstance();
+
+        svm.doClassification("test_1",positiveConcatList,negativeConcatList,testConcatList,(positiveObjType == testObjType),true);
+
+
+
+    }
 
 }
