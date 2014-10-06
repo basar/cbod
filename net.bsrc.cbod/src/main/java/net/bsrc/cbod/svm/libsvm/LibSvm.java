@@ -86,10 +86,13 @@ public class LibSvm {
 			List<ImageModel> imageModelListA, int labelB,
 			List<ImageModel> imageModelListB, EDescriptorType descType) {
 
-        List<List<Double>> dataListsA = ImageModel.getDescriptorDataLists(imageModelListA, descType);
-        List<List<Double>> dataListsB = ImageModel.getDescriptorDataLists(imageModelListB, descType);
+		List<List<Double>> dataListsA = ImageModel.getDescriptorDataLists(
+				imageModelListA, descType);
+		List<List<Double>> dataListsB = ImageModel.getDescriptorDataLists(
+				imageModelListB, descType);
 
-        createFormattedDataFile(fileName,labelA,dataListsA,labelB,dataListsB);
+		createFormattedDataFile(fileName, labelA, dataListsA, labelB,
+				dataListsB);
 	}
 
 	/**
@@ -101,7 +104,7 @@ public class LibSvm {
 	public void createFormattedDataFile(String fileName, int label,
 			List<ImageModel> imageModelList, EDescriptorType descType) {
 
-	    List<List<Double>> dataLists = new ArrayList<List<Double>>();
+		List<List<Double>> dataLists = new ArrayList<List<Double>>();
 		for (ImageModel imageModel : imageModelList) {
 
 			Descriptor descriptor = imageModel.getDescriptor(descType);
@@ -115,7 +118,7 @@ public class LibSvm {
 			dataLists.add(imageModel.getDescriptor(descType).getDataList());
 		}
 
-		createFormattedDataFile(fileName,label,dataLists);
+		createFormattedDataFile(fileName, label, dataLists);
 	}
 
 	public void createFormattedDataFile(String fileName, int labelA,
@@ -279,52 +282,50 @@ public class LibSvm {
 		return predictFileName;
 	}
 
+	public void doClassification(String classificationId,
+			List<List<Double>> positiveTrainDataLists,
+			List<List<Double>> negativeTrainDataLists,
+			List<List<Double>> testDataLists, boolean isTestDataPositive,
+			boolean doScale) {
 
-    public void doClassification(String classificationId,
-                                    List<List<Double>> positiveTrainDataLists,
-                                    List<List<Double>> negativeTrainDataLists,
-                                    List<List<Double>> testDataLists, boolean isTestDataPositive,
-                                    boolean doScale){
+		String trainingFileName = classificationId + "."
+				+ CBODConstants.SVM_TRAIN + CBODConstants.TXT_SUFFIX;
+		String testFileName = classificationId + "." + CBODConstants.SVM_TEST
+				+ CBODConstants.TXT_SUFFIX;
+		String rangeFileName = classificationId + "." + CBODConstants.SVM_RANGE
+				+ CBODConstants.TXT_SUFFIX;
 
-        String trainingFileName = classificationId + "." + CBODConstants.SVM_TRAIN
-                + CBODConstants.TXT_SUFFIX;
-        String testFileName = classificationId + "." + CBODConstants.SVM_TEST
-                + CBODConstants.TXT_SUFFIX;
-        String rangeFileName = classificationId + "." + CBODConstants.SVM_RANGE
-                + CBODConstants.TXT_SUFFIX;
+		int positiveLabel = 0;
+		int negativeLabel = 1;
 
-        int positiveLabel = 0;
-        int negativeLabel = 1;
+		int testLabel = 1;
 
-        int testLabel = 1;
+		if (isTestDataPositive)
+			testLabel = positiveLabel;
 
-        if (isTestDataPositive)
-            testLabel = positiveLabel;
+		LibSvm libSvm = LibSvm.getInstance();
 
-        LibSvm libSvm = LibSvm.getInstance();
+		libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
+				positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
+		libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
 
-        libSvm.createFormattedDataFile(trainingFileName, positiveLabel,
-                positiveTrainDataLists, negativeLabel, negativeTrainDataLists);
-        libSvm.createFormattedDataFile(testFileName, testLabel, testDataLists);
+		if (doScale) {
 
-        if (doScale) {
+			ScaleParameter scaleParameter = new ScaleParameter();
+			scaleParameter.setSaveFileName(rangeFileName);
+			// scaleParameter.setLower(-1);
 
-            ScaleParameter scaleParameter = new ScaleParameter();
-            scaleParameter.setSaveFileName(rangeFileName);
-            // scaleParameter.setLower(-1);
+			trainingFileName = libSvm.doScale(trainingFileName, scaleParameter);
+			scaleParameter.setSaveFileName(null);
+			scaleParameter.setRestoreFileName(rangeFileName);
+			testFileName = libSvm.doScale(testFileName, scaleParameter);
+		}
 
-            trainingFileName = libSvm.doScale(trainingFileName,
-                    scaleParameter);
-            scaleParameter.setSaveFileName(null);
-            scaleParameter.setRestoreFileName(rangeFileName);
-            testFileName = libSvm.doScale(testFileName, scaleParameter);
-        }
+		String modelFileName = libSvm.doTrain(trainingFileName, null);
 
-        String modelFileName = libSvm.doTrain(trainingFileName, null);
+		libSvm.doPredict(testFileName, modelFileName, null);
 
-        libSvm.doPredict(testFileName, modelFileName, null);
-
-    }
+	}
 
 	private <T> String formatData(int label, List<T> data) {
 

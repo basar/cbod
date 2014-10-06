@@ -29,7 +29,7 @@ public class PredictParameter {
 
 		StringBuilder sb = new StringBuilder();
 
-		CBODUtil.appendParam(sb, "-b", new Object[]{probabilityEstimates});
+		CBODUtil.appendParam(sb, "-b", new Object[] { probabilityEstimates });
 
 		return sb.toString();
 

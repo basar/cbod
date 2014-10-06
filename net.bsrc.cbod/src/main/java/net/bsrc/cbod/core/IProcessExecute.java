@@ -5,9 +5,11 @@ package net.bsrc.cbod.core;
  */
 public interface IProcessExecute {
 
-    /**
-     * Execute a process
-     * @param parameter process parameter
-     */
+	/**
+	 * Execute a process
+	 * 
+	 * @param parameter
+	 *            process parameter
+	 */
 	void execute(String parameter);
 }

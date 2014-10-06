@@ -64,6 +64,4 @@ public final class ImageModelFactory {
 		return _createImageModel(imagePath, isCreateMat, isCreateSegments);
 	}
 
-
-
 }

@@ -211,7 +211,7 @@ public final class OpenCV {
 			}
 
 			Point[] arr = points.toArray(new Point[points.size()]);
-			
+
 			Rect rect = null;
 			try {
 				rect = Imgproc.boundingRect(new MatOfPoint(arr));

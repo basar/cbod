@@ -20,9 +20,8 @@ import org.apache.commons.io.FileUtils;
  */
 public class CbodExperiment {
 
-
 	@SuppressWarnings("unchecked")
-    public static void doExperiment(INormalization normalization,
+	public static void doExperiment(INormalization normalization,
 			EObjectType positiveObjType, EObjectType negativeObjType,
 			EObjectType testObjType, EDescriptorType... descriptorTypes) {
 
@@ -38,10 +37,10 @@ public class CbodExperiment {
 
 			List<List<Double>> trainPositive = ImageModel
 					.getDescriptorDataLists(service.getImageModelList(
-                            positiveObjType, false, 400), descriptorType);
+							positiveObjType, false, 400), descriptorType);
 			List<List<Double>> trainNegative = ImageModel
 					.getDescriptorDataLists(service.getImageModelList(
-                            negativeObjType, false, 400), descriptorType);
+							negativeObjType, false, 400), descriptorType);
 			// test data
 			List<List<Double>> testList = ImageModel.getDescriptorDataLists(
 					service.getImageModelList(testObjType, true, 100),
@@ -52,21 +51,22 @@ public class CbodExperiment {
 			testDataArr[i] = testList;
 		}
 
-        List<List<Double>> positiveConcatList=CBODUtil.concatDataLists(trainPositiveDataArr);
-        List<List<Double>> negativeConcatList=CBODUtil.concatDataLists(trainNegativeDataArr);
-        List<List<Double>> testConcatList=CBODUtil.concatDataLists(testDataArr);
+		List<List<Double>> positiveConcatList = CBODUtil
+				.concatDataLists(trainPositiveDataArr);
+		List<List<Double>> negativeConcatList = CBODUtil
+				.concatDataLists(trainNegativeDataArr);
+		List<List<Double>> testConcatList = CBODUtil
+				.concatDataLists(testDataArr);
 
+		normalization.applyNormalizations(positiveConcatList);
+		normalization.applyNormalizations(negativeConcatList);
+		normalization.applyNormalizations(testConcatList);
 
-        normalization.applyNormalizations(positiveConcatList);
-        normalization.applyNormalizations(negativeConcatList);
-        normalization.applyNormalizations(testConcatList);
+		LibSvm svm = LibSvm.getInstance();
 
-        LibSvm svm=LibSvm.getInstance();
+		svm.doClassification("test_1", positiveConcatList, negativeConcatList,
+				testConcatList, (positiveObjType == testObjType), true);
 
-        svm.doClassification("test_1",positiveConcatList,negativeConcatList,testConcatList,(positiveObjType == testObjType),true);
-
-
-
-    }
+	}
 
 }

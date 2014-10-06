@@ -18,11 +18,10 @@ import net.bsrc.cbod.core.model.ImageModel;
 
 public class CBODHog {
 
-	
-	public static List<Double> extractHogDescriptor(ImageModel imageModel){
-		
+	public static List<Double> extractHogDescriptor(ImageModel imageModel) {
+
 		List<Double> list = new ArrayList<Double>();
-		
+
 		IplImage rawImg = cvLoadImage(imageModel.getImagePath());
 
 		// resize image
@@ -43,19 +42,13 @@ public class CBODHog {
 		HOGDescriptor hog = new HOGDescriptor();
 		hog.winSize(winSize);
 		hog.compute(gray, featureVector, winStride, padding, locations);
-		
+
 		for (int i = 0; i < featureVector.capacity(); i++) {
 			list.add(new Double(featureVector.get(i)));
 		}
-		
-		
+
 		return list;
-		
+
 	}
-	
-	
-	
-	
-	
-	
+
 }

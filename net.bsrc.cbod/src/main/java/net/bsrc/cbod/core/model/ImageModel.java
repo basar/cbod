@@ -118,9 +118,9 @@ public class ImageModel implements Serializable {
 
 	public List<Double> getDescriptorDataList(EDescriptorType type) {
 
-        Validate.notNull(type);
+		Validate.notNull(type);
 
-        List<Double> dataList = null;
+		List<Double> dataList = null;
 		Descriptor descriptor = getDescriptor(type);
 		if (descriptor != null) {
 			dataList = descriptor.getDataList();
@@ -130,17 +130,17 @@ public class ImageModel implements Serializable {
 	}
 
 	public static List<List<Double>> getDescriptorDataLists(
-            List<ImageModel> modelList, EDescriptorType type) {
+			List<ImageModel> modelList, EDescriptorType type) {
 
-        Validate.notEmpty(modelList);
+		Validate.notEmpty(modelList);
 
 		List<List<Double>> result = new ArrayList<List<Double>>();
 
-        for (ImageModel imageModel : modelList) {
-            result.add(imageModel.getDescriptorDataList(type));
-        }
+		for (ImageModel imageModel : modelList) {
+			result.add(imageModel.getDescriptorDataList(type));
+		}
 
-        return result;
+		return result;
 	}
 
 	public void setRawImageName(String rawImageName) {

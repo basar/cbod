@@ -44,5 +44,5 @@ public class PascalSize {
 		return "PascalSize [width=" + width + ", height=" + height + ", depth="
 				+ depth + "]";
 	}
-	
+
 }

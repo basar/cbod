@@ -27,8 +27,8 @@ public class ZScoreNormalization implements INormalization {
 
 	@Override
 	public void applyNormalizations(List<List<Double>> datas) {
-        for (List<Double> dataList : datas) {
-            applyNormalization(dataList);
-        }
+		for (List<Double> dataList : datas) {
+			applyNormalization(dataList);
+		}
 	}
 }

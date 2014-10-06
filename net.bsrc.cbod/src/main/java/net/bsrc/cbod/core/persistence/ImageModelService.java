@@ -116,10 +116,8 @@ public class ImageModelService {
 			return imageModels.subList(0, count);
 	}
 
-
-	
-	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType,
-			final boolean isTestImage, int count) {
+	public List<ImageModel> getImageModelListNegativeFor(
+			final EObjectType objectType, final boolean isTestImage, int count) {
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -139,9 +137,9 @@ public class ImageModelService {
 		else
 			return imageModels.subList(0, count);
 	}
-	
-	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType,
-			final boolean isTestImage) {
+
+	public List<ImageModel> getImageModelListNegativeFor(
+			final EObjectType objectType, final boolean isTestImage) {
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -175,9 +173,10 @@ public class ImageModelService {
 
 		return imageModels;
 	}
-	
-	public List<ImageModel> getImageModelListNegativeFor(final EObjectType objectType){
-		
+
+	public List<ImageModel> getImageModelListNegativeFor(
+			final EObjectType objectType) {
+
 		ObjectContainer container = db4O.getObjContainer();
 
 		@SuppressWarnings("serial")
@@ -192,8 +191,9 @@ public class ImageModelService {
 
 		return imageModels;
 	}
-	
-	public List<ImageModel> getImageModelList(final EObjectType objectType,int count) {
+
+	public List<ImageModel> getImageModelList(final EObjectType objectType,
+			int count) {
 
 		ObjectContainer container = db4O.getObjContainer();
 
@@ -212,6 +212,5 @@ public class ImageModelService {
 		else
 			return imageModels.subList(0, count);
 	}
-
 
 }

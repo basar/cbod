@@ -3,10 +3,11 @@ package net.bsrc.cbod.core.model;
 import java.util.Set;
 
 import org.opencv.core.Mat;
+
 /**
  * 
  * @author bsr
- *
+ * 
  */
 public class RegionMap {
 

@@ -119,8 +119,8 @@ public class CBODDemo {
 		if (descriptorType == EDescriptorType.CLD) {
 			mpeg7Fex.extractColorLayoutDescriptors(imageSegments, 64, 28);
 		}
-		
-		if(descriptorType == EDescriptorType.HOG){
+
+		if (descriptorType == EDescriptorType.HOG) {
 			// HOG descriptors
 			for (ImageModel imageModel : imageSegments) {
 				Descriptor hogDesc = new Descriptor();
@@ -170,7 +170,8 @@ public class CBODDemo {
 
 	}
 
-	public static List<ImageModel> segmentImage(String imagePath,JSEGParameter jsegParam) {
+	public static List<ImageModel> segmentImage(String imagePath,
+			JSEGParameter jsegParam) {
 		// Image raw name
 		String imageRawName = FilenameUtils.getBaseName(imagePath);
 		// OS temp dir
@@ -179,7 +180,7 @@ public class CBODDemo {
 		String cbodTempDir = CBODUtil.getCbodTempDirectory();
 
 		// Ilk olarak gelen image segmentlerine ayrilmali!
-		if(jsegParam==null){
+		if (jsegParam == null) {
 			jsegParam = new JSEGParameter(imagePath);
 		}
 

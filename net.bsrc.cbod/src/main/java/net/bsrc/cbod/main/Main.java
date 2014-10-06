@@ -45,7 +45,10 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 
-        CbodExperiment.doExperiment(new MedianNormalization(),EObjectType.TAIL_LIGHT,EObjectType.NONE_CAR_PART,EObjectType.TAIL_LIGHT,EDescriptorType.SCD,EDescriptorType.HOG,EDescriptorType.EHD);
+		CbodExperiment.doExperiment(new MedianNormalization(),
+				EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
+				EObjectType.TAIL_LIGHT, EDescriptorType.SCD,
+				EDescriptorType.HOG, EDescriptorType.CLD);
 
 		// DBInitializeUtil.saveImageModelstoDB();
 
@@ -67,7 +70,6 @@ public class Main {
 
 		DB4O.getInstance().close();
 	}
-
 
 	private static void testObjectDetection(String imageName) {
 

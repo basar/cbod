@@ -23,12 +23,12 @@ public final class CBODConstants {
 	public static final String SEG_SUFFIX = ".seg";
 	public static final String TXT_SUFFIX = ".txt";
 
-    public static final String SVM_TRAIN = "train";
-    public static final String SVM_TEST = "test";
-    public static final String SVM_RANGE = "range";
-    public static final String SVM_SCALE = "scale";
-    public static final String SVM_MODEL = "model";
-    public static final String SVM_PREDICT = "predict";
+	public static final String SVM_TRAIN = "train";
+	public static final String SVM_TEST = "test";
+	public static final String SVM_RANGE = "range";
+	public static final String SVM_SCALE = "scale";
+	public static final String SVM_MODEL = "model";
+	public static final String SVM_PREDICT = "predict";
 
 	/**
 	 * Property files keys
@@ -38,8 +38,8 @@ public final class CBODConstants {
 	 * CBOD Core
 	 */
 	public static final String CBOD_OUTPUT_DIR = "net.bsrc.cbod.dir";
-    public static final String CBOD_TEMP_DIR = "net.bsrc.cbod.temp.dir";
-    public static final String CBOD_INPUT_IMAGE_DIR = "net.bsrc.cbod.inputImage.dir";
+	public static final String CBOD_TEMP_DIR = "net.bsrc.cbod.temp.dir";
+	public static final String CBOD_INPUT_IMAGE_DIR = "net.bsrc.cbod.inputImage.dir";
 
 	/**
 	 * Pascal VOC
@@ -70,18 +70,16 @@ public final class CBODConstants {
 	public static final String LIB_SVM_PREDICT_EXECUTE_COMMAND = "net.bsrc.cbod.libsvm.predict.executeCommand";
 	public static final String LIB_SVM_DIR = "net.bsrc.cobd.libsvm.dir";
 
-
 	/**
 	 * DB4O
 	 */
 	public static final String DB4O_FILE_PATH = "net.bsrc.cbod.db4o.filePath";
-	
-	
+
 	/**
-	 * SIFT 
+	 * SIFT
 	 */
-	public static final String SIFT_DICTIONARY_FILE_NAME="cbod_sift.xml";
-	
+	public static final String SIFT_DICTIONARY_FILE_NAME = "cbod_sift.xml";
+
 	/**
 	 * To prevent object creation
 	 */

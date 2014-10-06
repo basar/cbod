@@ -85,7 +85,7 @@ public class CBODSift {
 		FeatureDetector detector = sift.getFeatureDetector();
 
 		DescriptorMatcher descMatcher = new FlannBasedMatcher();
-		//DescriptorMatcher descMatcher = new BFMatcher();
+		// DescriptorMatcher descMatcher = new BFMatcher();
 
 		BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
 				extractor, descMatcher);
@@ -121,38 +121,40 @@ public class CBODSift {
 		return list;
 	}
 
+	public static void drawKeypointsFromImageModel(ImageModel imageModel) {
 
-    public static void drawKeypointsFromImageModel(ImageModel imageModel){
+		KeyPoint keyPoint = new KeyPoint();
 
+		SIFT sift = new SIFT();
+		// SIFT sift = new SIFT(0,3,0.04,5,1.2);
+		FeatureDetector detector = sift.getFeatureDetector();
 
-        KeyPoint keyPoint = new KeyPoint();
+		// Orginal image
+		CvMat orginalImg = cvLoadImageM(imageModel.getImagePath());
+		// Gray image
+		CvMat grayImg = CvMat.create(orginalImg.rows(), orginalImg.cols(),
+				CV_8U);
+		// Fill gray image
+		cvCvtColor(orginalImg, grayImg, CV_BGR2GRAY);
 
-        SIFT sift = new SIFT();
-        //SIFT sift = new SIFT(0,3,0.04,5,1.2);
-        FeatureDetector detector = sift.getFeatureDetector();
+		// detect key points in the image
+		detector.detect(grayImg, keyPoint, null);
 
-        //Orginal image
-        CvMat orginalImg=cvLoadImageM(imageModel.getImagePath());
-        //Gray image
-        CvMat grayImg = CvMat.create(orginalImg.rows(),orginalImg.cols(),CV_8U);
-        //Fill gray image
-        cvCvtColor(orginalImg,grayImg,CV_BGR2GRAY);
+		CvMat outputImgDesc = CvMat.create(orginalImg.rows(),
+				orginalImg.cols(), orginalImg.type());
 
-        // detect key points in the image
-        detector.detect(grayImg, keyPoint, null);
+		drawKeypoints(orginalImg, keyPoint, outputImgDesc,
+				opencv_core.CvScalar.YELLOW,
+				opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
+		// App temp dir
+		String cbodTempDir = CBODUtil.getCbodTempDirectory();
 
-        CvMat outputImgDesc = CvMat.create(orginalImg.rows(),orginalImg.cols(),orginalImg.type());
+		String path = cbodTempDir.concat("/")
+				.concat(imageModel.getRawImageName())
+				.concat("_key_points" + CBODConstants.JPEG_SUFFIX);
 
-        drawKeypoints(orginalImg,keyPoint,outputImgDesc, opencv_core.CvScalar.YELLOW, opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
-        // App temp dir
-        String cbodTempDir = CBODUtil.getCbodTempDirectory();
+		cvSaveImage(path, outputImgDesc);
 
-        String path=cbodTempDir.concat("/")
-                .concat(imageModel.getRawImageName())
-                .concat("_key_points" + CBODConstants.JPEG_SUFFIX);
-
-        cvSaveImage(path,outputImgDesc);
-
-    }
+	}
 
 }

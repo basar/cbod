@@ -21,8 +21,8 @@ public class JSEGParameterFactory {
 		jsegParameter.setInputFileName(imagePath);
 		jsegParameter.setOutputFileImage(outputDir.concat("/").concat(baseName)
 				.concat(CBODConstants.JPEG_SUFFIX));
-        jsegParameter.setRegionMapFileName(outputDir.concat("/").concat(baseName)
-                .concat(CBODConstants.MAP_SUFFIX));
+		jsegParameter.setRegionMapFileName(outputDir.concat("/")
+				.concat(baseName).concat(CBODConstants.MAP_SUFFIX));
 
 		return jsegParameter;
 	}
