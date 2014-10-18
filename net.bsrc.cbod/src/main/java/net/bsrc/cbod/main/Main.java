@@ -44,7 +44,6 @@ public class Main {
     public static void main(String[] args) {
 
         svm_problem svm_problem = new svm_problem();
-        svm_problem.
 
 
 //        CbodExperiment.doExperiment(new MedianNormalization(),
