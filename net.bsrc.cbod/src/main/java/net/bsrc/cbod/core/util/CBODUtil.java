@@ -292,6 +292,15 @@ public final class CBODUtil {
 
 	}
 
+    public static double[] toArray(List<Double> list){
+        return  ArrayUtils.toPrimitive(list
+                .toArray(new Double[list.size()]));
+    }
+
+    public static List<Double> toList(double[] arr){
+        return Arrays.asList(ArrayUtils.toObject(arr));
+    }
+
 	public static List<Double> concatDataList(List<Double>... dataLists) {
 
 		List<Double> result = new ArrayList<Double>();

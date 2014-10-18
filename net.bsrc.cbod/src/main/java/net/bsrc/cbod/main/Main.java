@@ -3,6 +3,7 @@ package net.bsrc.cbod.main;
 import java.util.ArrayList;
 import java.util.List;
 
+import libsvm.svm_problem;
 import net.bsrc.cbod.core.*;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
@@ -19,300 +20,298 @@ import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalObject;
 
 import net.bsrc.cbod.svm.libsvm.LibSvm;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
+import org.opencv.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Main {
 
-	private final static Logger logger = LoggerFactory.getLogger(Main.class);
-
-	static {
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-	}
-
-	private final static String IMG_DIR = CBODUtil.getCbodInputImageDirectory()
-			+ "/";
-	private final static String TMP_DIR = CBODUtil.getCbodTempDirectory() + "/";
-
-	/**
-	 * Main entry point for program
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-
-		CbodExperiment.doExperiment(new MedianNormalization(),
-				EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
-				EObjectType.TAIL_LIGHT, EDescriptorType.SCD,
-				EDescriptorType.HOG, EDescriptorType.CLD);
-
-		// DBInitializeUtil.saveImageModelstoDB();
-
-		// createModelFiles();
-		// testObjectDetection("test_32.jpg");
-
-		// CbodExperiment.doExperiment(EObjectType.WHEEL,
-		// EObjectType.NONE_CAR_PART, EObjectType.WHEEL, 400, 100,
-		// EDescriptorType.HOG);
-
-		// JSEGParameter param =
-		// JSEGParameterFactory.createJSEGParameter(IMG_DIR
-		// + "/test_4.jpg", CBODUtil.getCbodTempDirectory());
-		// param.setFactor(0.5);
-		// param.setColorQuantizationThreshold(1);
-		// param.setRegionMergeThreshold(0.1);
-		// param.setNumberOfScales(2);
-		// JSEG.doSegmentation(param);
+    private final static Logger logger = LoggerFactory.getLogger(Main.class);
 
-		DB4O.getInstance().close();
-	}
+    static {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
 
-	private static void testObjectDetection(String imageName) {
+    private final static String IMG_DIR = CBODUtil.getCbodInputImageDirectory()
+            + "/";
+    private final static String TMP_DIR = CBODUtil.getCbodTempDirectory() + "/";
+
+    /**
+     * Main entry point for program
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
 
-		// Test yapilacak image
-		ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR
-				+ imageName, true);
+        svm_problem svm_problem = new svm_problem();
+        svm_problem.
 
-		JSEGParameter jsegParam = new JSEGParameter(imageModel.getImagePath());
-		jsegParam.setFactor(0.5);
-		jsegParam.setColorQuantizationThreshold(1);
-		jsegParam.setRegionMergeThreshold(0.1);
-		jsegParam.setNumberOfScales(2);
 
-		// Image segmentlere ayriliyor
-		List<ImageModel> imageSegments = CBODDemo.segmentImage(
-				imageModel.getImagePath(), null);
+//        CbodExperiment.doExperiment(new MedianNormalization(),
+//                EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
+//                EObjectType.TAIL_LIGHT, EDescriptorType.SCD,
+//                EDescriptorType.HOG, EDescriptorType.CLD, EDescriptorType.CSD, EDescriptorType.EHD, EDescriptorType.DCD, EDescriptorType.SIFT);
 
-		findCandidateWheels(imageModel, imageSegments);
-		// findCandidateHeadlights(imageModel, imageSegments);
-		// findCandidateTaillights(imageModel, imageSegments);
+        // DBInitializeUtil.saveImageModelstoDB();
 
-	}
+        // createModelFiles();
+        // testObjectDetection("test_32.jpg");
 
-	/**
-	 * 
-	 * @param imageModel
-	 * @param imageSegments
-	 */
-	private static void findCandidateWheels(ImageModel imageModel,
-			List<ImageModel> imageSegments) {
+        // CbodExperiment.doExperiment(EObjectType.WHEEL,
+        // EObjectType.NONE_CAR_PART, EObjectType.WHEEL, 400, 100,
+        // EDescriptorType.HOG);
 
-		Scalar green = new Scalar(0, 255, 0);
+        // JSEGParameter param =
+        // JSEGParameterFactory.createJSEGParameter(IMG_DIR
+        // + "/test_4.jpg", CBODUtil.getCbodTempDirectory());
+        // param.setFactor(0.5);
+        // param.setColorQuantizationThreshold(1);
+        // param.setRegionMergeThreshold(0.1);
+        // param.setNumberOfScales(2);
+        // JSEG.doSegmentation(param);
 
-		String wheelModelFile = "HOG_WHEEL.train.scale.model.txt";
-		String wheelRangeFile = "HOG_WHEEL.range.txt";
-		EDescriptorType hog = EDescriptorType.HOG;
+        DB4O.getInstance().close();
+    }
 
-		doPredict(imageModel, imageSegments, wheelModelFile, wheelRangeFile,
-				hog, green);
+    private static void testObjectDetection(String imageName) {
 
-	}
+        // Test yapilacak image
+        ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR
+                + imageName, true);
 
-	/**
-	 * 
-	 * @param imageModel
-	 * @param imageSegments
-	 */
-	private static void findCandidateHeadlights(ImageModel imageModel,
-			List<ImageModel> imageSegments) {
+        JSEGParameter jsegParam = new JSEGParameter(imageModel.getImagePath());
+        jsegParam.setFactor(0.5);
+        jsegParam.setColorQuantizationThreshold(1);
+        jsegParam.setRegionMergeThreshold(0.1);
+        jsegParam.setNumberOfScales(2);
 
-		Scalar blue = new Scalar(255, 195, 0);
+        // Image segmentlere ayriliyor
+        List<ImageModel> imageSegments = CBODDemo.segmentImage(
+                imageModel.getImagePath(), null);
 
-		String headlightModelFile = "HOG_HEADLIGHT.train.scale.model.txt";
-		String headlightRangeFile = "HOG_HEADLIGHT.range.txt";
-		EDescriptorType hog = EDescriptorType.HOG;
+        findCandidateWheels(imageModel, imageSegments);
+        // findCandidateHeadlights(imageModel, imageSegments);
+        // findCandidateTaillights(imageModel, imageSegments);
 
-		doPredict(imageModel, imageSegments, headlightModelFile,
-				headlightRangeFile, hog, blue);
-	}
+    }
 
-	/**
-	 * 
-	 * @param imageModel
-	 * @param imageSegments
-	 */
-	private static void findCandidateTaillights(ImageModel imageModel,
-			List<ImageModel> imageSegments) {
+    /**
+     * @param imageModel
+     * @param imageSegments
+     */
+    private static void findCandidateWheels(ImageModel imageModel,
+                                            List<ImageModel> imageSegments) {
 
-		Scalar yellow = new Scalar(0, 255, 255);
+        Scalar green = new Scalar(0, 255, 0);
 
-		String taillightModelFile = "SCD_TAILLIGHT.train.scale.model.txt";
-		String taillightRangeFile = "SCD_TAILLIGHT.range.txt";
-		EDescriptorType scd = EDescriptorType.SCD;
+        String wheelModelFile = "HOG_WHEEL.train.scale.model.txt";
+        String wheelRangeFile = "HOG_WHEEL.range.txt";
+        EDescriptorType hog = EDescriptorType.HOG;
 
-		doPredict(imageModel, imageSegments, taillightModelFile,
-				taillightRangeFile, scd, yellow);
-	}
+        doPredict(imageModel, imageSegments, wheelModelFile, wheelRangeFile,
+                hog, green);
 
-	private static void createModelFiles() {
+    }
 
-		EDescriptorType hog = EDescriptorType.HOG;
-		EDescriptorType scd = EDescriptorType.SCD;
+    /**
+     * @param imageModel
+     * @param imageSegments
+     */
+    private static void findCandidateHeadlights(ImageModel imageModel,
+                                                List<ImageModel> imageSegments) {
 
-		String wheelFilePreffix = "HOG_WHEEL";
-		String headlightFilePreffix = "HOG_HEADLIGHT";
-		String taillightFilePreffix = "SCD_TAILLIGHT";
+        Scalar blue = new Scalar(255, 195, 0);
 
-		ImageModelService service = ImageModelService.getInstance();
+        String headlightModelFile = "HOG_HEADLIGHT.train.scale.model.txt";
+        String headlightRangeFile = "HOG_HEADLIGHT.range.txt";
+        EDescriptorType hog = EDescriptorType.HOG;
 
-		List<ImageModel> imageModelsWheel = service
-				.getImageModelList(EObjectType.WHEEL);
+        doPredict(imageModel, imageSegments, headlightModelFile,
+                headlightRangeFile, hog, blue);
+    }
 
-		List<ImageModel> imageModelsHeadlight = service
-				.getImageModelList(EObjectType.HEAD_LIGHT);
+    /**
+     * @param imageModel
+     * @param imageSegments
+     */
+    private static void findCandidateTaillights(ImageModel imageModel,
+                                                List<ImageModel> imageSegments) {
 
-		List<ImageModel> imageModelsTaillight = service
-				.getImageModelList(EObjectType.TAIL_LIGHT);
+        Scalar yellow = new Scalar(0, 255, 255);
 
-		List<ImageModel> negativeImageModels = service.getImageModelList(
-				EObjectType.NONE_CAR_PART, 500);
+        String taillightModelFile = "SCD_TAILLIGHT.train.scale.model.txt";
+        String taillightRangeFile = "SCD_TAILLIGHT.range.txt";
+        EDescriptorType scd = EDescriptorType.SCD;
 
-		String[] arr = CBODDemo.createScaledTrainFileAndRangeFile(
-				wheelFilePreffix, hog, imageModelsWheel, negativeImageModels);
+        doPredict(imageModel, imageSegments, taillightModelFile,
+                taillightRangeFile, scd, yellow);
+    }
 
-		CBODDemo.createModelFile(arr[0]);
+    private static void createModelFiles() {
 
-		arr = CBODDemo.createScaledTrainFileAndRangeFile(headlightFilePreffix,
-				hog, imageModelsHeadlight, negativeImageModels);
+        EDescriptorType hog = EDescriptorType.HOG;
+        EDescriptorType scd = EDescriptorType.SCD;
 
-		CBODDemo.createModelFile(arr[0]);
+        String wheelFilePreffix = "HOG_WHEEL";
+        String headlightFilePreffix = "HOG_HEADLIGHT";
+        String taillightFilePreffix = "SCD_TAILLIGHT";
 
-		arr = CBODDemo.createScaledTrainFileAndRangeFile(taillightFilePreffix,
-				scd, imageModelsTaillight, negativeImageModels);
+        ImageModelService service = ImageModelService.getInstance();
 
-		CBODDemo.createModelFile(arr[0]);
+        List<ImageModel> imageModelsWheel = service
+                .getImageModelList(EObjectType.WHEEL);
 
-	}
+        List<ImageModel> imageModelsHeadlight = service
+                .getImageModelList(EObjectType.HEAD_LIGHT);
 
-	private static void doPredict(ImageModel imageModel,
-			List<ImageModel> imageSegments, String modelFile, String rangeFile,
-			EDescriptorType descriptorType, Scalar scalar) {
+        List<ImageModel> imageModelsTaillight = service
+                .getImageModelList(EObjectType.TAIL_LIGHT);
 
-		List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
-				modelFile, rangeFile, descriptorType);
+        List<ImageModel> negativeImageModels = service.getImageModelList(
+                EObjectType.NONE_CAR_PART, 500);
 
-		Mat copy = OpenCV.copyImage(imageModel.getMat());
+        String[] arr = CBODDemo.createScaledTrainFileAndRangeFile(
+                wheelFilePreffix, hog, imageModelsWheel, negativeImageModels);
 
-		for (ImageModel candidate : candidates) {
-			Rect rect = candidate.getRelativeToOrg();
-			OpenCV.drawRect(rect, copy, scalar);
-		}
+        CBODDemo.createModelFile(arr[0]);
 
-		StringBuilder sb = new StringBuilder();
-		sb.append(imageModel.getRawImageName()).append(".");
-		sb.append(descriptorType.getName().toLowerCase()).append(".out.jpg");
+        arr = CBODDemo.createScaledTrainFileAndRangeFile(headlightFilePreffix,
+                hog, imageModelsHeadlight, negativeImageModels);
 
-		String outputImagePath = TMP_DIR.concat(sb.toString());
-		OpenCV.writeImage(copy, outputImagePath);
+        CBODDemo.createModelFile(arr[0]);
 
-	}
+        arr = CBODDemo.createScaledTrainFileAndRangeFile(taillightFilePreffix,
+                scd, imageModelsTaillight, negativeImageModels);
 
-	private static void createNoneCarImageModel() {
+        CBODDemo.createModelFile(arr[0]);
 
-		final int trainImgCount = 40;
-		final int testImgCount = 10;
-		final String trainFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/train/";
-		final String testFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/test/";
+    }
 
-		final int trainImgCountCar = 400;
-		final int testImgCountCar = 100;
+    private static void doPredict(ImageModel imageModel,
+                                  List<ImageModel> imageSegments, String modelFile, String rangeFile,
+                                  EDescriptorType descriptorType, Scalar scalar) {
 
-		final String trainFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/train/";
-		final String testFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/test/";
+        List<ImageModel> candidates = CBODDemo.doPredict(imageSegments,
+                modelFile, rangeFile, descriptorType);
 
-		// none cars
-		saveImageToDisk(EPascalType.BIRD, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.BIRD, true, testImgCount, testFolder);
+        Mat copy = OpenCV.copyImage(imageModel.getMat());
 
-		saveImageToDisk(EPascalType.PERSON, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.PERSON, true, testImgCount, testFolder);
+        for (ImageModel candidate : candidates) {
+            Rect rect = candidate.getRelativeToOrg();
+            OpenCV.drawRect(rect, copy, scalar);
+        }
 
-		saveImageToDisk(EPascalType.COW, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.COW, true, testImgCount, testFolder);
+        StringBuilder sb = new StringBuilder();
+        sb.append(imageModel.getRawImageName()).append(".");
+        sb.append(descriptorType.getName().toLowerCase()).append(".out.jpg");
 
-		saveImageToDisk(EPascalType.BOAT, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.BOAT, true, testImgCount, testFolder);
+        String outputImagePath = TMP_DIR.concat(sb.toString());
+        OpenCV.writeImage(copy, outputImagePath);
 
-		saveImageToDisk(EPascalType.AEROPLANE, false, trainImgCount,
-				trainFolder);
-		saveImageToDisk(EPascalType.AEROPLANE, true, testImgCount, testFolder);
+    }
 
-		saveImageToDisk(EPascalType.HORSE, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.HORSE, true, testImgCount, testFolder);
+    private static void createNoneCarImageModel() {
 
-		saveImageToDisk(EPascalType.TV_MONITOR, false, trainImgCount,
-				trainFolder);
-		saveImageToDisk(EPascalType.TV_MONITOR, true, testImgCount, testFolder);
+        final int trainImgCount = 40;
+        final int testImgCount = 10;
+        final String trainFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/train/";
+        final String testFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/test/";
 
-		saveImageToDisk(EPascalType.POTTED_PLANT, false, trainImgCount,
-				trainFolder);
-		saveImageToDisk(EPascalType.POTTED_PLANT, true, testImgCount,
-				testFolder);
+        final int trainImgCountCar = 400;
+        final int testImgCountCar = 100;
 
-		saveImageToDisk(EPascalType.CHAIR, false, trainImgCount, trainFolder);
-		saveImageToDisk(EPascalType.CHAIR, true, testImgCount, testFolder);
+        final String trainFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/train/";
+        final String testFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/test/";
 
-		saveImageToDisk(EPascalType.DINING_TABLE, false, trainImgCount,
-				trainFolder);
-		saveImageToDisk(EPascalType.DINING_TABLE, true, testImgCount,
-				testFolder);
+        // none cars
+        saveImageToDisk(EPascalType.BIRD, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.BIRD, true, testImgCount, testFolder);
 
-		// cars
-		saveImageToDisk(EPascalType.CAR, false, trainImgCountCar,
-				trainFolderCar);
-		saveImageToDisk(EPascalType.CAR, true, testImgCountCar, testFolderCar);
+        saveImageToDisk(EPascalType.PERSON, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.PERSON, true, testImgCount, testFolder);
 
-	}
+        saveImageToDisk(EPascalType.COW, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.COW, true, testImgCount, testFolder);
 
-	private static void saveImageToDisk(EPascalType pascalType, boolean isTest,
-			int count, String folder) {
+        saveImageToDisk(EPascalType.BOAT, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.BOAT, true, testImgCount, testFolder);
 
-		PascalVOC pascalVOC = PascalVOC.getInstance();
+        saveImageToDisk(EPascalType.AEROPLANE, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.AEROPLANE, true, testImgCount, testFolder);
 
-		// 0, train, 1 test
-		int suffix = 0;
-		if (isTest)
-			suffix = 1;
+        saveImageToDisk(EPascalType.HORSE, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.HORSE, true, testImgCount, testFolder);
 
-		List<ImageModel> imageModels = pascalVOC.getImageModels(pascalType,
-				suffix, 1);
+        saveImageToDisk(EPascalType.TV_MONITOR, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.TV_MONITOR, true, testImgCount, testFolder);
 
-		int localCount = 0;
-		for (ImageModel imgModel : imageModels) {
+        saveImageToDisk(EPascalType.POTTED_PLANT, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.POTTED_PLANT, true, testImgCount,
+                testFolder);
 
-			if (localCount == count)
-				break;
+        saveImageToDisk(EPascalType.CHAIR, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.CHAIR, true, testImgCount, testFolder);
 
-			PascalAnnotation pascalAnnotation = pascalVOC
-					.getAnnotation(imgModel.getRawImageName());
-			List<PascalObject> pascalObjects = pascalAnnotation
-					.getObjectList(pascalType);
-			for (PascalObject pascalObject : pascalObjects) {
+        saveImageToDisk(EPascalType.DINING_TABLE, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.DINING_TABLE, true, testImgCount,
+                testFolder);
 
-				if (!pascalObject.isTruncated()) {
+        // cars
+        saveImageToDisk(EPascalType.CAR, false, trainImgCountCar,
+                trainFolderCar);
+        saveImageToDisk(EPascalType.CAR, true, testImgCountCar, testFolderCar);
 
-					Mat imgMat = OpenCV.getImageMat(imgModel.getImagePath(),
-							pascalObject.getBndbox());
-					OpenCV.writeImage(
-							imgMat,
-							folder.concat(imgModel.getRawImageName())
-									.concat("_")
-									.concat(pascalType.getName())
-									.concat("_")
-									.concat(Integer.toString(localCount++)
-											.concat(".jpg")));
+    }
 
-				}
+    private static void saveImageToDisk(EPascalType pascalType, boolean isTest,
+                                        int count, String folder) {
 
-				if (localCount == count)
-					break;
-			}
-		}
+        PascalVOC pascalVOC = PascalVOC.getInstance();
 
-	}
+        // 0, train, 1 test
+        int suffix = 0;
+        if (isTest)
+            suffix = 1;
+
+        List<ImageModel> imageModels = pascalVOC.getImageModels(pascalType,
+                suffix, 1);
+
+        int localCount = 0;
+        for (ImageModel imgModel : imageModels) {
+
+            if (localCount == count)
+                break;
+
+            PascalAnnotation pascalAnnotation = pascalVOC
+                    .getAnnotation(imgModel.getRawImageName());
+            List<PascalObject> pascalObjects = pascalAnnotation
+                    .getObjectList(pascalType);
+            for (PascalObject pascalObject : pascalObjects) {
+
+                if (!pascalObject.isTruncated()) {
+
+                    Mat imgMat = OpenCV.getImageMat(imgModel.getImagePath(),
+                            pascalObject.getBndbox());
+                    OpenCV.writeImage(
+                            imgMat,
+                            folder.concat(imgModel.getRawImageName())
+                                    .concat("_")
+                                    .concat(pascalType.getName())
+                                    .concat("_")
+                                    .concat(Integer.toString(localCount++)
+                                            .concat(".jpg")));
+
+                }
+
+                if (localCount == count)
+                    break;
+            }
+        }
+
+    }
 
 }

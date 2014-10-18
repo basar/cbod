@@ -9,7 +9,7 @@ public enum EDescriptorType {
 	SCD("SCD"), // Scalable color descriptors
 	CLD("CLD"), // Color layout descriptors
 	DCD("DCD"), // Dominant color descriptors
-	HTD("HTD"), // Homogeneus texture descriptors
+	HTD("HTD"), // Homogeneus texture descriptors  (Simdilik kullanilmiyor)
 	EHD("EHD"), // Edge histogram descriptors
 	SIFT("SIFT"), // SIFT descriptors
 	HOG("HOG");// Histogram of Gradient Descriptors

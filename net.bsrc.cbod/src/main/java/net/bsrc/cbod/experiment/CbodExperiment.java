@@ -1,10 +1,8 @@
 package net.bsrc.cbod.experiment;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 
-import net.bsrc.cbod.core.CBODConstants;
+import net.bsrc.cbod.core.IDimensionReduction;
 import net.bsrc.cbod.core.INormalization;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
@@ -12,61 +10,70 @@ import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
-import net.bsrc.cbod.svm.libsvm.ScaleParameter;
-import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The class contains experiments methods
  */
 public class CbodExperiment {
 
-	@SuppressWarnings("unchecked")
-	public static void doExperiment(INormalization normalization,
-			EObjectType positiveObjType, EObjectType negativeObjType,
-			EObjectType testObjType, EDescriptorType... descriptorTypes) {
 
-		ImageModelService service = ImageModelService.getInstance();
+    private static final Logger logger = LoggerFactory.getLogger(CbodExperiment.class);
 
-		List<List<Double>>[] trainPositiveDataArr = new List[descriptorTypes.length];
-		List<List<Double>>[] trainNegativeDataArr = new List[descriptorTypes.length];
-		List<List<Double>>[] testDataArr = new List[descriptorTypes.length];
+    @SuppressWarnings("unchecked")
+    public static void doExperiment(INormalization normalization,
+                                    EObjectType positiveObjType, EObjectType negativeObjType,
+                                    EObjectType testObjType, EDescriptorType... descriptorTypes) {
 
-		for (int i = 0; i < descriptorTypes.length; i++) {
+        ImageModelService service = ImageModelService.getInstance();
 
-			EDescriptorType descriptorType = descriptorTypes[i];
+        List<List<Double>>[] trainPositiveDataArr = new List[descriptorTypes.length];
+        List<List<Double>>[] trainNegativeDataArr = new List[descriptorTypes.length];
+        List<List<Double>>[] testDataArr = new List[descriptorTypes.length];
 
-			List<List<Double>> trainPositive = ImageModel
-					.getDescriptorDataLists(service.getImageModelList(
-							positiveObjType, false, 400), descriptorType);
-			List<List<Double>> trainNegative = ImageModel
-					.getDescriptorDataLists(service.getImageModelList(
-							negativeObjType, false, 400), descriptorType);
-			// test data
-			List<List<Double>> testList = ImageModel.getDescriptorDataLists(
-					service.getImageModelList(testObjType, true, 100),
-					descriptorType);
+        List<ImageModel> trainPositiveImages = service.getImageModelList(
+                positiveObjType, false, 400);
+        List<ImageModel> trainNegativeImages = service.getImageModelList(
+                negativeObjType, false, 400);
+        List<ImageModel> testImages = service.getImageModelList(testObjType,
+                true, 100);
 
-			trainPositiveDataArr[i] = trainPositive;
-			trainNegativeDataArr[i] = trainNegative;
-			testDataArr[i] = testList;
-		}
+        for (int i = 0; i < descriptorTypes.length; i++) {
 
-		List<List<Double>> positiveConcatList = CBODUtil
-				.concatDataLists(trainPositiveDataArr);
-		List<List<Double>> negativeConcatList = CBODUtil
-				.concatDataLists(trainNegativeDataArr);
-		List<List<Double>> testConcatList = CBODUtil
-				.concatDataLists(testDataArr);
+            EDescriptorType descriptorType = descriptorTypes[i];
 
-		normalization.applyNormalizations(positiveConcatList);
-		normalization.applyNormalizations(negativeConcatList);
-		normalization.applyNormalizations(testConcatList);
+            List<List<Double>> trainPositive = ImageModel
+                    .getDescriptorDataLists(trainPositiveImages, descriptorType);
+            List<List<Double>> trainNegative = ImageModel
+                    .getDescriptorDataLists(trainNegativeImages, descriptorType);
+            // test data
+            List<List<Double>> testList = ImageModel.getDescriptorDataLists(
+                    testImages, descriptorType);
 
-		LibSvm svm = LibSvm.getInstance();
+            trainPositiveDataArr[i] = trainPositive;
+            trainNegativeDataArr[i] = trainNegative;
+            testDataArr[i] = testList;
+        }
 
-		svm.doClassification("test_1", positiveConcatList, negativeConcatList,
-				testConcatList, (positiveObjType == testObjType), true);
+        List<List<Double>> positiveConcatList = CBODUtil
+                .concatDataLists(trainPositiveDataArr);
+        List<List<Double>> negativeConcatList = CBODUtil
+                .concatDataLists(trainNegativeDataArr);
+        List<List<Double>> testConcatList = CBODUtil
+                .concatDataLists(testDataArr);
 
-	}
+        normalization.applyNormalizations(positiveConcatList);
+        normalization.applyNormalizations(negativeConcatList);
+        normalization.applyNormalizations(testConcatList);
+
+
+
+        LibSvm svm = LibSvm.getInstance();
+
+        svm.doClassification("test_1", positiveConcatList, negativeConcatList,
+                testConcatList, (positiveObjType == testObjType), true);
+
+    }
 
 }
