@@ -22,7 +22,7 @@ public class CbodExperiment {
     private static final Logger logger = LoggerFactory.getLogger(CbodExperiment.class);
 
     @SuppressWarnings("unchecked")
-    public static void doExperiment(INormalization normalization,
+    public static void doExperiment(INormalization normalization,boolean doScale,
                                     EObjectType positiveObjType, EObjectType negativeObjType,
                                     EObjectType testObjType, EDescriptorType... descriptorTypes) {
 
@@ -72,7 +72,7 @@ public class CbodExperiment {
         LibSvm svm = LibSvm.getInstance();
 
         svm.doClassification("test_1", positiveConcatList, negativeConcatList,
-                testConcatList, (positiveObjType == testObjType), true);
+                testConcatList, (positiveObjType == testObjType), doScale);
 
     }
 

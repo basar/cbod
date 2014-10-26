@@ -3,7 +3,7 @@ package net.bsrc.cbod.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import libsvm.svm_problem;
+import libsvm.*;
 import net.bsrc.cbod.core.*;
 import net.bsrc.cbod.core.model.EDescriptorType;
 import net.bsrc.cbod.core.model.EObjectType;
@@ -12,7 +12,9 @@ import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.experiment.CbodExperiment;
+import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
+import net.bsrc.cbod.jseg.JSEGParameterFactory;
 import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.pascal.EPascalType;
 import net.bsrc.cbod.pascal.PascalVOC;
@@ -43,13 +45,13 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        svm_problem svm_problem = new svm_problem();
+
+        libSvmUsage();
 
 
-//        CbodExperiment.doExperiment(new MedianNormalization(),
+//        CbodExperiment.doExperiment(new NullNormalization(),false,
 //                EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
-//                EObjectType.TAIL_LIGHT, EDescriptorType.SCD,
-//                EDescriptorType.HOG, EDescriptorType.CLD, EDescriptorType.CSD, EDescriptorType.EHD, EDescriptorType.DCD, EDescriptorType.SIFT);
+//                EObjectType.TAIL_LIGHT, EDescriptorType.EHD);
 
         // DBInitializeUtil.saveImageModelstoDB();
 
@@ -60,17 +62,147 @@ public class Main {
         // EObjectType.NONE_CAR_PART, EObjectType.WHEEL, 400, 100,
         // EDescriptorType.HOG);
 
-        // JSEGParameter param =
-        // JSEGParameterFactory.createJSEGParameter(IMG_DIR
-        // + "/test_4.jpg", CBODUtil.getCbodTempDirectory());
-        // param.setFactor(0.5);
-        // param.setColorQuantizationThreshold(1);
-        // param.setRegionMergeThreshold(0.1);
-        // param.setNumberOfScales(2);
-        // JSEG.doSegmentation(param);
+
+//        JSEGParameter param =
+//                JSEGParameterFactory.createJSEGParameter(IMG_DIR
+//                        + "7.jpg", CBODUtil.getCbodTempDirectory());
+//        param.setFactor(0.5);
+//        param.setColorQuantizationThreshold(150);
+//        param.setRegionMergeThreshold(0.4);
+//        param.setNumberOfScales(3);
+//        JSEG.doSegmentation(param);
 
         DB4O.getInstance().close();
     }
+
+
+    private static void libSvmUsage() {
+
+        ImageModelService service = ImageModelService.getInstance();
+
+        //taillight and none-car part with ehd descriptors
+
+        List<ImageModel> tailLightModels = service.getImageModelList(
+                EObjectType.TAIL_LIGHT, false, 400);
+
+        List<ImageModel> nonCarPartModels = service.getImageModelList(EObjectType.NONE_CAR_PART, false, 400);
+
+
+        List<List<Double>> tailLightEhdDataLists = ImageModel.getDescriptorDataLists(tailLightModels, EDescriptorType.EHD);
+        List<List<Double>> nonCarPartEhdDataLists = ImageModel.getDescriptorDataLists(nonCarPartModels, EDescriptorType.EHD);
+
+
+
+
+        int l = tailLightEhdDataLists.size() + nonCarPartEhdDataLists.size();
+
+        double[] y = new double[l];
+
+        for (int i = 0; i < tailLightEhdDataLists.size(); i++) {
+            y[i] = 0;
+        }
+
+        for (int j = nonCarPartEhdDataLists.size(); j < l; j++) {
+            y[j] = 1;
+        }
+
+        svm_node[][] svmNodes = new svm_node[l][];
+
+
+        for (int i = 0; i < tailLightEhdDataLists.size(); i++) {
+
+            double[] feature = CBODUtil.toArray(tailLightEhdDataLists.get(i));
+            svmNodes[i] = new svm_node[feature.length];
+            for (int j = 0; j < feature.length; j++) {
+                svm_node svmNode = new svm_node();
+                svmNode.index = j + 1;
+                svmNode.value = feature[j];
+                svmNodes[i][j] = svmNode;
+            }
+        }
+
+
+        for (int i = 0; i < nonCarPartEhdDataLists.size(); i++) {
+
+            double[] feature = CBODUtil.toArray(nonCarPartEhdDataLists.get(i));
+            svmNodes[i+tailLightEhdDataLists.size()] = new svm_node[feature.length];
+            for (int j = 0; j < feature.length; j++) {
+                svm_node svmNode = new svm_node();
+                svmNode.index = j + 1;
+                svmNode.value = feature[j];
+                svmNodes[i + tailLightEhdDataLists.size()][j] = svmNode;
+            }
+        }
+
+        svm_problem svmProblem = new svm_problem();
+
+        svmProblem.y = y;
+        svmProblem.l = l;
+        svmProblem.x = svmNodes;
+
+        svm_parameter param = new svm_parameter();
+        param.svm_type = svm_parameter.C_SVC;
+        param.kernel_type = svm_parameter.RBF;
+        param.probability=1;
+        param.gamma = 1.0/(double)l;
+        param.degree = 3;
+        param.coef0 =0;
+        param.C = 1;
+        param.nu = 0.5;
+        param.p = 0.1;
+        param.cache_size = 20000;
+        param.eps = 0.001;
+
+
+        logger.debug("Gamma:"+param.gamma);
+
+
+
+        String checkResult=svm.svm_check_parameter(svmProblem,param);
+
+        if(checkResult!=null){
+            logger.error("Parameters not feasible:{}",checkResult);
+            return;
+        }
+
+        svm_model svmModel=svm.svm_train(svmProblem,param);
+
+
+        List<ImageModel> testModels = service.getImageModelList(
+                EObjectType.NONE_CAR_PART, true, 100);
+
+        List<List<Double>> testDataLists = ImageModel.getDescriptorDataLists(testModels, EDescriptorType.EHD);
+
+
+
+
+
+        int success = 0;
+        for(int i=0;i<testDataLists.size();i++){
+
+            List<Double> temp = testDataLists.get(i);
+            svm_node[] testNode = new svm_node[temp.size()];
+
+            for(int j=0;j<temp.size();j++){
+                svm_node node = new svm_node();
+                node.index = j+1;
+                node.value = temp.get(j);
+
+                testNode[j] = node;
+            }
+
+            double[] prob_estimates = new double[2];
+            double v = svm.svm_predict_probability(svmModel, testNode, prob_estimates);
+           // double v=svm.svm_predict(svmModel,testNode);
+            if(v==1.0){
+                success++;
+            }
+        }
+
+        logger.debug("success:"+success);
+
+    }
+
 
     private static void testObjectDetection(String imageName) {
 
