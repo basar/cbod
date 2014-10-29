@@ -22,6 +22,8 @@ import net.bsrc.cbod.pascal.xml.PascalAnnotation;
 import net.bsrc.cbod.pascal.xml.PascalObject;
 
 import net.bsrc.cbod.svm.libsvm.LibSvm;
+import net.bsrc.cbod.svm.libsvm.LibSvmUtil;
+import net.bsrc.cbod.svm.libsvm.SvmModelPair;
 import org.opencv.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ public class Main {
         libSvmUsage();
 
 
-//        CbodExperiment.doExperiment(new NullNormalization(),false,
+//        CbodExperiment.doExperiment(new NormDivisionNormalization(),false,
 //                EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
 //                EObjectType.TAIL_LIGHT, EDescriptorType.EHD);
 
@@ -83,99 +85,53 @@ public class Main {
         //taillight and none-car part with ehd descriptors
 
         List<ImageModel> tailLightModels = service.getImageModelList(
-                EObjectType.TAIL_LIGHT, false, 400);
+                EObjectType.TAIL_LIGHT,false,400);
+        List<ImageModel> wheelModels = service.getImageModelList(EObjectType.WHEEL,false,400);
+        List<ImageModel> nonCarPartModels = service.getImageModelList(EObjectType.NONE_CAR_PART,false,400);
 
-        List<ImageModel> nonCarPartModels = service.getImageModelList(EObjectType.NONE_CAR_PART, false, 400);
+        List<ImageModel> testModels = service.getImageModelList(
+                EObjectType.TAIL_LIGHT, true, 100);
 
+        INormalization normalization = new ZScoreNormalization();
 
         List<List<Double>> tailLightEhdDataLists = ImageModel.getDescriptorDataLists(tailLightModels, EDescriptorType.EHD);
         List<List<Double>> nonCarPartEhdDataLists = ImageModel.getDescriptorDataLists(nonCarPartModels, EDescriptorType.EHD);
+        List<List<Double>> wheelEhdDataLists = ImageModel.getDescriptorDataLists(wheelModels,EDescriptorType.EHD);
+        List<List<Double>> testDataLists = ImageModel.getDescriptorDataLists(testModels, EDescriptorType.EHD);
 
 
+        normalization.applyNormalizations(tailLightEhdDataLists);
+        normalization.applyNormalizations(nonCarPartEhdDataLists);
+        normalization.applyNormalizations(wheelEhdDataLists);
+        normalization.applyNormalizations(testDataLists);
 
+        List<SvmModelPair> pairs = new ArrayList<SvmModelPair>();
+        pairs.add(new SvmModelPair(0, tailLightEhdDataLists));
+        pairs.add(new SvmModelPair(1, nonCarPartEhdDataLists));
+        pairs.add(new SvmModelPair(2,wheelEhdDataLists));
 
-        int l = tailLightEhdDataLists.size() + nonCarPartEhdDataLists.size();
+        svm_problem svmProblem = LibSvmUtil.createSvmProblem(pairs);
 
-        double[] y = new double[l];
-
-        for (int i = 0; i < tailLightEhdDataLists.size(); i++) {
-            y[i] = 0;
-        }
-
-        for (int j = nonCarPartEhdDataLists.size(); j < l; j++) {
-            y[j] = 1;
-        }
-
-        svm_node[][] svmNodes = new svm_node[l][];
-
-
-        for (int i = 0; i < tailLightEhdDataLists.size(); i++) {
-
-            double[] feature = CBODUtil.toArray(tailLightEhdDataLists.get(i));
-            svmNodes[i] = new svm_node[feature.length];
-            for (int j = 0; j < feature.length; j++) {
-                svm_node svmNode = new svm_node();
-                svmNode.index = j + 1;
-                svmNode.value = feature[j];
-                svmNodes[i][j] = svmNode;
-            }
-        }
-
-
-        for (int i = 0; i < nonCarPartEhdDataLists.size(); i++) {
-
-            double[] feature = CBODUtil.toArray(nonCarPartEhdDataLists.get(i));
-            svmNodes[i+tailLightEhdDataLists.size()] = new svm_node[feature.length];
-            for (int j = 0; j < feature.length; j++) {
-                svm_node svmNode = new svm_node();
-                svmNode.index = j + 1;
-                svmNode.value = feature[j];
-                svmNodes[i + tailLightEhdDataLists.size()][j] = svmNode;
-            }
-        }
-
-        svm_problem svmProblem = new svm_problem();
-
-        svmProblem.y = y;
-        svmProblem.l = l;
-        svmProblem.x = svmNodes;
 
         svm_parameter param = new svm_parameter();
         param.svm_type = svm_parameter.C_SVC;
         param.kernel_type = svm_parameter.RBF;
-        param.probability=1;
-        param.gamma = 1.0/(double)l;
-        param.degree = 3;
-        param.coef0 =0;
-        param.C = 1;
+        param.probability = 1;
+        param.gamma = 1.0;
+        param.C = 3268.0;
+
+        //default values
+        param.coef0 = 0;
         param.nu = 0.5;
         param.p = 0.1;
         param.cache_size = 20000;
         param.eps = 0.001;
 
-
-        logger.debug("Gamma:"+param.gamma);
-
+        LibSvmUtil.doCrossValidation(svmProblem,param,5,3,4);
 
 
-        String checkResult=svm.svm_check_parameter(svmProblem,param);
-
-        if(checkResult!=null){
-            logger.error("Parameters not feasible:{}",checkResult);
-            return;
-        }
-
+        /*
         svm_model svmModel=svm.svm_train(svmProblem,param);
-
-
-        List<ImageModel> testModels = service.getImageModelList(
-                EObjectType.NONE_CAR_PART, true, 100);
-
-        List<List<Double>> testDataLists = ImageModel.getDescriptorDataLists(testModels, EDescriptorType.EHD);
-
-
-
-
 
         int success = 0;
         for(int i=0;i<testDataLists.size();i++){
@@ -194,12 +150,14 @@ public class Main {
             double[] prob_estimates = new double[2];
             double v = svm.svm_predict_probability(svmModel, testNode, prob_estimates);
            // double v=svm.svm_predict(svmModel,testNode);
-            if(v==1.0){
+            if(v==0.0){
                 success++;
             }
         }
 
         logger.debug("success:"+success);
+        */
+
 
     }
 
