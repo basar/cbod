@@ -20,14 +20,15 @@ import com.googlecode.javacv.cpp.opencv_core.CvMat;
 
 public class DBInitializeUtil {
 
-	private final static boolean SAVE_WHEEL = false;
+	private final static boolean SAVE_WHEEL = true;
 	private final static boolean SAVE_HEAD_LIGHT = false;
-	private final static boolean SAVE_TAIL_LIGHT = false;
-	private final static boolean SAVE_NONE_CAR_PART = false;
-	private final static boolean SAVE_CAR = true;
-	private final static boolean SAVE_NONE_CAR = true;
+	private final static boolean SAVE_TAIL_LIGHT = true;
+    private final static boolean SAVE_LICENSE_PLATE = true;
+	private final static boolean SAVE_NONE_CAR_PART = true;
+	private final static boolean SAVE_CAR = false;
+	private final static boolean SAVE_NONE_CAR = false;
 
-	private final static boolean CREATE_DICT_FOR_NONE_PARTS = true;
+	private final static boolean CREATE_DICT_FOR_NONE_PARTS = false;
 
 	public static void saveImageModelstoDB() {
 
@@ -83,6 +84,22 @@ public class DBInitializeUtil {
 			saveImageModels.addAll(createImageModels(headLightTestImagePath,
 					true, EObjectType.HEAD_LIGHT));
 		}
+
+
+        if(SAVE_LICENSE_PLATE){
+            // Head light paths
+            String licensePlateTrainImagePath = cbodDirPath
+                    .concat("/image_db/license_plate/train");
+            String headLightTestImagePath = cbodDirPath
+                    .concat("/image_db/license_plate/test");
+
+            saveImageModels.addAll(createImageModels(licensePlateTrainImagePath,
+                    false, EObjectType.LICENSE_PLATE));
+
+            saveImageModels.addAll(createImageModels(headLightTestImagePath,
+                    true, EObjectType.LICENSE_PLATE));
+
+        }
 
 		if (SAVE_NONE_CAR_PART) {
 
@@ -195,13 +212,6 @@ public class DBInitializeUtil {
 		}
 
 		BilMpeg7Fex mpegFex = BilMpeg7Fex.getInstance();
-		// mpegFex.extractEdgeHistogramDescriptors(imageModelList);
-		// mpegFex.extractColorStructureDescriptors(imageModelList.subList(fromIndex,
-		// toIndex), 256);
-		// mpegFex.extractScalableColorDescriptors(imageModelList, 256);
-		// mpegFex.extractColorLayoutDescriptors(imageModelList, 64, 28);
-		// mpegFex.extractDominantColorDescriptors(imageModelList, 1, 0, 1, 32,
-		// 32, 32);
 
 		int interval = 100;
 		int intervalCount = imageModelList.size() / interval;

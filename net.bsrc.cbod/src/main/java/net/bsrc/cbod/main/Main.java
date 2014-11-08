@@ -11,6 +11,7 @@ import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.core.util.DBInitializeUtil;
 import net.bsrc.cbod.experiment.CbodExperiment;
 import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
@@ -48,7 +49,10 @@ public class Main {
     public static void main(String[] args) {
 
 
-        libSvmUsage();
+
+        DBInitializeUtil.saveImageModelstoDB();
+
+        //libSvmUsage();
 
 
 //        CbodExperiment.doExperiment(new NormDivisionNormalization(),false,

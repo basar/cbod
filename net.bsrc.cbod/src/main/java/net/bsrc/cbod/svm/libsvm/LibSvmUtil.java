@@ -75,7 +75,13 @@ public class LibSvmUtil {
         return svmProblem;
     }
 
-
+    /**
+     * @param svmProblem svm problem
+     * @param param      svm parameter
+     * @param costStep   loop step for C parameter
+     * @param gammaStep  loop step for Gamma parameter
+     * @param fold       fold for cross validation
+     */
     public static void doCrossValidation(svm_problem svmProblem, svm_parameter param, int costStep, int gammaStep, int fold) {
 
 
@@ -133,11 +139,9 @@ public class LibSvmUtil {
             }
         }
 
-
         for (String stat : stats) {
             logger.debug(stat);
         }
-
 
         StringBuilder sb = new StringBuilder();
 
