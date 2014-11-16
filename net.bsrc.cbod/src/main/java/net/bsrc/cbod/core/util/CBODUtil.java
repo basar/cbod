@@ -29,315 +29,328 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Util operations for
- * 
+ *
  * @author bsr
- * 
  */
 public final class CBODUtil {
 
-	private final static Logger logger = LoggerFactory
-			.getLogger(CBODUtil.class);
+    private final static Logger logger = LoggerFactory
+            .getLogger(CBODUtil.class);
 
-	private CBODUtil() {
+    private CBODUtil() {
 
-	}
+    }
 
-	public static byte[] getFileData(String filePath) {
+    public static byte[] getFileData(String filePath) {
 
-		Validate.notEmpty(filePath);
-		File file = FileUtils.getFile(filePath);
+        Validate.notEmpty(filePath);
+        File file = FileUtils.getFile(filePath);
 
-		if (!file.exists())
-			throw new CBODException("File could not be found. Path: "
-					+ filePath);
+        if (!file.exists())
+            throw new CBODException("File could not be found. Path: "
+                    + filePath);
 
-		byte[] result = null;
+        byte[] result = null;
 
-		try {
-			result = FileUtils.readFileToByteArray(file);
-		} catch (IOException e) {
-			logger.error("", e);
-			result = null;
-		}
+        try {
+            result = FileUtils.readFileToByteArray(file);
+        } catch (IOException e) {
+            logger.error("", e);
+            result = null;
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	public static File getDefaultOutputDirectory() {
+    public static File getDefaultOutputDirectory() {
 
-		String outputDirPath = ConfigurationUtil
-				.getString(CBODConstants.CBOD_OUTPUT_DIR);
-		File file = FileUtils.getFile(outputDirPath);
-		if (!file.exists())
-			createDirectory(file);
+        String outputDirPath = ConfigurationUtil
+                .getString(CBODConstants.CBOD_OUTPUT_DIR);
+        File file = FileUtils.getFile(outputDirPath);
+        if (!file.exists())
+            createDirectory(file);
 
-		return file;
-	}
+        return file;
+    }
 
-	public static String getDefaultOutputDirectoryPath() {
-		return getDefaultOutputDirectory().getAbsolutePath();
-	}
+    public static String getDefaultOutputDirectoryPath() {
+        return getDefaultOutputDirectory().getAbsolutePath();
+    }
 
-	public static String getCbodTempDirectory() {
+    public static String getCbodTempDirectory() {
 
-		String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_TEMP_DIR);
-		return getDefaultOutputDirectoryPath().concat(tmp);
-	}
+        String tmp = ConfigurationUtil.getString(CBODConstants.CBOD_TEMP_DIR);
+        return getDefaultOutputDirectoryPath().concat(tmp);
+    }
 
-	public static String getCbodInputImageDirectory() {
-		String tmp = ConfigurationUtil
-				.getString(CBODConstants.CBOD_INPUT_IMAGE_DIR);
-		return getDefaultOutputDirectoryPath().concat(tmp);
-	}
+    public static String getCbodInputImageDirectory() {
+        String tmp = ConfigurationUtil
+                .getString(CBODConstants.CBOD_INPUT_IMAGE_DIR);
+        return getDefaultOutputDirectoryPath().concat(tmp);
+    }
 
-	/**
-	 * 
-	 * @param dirPath
-	 * @return
-	 */
-	public static void createDirectory(String dirPath) {
+    /**
+     * @param dirPath
+     * @return
+     */
+    public static void createDirectory(String dirPath) {
 
-		File file = FileUtils.getFile(dirPath);
-		try {
-			if (!file.exists())
-				FileUtils.forceMkdir(file);
-		} catch (IOException e) {
-			throw new CBODException(e);
-		}
-	}
+        File file = FileUtils.getFile(dirPath);
+        try {
+            if (!file.exists())
+                FileUtils.forceMkdir(file);
+        } catch (IOException e) {
+            throw new CBODException(e);
+        }
+    }
 
-	/**
-	 * 
-	 * @param file
-	 */
-	public static void createDirectory(File file) {
+    /**
+     * @param file
+     */
+    public static void createDirectory(File file) {
 
-		try {
-			FileUtils.forceMkdir(file);
-		} catch (IOException e) {
-			throw new CBODException(e);
-		}
+        try {
+            FileUtils.forceMkdir(file);
+        } catch (IOException e) {
+            throw new CBODException(e);
+        }
 
-	}
+    }
 
-	public static void compareTwoImageModelCollection(List<ImageModel> models1,
-			List<ImageModel> models2) {
+    public static void compareTwoImageModelCollection(List<ImageModel> models1,
+                                                      List<ImageModel> models2) {
 
-		for (ImageModel model1 : models1) {
-			for (ImageModel model2 : models2) {
-				if (model1.getImageName().equals(model2.getImageName())) {
-					throw new CBODException(
-							"The collections cotain equals image model elements!");
-				}
-			}
-		}
+        for (ImageModel model1 : models1) {
+            for (ImageModel model2 : models2) {
+                if (model1.getImageName().equals(model2.getImageName())) {
+                    throw new CBODException(
+                            "The collections cotain equals image model elements!");
+                }
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * get all files that place in the given directory path
-	 * 
-	 * @param dirPath
-	 * @return
-	 */
-	public static List<String> getFileList(final String dirPath,
-			final String suffix) {
+    /**
+     * get all files that place in the given directory path
+     *
+     * @param dirPath
+     * @return
+     */
+    public static List<String> getFileList(final String dirPath,
+                                           final String suffix) {
 
-		File dir = FileUtils.getFile(dirPath);
+        File dir = FileUtils.getFile(dirPath);
 
-		if (!dir.exists()) {
-			throw new CBODException(
-					"Directory cannot be found: ".concat(dirPath));
-		}
+        if (!dir.exists()) {
+            throw new CBODException(
+                    "Directory cannot be found: ".concat(dirPath));
+        }
 
-		if (!dir.isDirectory()) {
-			throw new CBODException("File is not a directory");
-		}
+        if (!dir.isDirectory()) {
+            throw new CBODException("File is not a directory");
+        }
 
-		List<String> fileNameList = new ArrayList<String>();
+        List<String> fileNameList = new ArrayList<String>();
 
-		File[] files = dir.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File file, String s) {
+        File[] files = dir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File file, String s) {
 
-				if (!StringUtils.isEmpty(suffix))
-					return s.endsWith(suffix);
-				return true;
-			}
-		});
+                if (!StringUtils.isEmpty(suffix))
+                    return s.endsWith(suffix);
+                return true;
+            }
+        });
 
-		for (File file : files) {
-			fileNameList.add(file.getAbsolutePath());
-		}
+        for (File file : files) {
+            fileNameList.add(file.getAbsolutePath());
+        }
 
-		return fileNameList;
-	}
+        return fileNameList;
+    }
 
-	public static String getFileName(String fileFullPath) {
-		File file = new File(fileFullPath);
-		return file.getName();
-	}
+    public static String getFileName(String fileFullPath) {
+        File file = new File(fileFullPath);
+        return file.getName();
+    }
 
-	/**
-	 * 
-	 * @param sb
-	 * @param key
-	 * @param values
-	 */
-	public static void appendParam(StringBuilder sb, String key, Object[] values) {
-		appendParam(sb, " ", key, values);
-	}
+    /**
+     * @param sb
+     * @param key
+     * @param values
+     */
+    public static void appendParam(StringBuilder sb, String key, Object[] values) {
+        appendParam(sb, " ", key, values);
+    }
 
-	/**
-	 * 
-	 * @param sb
-	 * @param delimiter
-	 * @param key
-	 * @param values
-	 */
-	public static void appendParam(StringBuilder sb, String delimiter,
-			String key, Object[] values) {
+    /**
+     * @param sb
+     * @param delimiter
+     * @param key
+     * @param values
+     */
+    public static void appendParam(StringBuilder sb, String delimiter,
+                                   String key, Object[] values) {
 
-		appendParamCommon(sb, delimiter, key, values);
-	}
+        appendParamCommon(sb, delimiter, key, values);
+    }
 
-	private static void appendParamCommon(StringBuilder sb, String delimiter,
-			String key, Object[] values) {
+    private static void appendParamCommon(StringBuilder sb, String delimiter,
+                                          String key, Object[] values) {
 
-		if (!isAllParamsNull(values)) {
-			sb.append(key).append(delimiter);
-			for (Object o : values) {
-				if (o != null)
-					sb.append(o).append(" ");
-			}
+        if (!isAllParamsNull(values)) {
+            sb.append(key).append(delimiter);
+            for (Object o : values) {
+                if (o != null)
+                    sb.append(o).append(" ");
+            }
 
-		}
-	}
+        }
+    }
 
-	/**
-	 * 
-	 * @param objects
-	 * @return
-	 */
-	public static boolean isAllParamsNull(Object... objects) {
+    /**
+     * @param objects
+     * @return
+     */
+    public static boolean isAllParamsNull(Object... objects) {
 
-		boolean result = true;
+        boolean result = true;
 
-		if (!ArrayUtils.isEmpty(objects)) {
-			for (Object object : objects) {
-				if (object != null) {
-					result = false;
-					break;
-				}
-			}
-		}
+        if (!ArrayUtils.isEmpty(objects)) {
+            for (Object object : objects) {
+                if (object != null) {
+                    result = false;
+                    break;
+                }
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	/**
-	 * 
-	 * @param relativeDir
-	 * @return
-	 */
-	public static List<ImageModel> getImageModelList(String relativeDir) {
+    /**
+     * @param relativeDir
+     * @return
+     */
+    public static List<ImageModel> getImageModelList(String relativeDir) {
 
-		List<ImageModel> resultList = new ArrayList<ImageModel>();
+        List<ImageModel> resultList = new ArrayList<ImageModel>();
 
-		String defaultOutputDir = getDefaultOutputDirectoryPath();
-		String imageDirPath = defaultOutputDir.concat(relativeDir);
+        String defaultOutputDir = getDefaultOutputDirectoryPath();
+        String imageDirPath = defaultOutputDir.concat(relativeDir);
 
-		List<String> imgPathList = getFileList(imageDirPath,
-				CBODConstants.JPEG_SUFFIX);
-		for (String imgPath : imgPathList) {
+        List<String> imgPathList = getFileList(imageDirPath,
+                CBODConstants.JPEG_SUFFIX);
+        for (String imgPath : imgPathList) {
 
-			ImageModel imgModel = new ImageModel();
-			imgModel.setImagePath(imgPath);
-			imgModel.setImageName(FilenameUtils.getName(imgPath));
+            ImageModel imgModel = new ImageModel();
+            imgModel.setImagePath(imgPath);
+            imgModel.setImageName(FilenameUtils.getName(imgPath));
 
-			resultList.add(imgModel);
-		}
+            resultList.add(imgModel);
+        }
 
-		return resultList;
-	}
+        return resultList;
+    }
 
-	/**
-	 * 
-	 * @param relativeDir
-	 * @param testProportion
-	 * @return
-	 */
-	public static List<List<ImageModel>> seperateImageModelList(
-			String relativeDir, int testProportion) {
+    /**
+     * @param relativeDir
+     * @param testProportion
+     * @return
+     */
+    public static List<List<ImageModel>> seperateImageModelList(
+            String relativeDir, int testProportion) {
 
-		List<ImageModel> trainImageModelList = new ArrayList<ImageModel>();
-		List<ImageModel> testImageModelList = new ArrayList<ImageModel>();
+        List<ImageModel> trainImageModelList = new ArrayList<ImageModel>();
+        List<ImageModel> testImageModelList = new ArrayList<ImageModel>();
 
-		List<ImageModel> imageModelList = getImageModelList(relativeDir);
+        List<ImageModel> imageModelList = getImageModelList(relativeDir);
 
-		int k = 0;
-		for (ImageModel imageModel : imageModelList) {
-			if ((k++) % testProportion == 0) {
-				testImageModelList.add(imageModel);
-			} else {
-				trainImageModelList.add(imageModel);
-			}
-		}
+        int k = 0;
+        for (ImageModel imageModel : imageModelList) {
+            if ((k++) % testProportion == 0) {
+                testImageModelList.add(imageModel);
+            } else {
+                trainImageModelList.add(imageModel);
+            }
+        }
 
-		List<List<ImageModel>> result = new ArrayList<List<ImageModel>>();
-		result.add(trainImageModelList);
-		result.add(testImageModelList);
+        List<List<ImageModel>> result = new ArrayList<List<ImageModel>>();
+        result.add(trainImageModelList);
+        result.add(testImageModelList);
 
-		return result;
+        return result;
 
-	}
+    }
 
-    public static double[] toArray(List<Double> list){
-        return  ArrayUtils.toPrimitive(list
+    public static double[] toArray(List<Double> list) {
+        return ArrayUtils.toPrimitive(list
                 .toArray(new Double[list.size()]));
     }
 
-    public static List<Double> toList(double[] arr){
+    public static List<Double> toList(double[] arr) {
         return Arrays.asList(ArrayUtils.toObject(arr));
     }
 
-	public static List<Double> concatDataList(List<Double>... dataLists) {
+    public static List<Double> concatDataList(List<Double>... dataLists) {
 
-		List<Double> result = new ArrayList<Double>();
+        List<Double> result = new ArrayList<Double>();
 
-		for (List<Double> dataList : dataLists) {
-			result.addAll(dataList);
-		}
+        for (List<Double> dataList : dataLists) {
+            result.addAll(dataList);
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	public static List<List<Double>> concatDataLists(
-			List<List<Double>>... dataLists) {
+    public static List<List<Double>> concatDataLists(
+            List<List<Double>>... dataLists) {
 
-		if (dataLists == null || dataLists.length == 0)
-			throw new CBODException("dataLists cannot be empty");
+        if (dataLists == null || dataLists.length == 0)
+            throw new CBODException("dataLists cannot be empty");
 
-		final int size = dataLists[0].size();
+        final int size = dataLists[0].size();
 
-		for (int i = 0; i < dataLists.length; i++) {
-			if (size != dataLists[i].size()) {
-				throw new CBODException("All data list must be same size");
-			}
-		}
+        for (int i = 0; i < dataLists.length; i++) {
+            if (size != dataLists[i].size()) {
+                throw new CBODException("All data list must be same size");
+            }
+        }
 
-		List<List<Double>> result = new ArrayList<List<Double>>();
+        List<List<Double>> result = new ArrayList<List<Double>>();
 
-		for (int i = 0; i < size; i++) {
-			List<Double> temp = new ArrayList<Double>();
-			for (int j = 0; j < dataLists.length; j++) {
-				temp.addAll(dataLists[j].get(i));
-			}
-			result.add(temp);
-		}
+        for (int i = 0; i < size; i++) {
+            List<Double> temp = new ArrayList<Double>();
+            for (int j = 0; j < dataLists.length; j++) {
+                temp.addAll(dataLists[j].get(i));
+            }
+            result.add(temp);
+        }
 
-		return result;
+        return result;
 
-	}
+    }
+
+
+    public static int getIndexWithMaxValue(double... arr) {
+
+        int maxIndex = 0;
+        double maxValue = 0.0;
+        for (int i = 0; i < arr.length; i++) {
+
+            if (maxValue == 0.0) {
+                maxValue = arr[i];
+            } else {
+                if (maxValue < arr[i]) {
+                    maxValue = arr[i];
+                    maxIndex = i;
+                }
+            }
+
+        }
+
+        return maxIndex;
+    }
 
 }

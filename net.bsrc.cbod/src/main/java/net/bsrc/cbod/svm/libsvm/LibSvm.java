@@ -362,4 +362,9 @@ public class LibSvm {
 		return sb.toString();
 	}
 
+
+    public static String getSvmDirectoryPath(){
+        return LibSvm.getInstance().svmDirectoryPath;
+    }
+
 }

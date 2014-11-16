@@ -28,6 +28,7 @@ public class DBInitializeUtil {
 	private final static boolean SAVE_CAR = false;
 	private final static boolean SAVE_NONE_CAR = false;
 
+    private final static boolean EXTRACT_SIFT_DESCRIPTORS = true;
 	private final static boolean CREATE_DICT_FOR_NONE_PARTS = false;
 
 	public static void saveImageModelstoDB() {
@@ -143,28 +144,30 @@ public class DBInitializeUtil {
 
 		}
 
-		CvMat siftDictionary = null;
+        CvMat siftDictionary = null;
 
-		if (!CREATE_DICT_FOR_NONE_PARTS) {
-			// Create sift dictionary
-			siftDictionary = CBODSift.createDictionary(saveImageModels, 125);
-			String tempDir = CBODUtil.getCbodTempDirectory() + "/";
-			OpenCV.storeCvMatToFile(tempDir.concat("sift_dict.xml"),
-					"sift_dict", siftDictionary);
+        if(EXTRACT_SIFT_DESCRIPTORS) {
 
-		} else {
+            if (!CREATE_DICT_FOR_NONE_PARTS) {
+                // Create sift dictionary
+                siftDictionary = CBODSift.createDictionary(saveImageModels, 125);
+                String tempDir = CBODUtil.getCbodTempDirectory() + "/";
+                OpenCV.storeCvMatToFile(tempDir.concat("sift_dict.xml"),
+                        "sift_dict", siftDictionary);
+            } else {
 
-			siftDictionary = CBODSift.createDictionary(saveImageModels, 125);
-			String tempDir = CBODUtil.getCbodTempDirectory() + "/";
-			OpenCV.storeCvMatToFile(
-					tempDir.concat("sift_dict_none_car_part.xml"),
-					"sift_dict_none_car_part", siftDictionary);
+                siftDictionary = CBODSift.createDictionary(saveImageModels, 125);
+                String tempDir = CBODUtil.getCbodTempDirectory() + "/";
+                OpenCV.storeCvMatToFile(
+                        tempDir.concat("sift_dict_none_car_part.xml"),
+                        "sift_dict_none_car_part", siftDictionary);
+            }
 
-		}
+        }
 
-		extractFeatureVectors(saveImageModels, siftDictionary);
 
-		service.saveImageModelList(saveImageModels);
+        extractFeatureVectors(saveImageModels, siftDictionary);
+        service.saveImageModelList(saveImageModels);
 
 	}
 
@@ -195,13 +198,15 @@ public class DBInitializeUtil {
 			CvMat siftDictionary) {
 
 		// SIFT descriptors
-		for (ImageModel imageModel : imageModelList) {
-			Descriptor desc = new Descriptor();
-			desc.setType(EDescriptorType.SIFT);
-			desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
-					siftDictionary));
-			imageModel.getDescriptors().add(desc);
-		}
+        if(EXTRACT_SIFT_DESCRIPTORS) {
+            for (ImageModel imageModel : imageModelList) {
+                Descriptor desc = new Descriptor();
+                desc.setType(EDescriptorType.SIFT);
+                desc.setDataList(CBODSift.extractSIFTDescriptorAsList(imageModel,
+                        siftDictionary));
+                imageModel.getDescriptors().add(desc);
+            }
+        }
 
 		// HOG descriptors
 		for (ImageModel imageModel : imageModelList) {
