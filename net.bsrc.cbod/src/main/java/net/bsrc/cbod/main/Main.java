@@ -58,7 +58,7 @@ public class Main {
     public static void main(String[] args) {
 
 
-        doPredictionWithMultiClassSVMs("1.jpg", new ZScoreNormalization());
+        doPredictionWithMultiClassSVMs("8.jpg", new ZScoreNormalization());
 
 //        CbodExperiment.doExperiment(new NormDivisionNormalization(),false,
 //                EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
@@ -148,6 +148,10 @@ public class Main {
             svm_model scdModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("MC.SCD.txt"));
             svm_model dcdModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("MC.DCD.txt"));
 
+            List<ImageModel> possibleTailLights = new ArrayList<ImageModel>();
+            List<ImageModel> possibleWheels = new ArrayList<ImageModel>();
+            List<ImageModel> possibleLicensePlate = new ArrayList<ImageModel>();
+
             for (ImageModel im : imageSegments) {
 
                 double siftProbNonCar = getPredictedPropability(siftModel, im, EDescriptorType.SIFT, 0);
@@ -204,25 +208,53 @@ public class Main {
                         + (csdWeight * csdProbLicensePlate) + (cldWeight * cldProbLicensePlate)
                         + (scdWeight * scdProbLicensePlate) + (dcdWeight * dcdProbLicensePlate)) / totalWeight;
 
-                int maxIndex = CBODUtil.getIndexWithMaxValue(bayesNonCarPart,bayesTailLight,bayesWheel,bayesLicensePlate);
+                int maxIndex = CBODUtil.getIndexWithMaxValue(bayesNonCarPart, bayesTailLight, bayesWheel, bayesLicensePlate);
 
-                switch  (maxIndex){
+                switch (maxIndex) {
                     case 0:
-
                         break;
                     case 1:
-                        System.out.println("taillight");
+                        possibleTailLights.add(im);
                         break;
                     case 2:
-                        System.out.println("wheel");
+                        possibleWheels.add(im);
                         break;
                     case 3:
-                        System.out.println("license plate");
+                        possibleLicensePlate.add(im);
                         break;
                     default:
                 }
 
             }
+
+            List<ImageModel> possibleCarParts = new ArrayList<ImageModel>();
+            possibleCarParts.addAll(possibleTailLights);
+            possibleCarParts.addAll(possibleWheels);
+            possibleCarParts.addAll(possibleLicensePlate);
+
+            Mat copy = OpenCV.copyImage(imageModel.getMat());
+
+            Scalar blue = new Scalar(255,0,0);
+            Scalar green = new Scalar(0,255,0);
+            Scalar red = new Scalar(0,0,255);
+
+            for (ImageModel candidate : possibleTailLights) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, green);
+            }
+
+            for (ImageModel candidate : possibleWheels) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, red);
+            }
+
+            for (ImageModel candidate : possibleLicensePlate) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, blue);
+            }
+
+            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".out.jpg");
+            OpenCV.writeImage(copy, outputImagePath);
 
         } catch (IOException e) {
             logger.error("", e);
