@@ -58,7 +58,10 @@ public class Main {
     public static void main(String[] args) {
 
 
-        doPredictionWithMultiClassSVMs("8.jpg", new ZScoreNormalization());
+        //testObjectDetection("test_2.jpg");
+        doPredictionWithBinarySVMs("test_2.jpg",new ZScoreNormalization());
+
+        //doPredictionWithMultiClassSVMs("test_2.jpg", new ZScoreNormalization());
 
 //        CbodExperiment.doExperiment(new NormDivisionNormalization(),false,
 //                EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
@@ -188,7 +191,6 @@ public class Main {
                 double scdProbWheel = getPredictedPropability(scdModel, im, EDescriptorType.SCD, 2);
                 double dcdProbWheel = getPredictedPropability(dcdModel, im, EDescriptorType.DCD, 2);
 
-
                 double bayesWheel = ((siftWeight * siftProbWheel)
                         + (hogWeight * hogProbWheel) + (ehdWeight * ehdProbWheel)
                         + (csdWeight * csdProbWheel) + (cldWeight * cldProbWheel)
@@ -234,9 +236,9 @@ public class Main {
 
             Mat copy = OpenCV.copyImage(imageModel.getMat());
 
-            Scalar blue = new Scalar(255,0,0);
-            Scalar green = new Scalar(0,255,0);
-            Scalar red = new Scalar(0,0,255);
+            Scalar blue = new Scalar(255, 0, 0);
+            Scalar green = new Scalar(0, 255, 0);
+            Scalar red = new Scalar(0, 0, 255);
 
             for (ImageModel candidate : possibleTailLights) {
                 Rect rect = candidate.getRelativeToOrg();
@@ -260,8 +262,9 @@ public class Main {
             logger.error("", e);
         }
 
-
     }
+
+
 
 
     private static double getPredictedPropability(svm_model svmModel, ImageModel im, EDescriptorType descriptorType, int index) {
@@ -278,6 +281,122 @@ public class Main {
 
         return probs[index];
     }
+
+
+    private static void doPredictionWithBinarySVMs(String imageName, INormalization normalization) {
+
+        EDescriptorType[] descriptorTypes = new EDescriptorType[]{EDescriptorType.EHD,
+                EDescriptorType.SIFT, EDescriptorType.CLD, EDescriptorType.CSD,
+                EDescriptorType.SCD, EDescriptorType.DCD, EDescriptorType.HOG};
+
+        // Test yapilacak image
+        ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR.concat(imageName), true);
+
+        JSEGParameter jsegParam = new JSEGParameter(imageModel.getImagePath());
+        jsegParam.setFactor(0.5);
+        jsegParam.setColorQuantizationThreshold(150);
+        jsegParam.setRegionMergeThreshold(0.4);
+        jsegParam.setNumberOfScales(3);
+
+        //Image segmentlere ayriliyor
+        List<ImageModel> imageSegments = JSEG.segmentImage(
+                imageModel.getImagePath(), jsegParam);
+        //Her bir image model icin featurelar cikartiliyor
+
+        //SIFT and HOG Descriptor
+        CvMat dictMat = OpenCV.loadCvMatFromFile(TMP_DIR.concat("sift_dict.xml"), "sift_dict");
+        for (ImageModel im : imageSegments) {
+            Descriptor siftDesc = new Descriptor();
+            siftDesc.setType(EDescriptorType.SIFT);
+            siftDesc.setDataList(CBODSift.extractSIFTDescriptorAsList(im, dictMat));
+            im.getDescriptors().add(siftDesc);
+
+            Descriptor hogDesc = new Descriptor();
+            hogDesc.setType(EDescriptorType.HOG);
+            hogDesc.setDataList(CBODHog.extractHogDescriptor(im));
+            im.getDescriptors().add(hogDesc);
+        }
+
+        BilMpeg7Fex mpeg7Fex = BilMpeg7Fex.getInstance();
+        //MPEG descriptors
+        mpeg7Fex.extractEdgeHistogramDescriptors(imageSegments);
+        mpeg7Fex.extractScalableColorDescriptors(imageSegments, 256);
+        mpeg7Fex.extractColorStructureDescriptors(imageSegments, 256);
+        mpeg7Fex.extractColorLayoutDescriptors(imageSegments, 64, 28);
+        mpeg7Fex.extractDominantColorDescriptors(imageSegments, 1, 0, 1, 32,
+                32, 32);
+
+
+        try {
+
+            //SVM models
+            svm_model wheelNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.WHEEL_NON_CAR_PART.txt"));
+            svm_model tailLightNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.TAIL_LIGHT_NON_CAR_PART.txt"));
+            svm_model licensePlateNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.LICENSE_PLATE_NON_CAR_PART.txt"));
+
+            List<ImageModel> possibleTailLights = new ArrayList<ImageModel>();
+            List<ImageModel> possibleWheels = new ArrayList<ImageModel>();
+            List<ImageModel> possibleLicensePlates = new ArrayList<ImageModel>();
+
+            for (ImageModel im : imageSegments) {
+
+                List<List<Double>> descriptors = new ArrayList<List<Double>>();
+                for (int i = 0; i < descriptorTypes.length; i++) {
+
+                    EDescriptorType descriptorType = descriptorTypes[i];
+                    List<Double> descsDataList = im.getDescriptorDataList(descriptorType);
+                    descriptors.add(descsDataList);
+                }
+
+                List<Double> dataList = CBODUtil.concatDataList(descriptors);
+                normalization.applyNormalization(dataList);
+
+                svm_node[] nodes = createSVMNodeArray(dataList);
+
+                if(EObjectType.WHEEL.ordinal()==svm.svm_predict(wheelNonCarPartModel, nodes)){
+                   possibleWheels.add(im);
+                }
+
+                if(EObjectType.TAIL_LIGHT.ordinal()==svm.svm_predict(tailLightNonCarPartModel, nodes)){
+                    possibleTailLights.add(im);
+                }
+
+                if(EObjectType.LICENSE_PLATE.ordinal()==svm.svm_predict(licensePlateNonCarPartModel, nodes)){
+                    possibleLicensePlates.add(im);
+                }
+            }
+
+
+            Mat copy = OpenCV.copyImage(imageModel.getMat());
+
+            Scalar blue = new Scalar(255, 0, 0);
+            Scalar green = new Scalar(0, 255, 0);
+            Scalar red = new Scalar(0, 0, 255);
+
+            for (ImageModel candidate : possibleTailLights) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, green);
+            }
+
+            for (ImageModel candidate : possibleWheels) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, red);
+            }
+
+            for (ImageModel candidate : possibleLicensePlates) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, blue);
+            }
+
+            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".out.jpg");
+            OpenCV.writeImage(copy, outputImagePath);
+
+
+        }catch (IOException ex){
+            logger.error("",ex);
+        }
+    }
+
 
 
     private static void createMultiClassSVMModels(INormalization normalization) {
@@ -297,6 +416,21 @@ public class Main {
         createAndSaveMultiClassSvmModel("MC.CLD.txt", EDescriptorType.CLD, normalization, cld_c, cld_gamma);
         createAndSaveMultiClassSvmModel("MC.SCD.txt", EDescriptorType.SCD, normalization, scd_c, scd_gamma);
         createAndSaveMultiClassSvmModel("MC.DCD.txt", EDescriptorType.DCD, normalization, dcd_c, dcd_gamma);
+    }
+
+
+    private static void createBinarySVMModels(INormalization normalization){
+
+        final double wheelNonCarPartC = Math.pow(2.0,5.0),wheelNonCarPartGamma = Math.pow(2.0,-15.0);
+        final double tailLightNonCarPartC = Math.pow(2.0,10.0),tailLightNonCarPartGamma = Math.pow(2.0,-12.0);
+        final double licensePlateNonCarPartC = Math.pow(2.0,10.0),licensePlateNonCarPartGamma = Math.pow(2.0,-12.0);
+
+        EDescriptorType[] arr = new EDescriptorType[]{EDescriptorType.EHD,
+                EDescriptorType.SIFT, EDescriptorType.CLD, EDescriptorType.CSD, EDescriptorType.SCD, EDescriptorType.DCD, EDescriptorType.HOG};
+
+        createAndSaveBinarySVMModel("B.WHEEL_NON_CAR_PART.txt",EObjectType.WHEEL,EObjectType.NONE_CAR_PART,normalization,wheelNonCarPartC,wheelNonCarPartGamma,arr);
+        createAndSaveBinarySVMModel("B.TAIL_LIGHT_NON_CAR_PART.txt",EObjectType.TAIL_LIGHT,EObjectType.NONE_CAR_PART,normalization,tailLightNonCarPartC,tailLightNonCarPartGamma,arr);
+        createAndSaveBinarySVMModel("B.LICENSE_PLATE_NON_CAR_PART.txt",EObjectType.LICENSE_PLATE,EObjectType.NONE_CAR_PART,normalization,licensePlateNonCarPartC,licensePlateNonCarPartGamma,arr);
     }
 
 
@@ -327,6 +461,65 @@ public class Main {
         param.svm_type = svm_parameter.C_SVC;
         param.kernel_type = svm_parameter.RBF;
         param.probability = 1;
+        param.gamma = 0.015625;
+        param.C = 32768.0;
+
+        //default values
+        param.coef0 = 0;
+        param.nu = 0.5;
+        param.p = 0.1;
+        param.cache_size = 20000;
+        param.eps = 0.001;
+
+        LibSvmUtil.doCrossValidation(svmProblem, param, 5, 3, 4);
+
+    }
+
+
+    private static void doCrossValidationForBinarySVM(EObjectType objectType1, EObjectType objectType2, INormalization normalization, EDescriptorType... descriptorTypes) {
+
+        ImageModelService service = ImageModelService.getInstance();
+
+        List<List<Double>>[] trainDataArr1 = new List[descriptorTypes.length];
+        List<List<Double>>[] trainDataArr2 = new List[descriptorTypes.length];
+
+        List<ImageModel> imageModels1 = service.getImageModelList(
+                objectType1, 500);
+        List<ImageModel> imageModels2 = service.getImageModelList(
+                objectType2, 500);
+
+        for (int i = 0; i < descriptorTypes.length; i++) {
+
+            EDescriptorType descriptorType = descriptorTypes[i];
+
+            List<List<Double>> train1 = ImageModel
+                    .getDescriptorDataLists(imageModels1, descriptorType);
+            List<List<Double>> train2 = ImageModel
+                    .getDescriptorDataLists(imageModels2, descriptorType);
+
+
+            trainDataArr1[i] = train1;
+            trainDataArr2[i] = train2;
+        }
+
+        List<List<Double>> concatLists1 = CBODUtil
+                .concatDataLists(trainDataArr1);
+        List<List<Double>> concatLists2 = CBODUtil
+                .concatDataLists(trainDataArr2);
+
+        normalization.applyNormalizations(concatLists1);
+        normalization.applyNormalizations(concatLists2);
+
+        List<SvmModelPair> pairs = new ArrayList<SvmModelPair>();
+        pairs.add(new SvmModelPair(objectType1.ordinal(), concatLists1));
+        pairs.add(new SvmModelPair(objectType2.ordinal(), concatLists2));
+
+        svm_problem svmProblem = LibSvmUtil.createSvmProblem(pairs);
+
+        svm_parameter param = new svm_parameter();
+        param.svm_type = svm_parameter.C_SVC;
+        param.kernel_type = svm_parameter.RBF;
+        param.probability = 0;
         param.gamma = 0.015625;
         param.C = 32768.0;
 
@@ -391,6 +584,71 @@ public class Main {
 
     }
 
+
+    private static void createAndSaveBinarySVMModel(String modelName, EObjectType objectType1, EObjectType objectType2,
+                                                    INormalization normalization, double c, double gamma, EDescriptorType... descriptorTypes) {
+
+        ImageModelService service = ImageModelService.getInstance();
+
+        List<List<Double>>[] trainDataArr1 = new List[descriptorTypes.length];
+        List<List<Double>>[] trainDataArr2 = new List[descriptorTypes.length];
+
+        List<ImageModel> imageModels1 = service.getImageModelList(
+                objectType1, 500);
+        List<ImageModel> imageModels2 = service.getImageModelList(
+                objectType2, 500);
+
+        for (int i = 0; i < descriptorTypes.length; i++) {
+
+            EDescriptorType descriptorType = descriptorTypes[i];
+
+            List<List<Double>> train1 = ImageModel
+                    .getDescriptorDataLists(imageModels1, descriptorType);
+            List<List<Double>> train2 = ImageModel
+                    .getDescriptorDataLists(imageModels2, descriptorType);
+
+
+            trainDataArr1[i] = train1;
+            trainDataArr2[i] = train2;
+        }
+
+        List<List<Double>> concatLists1 = CBODUtil
+                .concatDataLists(trainDataArr1);
+        List<List<Double>> concatLists2 = CBODUtil
+                .concatDataLists(trainDataArr2);
+
+        normalization.applyNormalizations(concatLists1);
+        normalization.applyNormalizations(concatLists2);
+
+
+        List<SvmModelPair> pairs = new ArrayList<SvmModelPair>();
+        pairs.add(new SvmModelPair(objectType1.ordinal(), concatLists1));
+        pairs.add(new SvmModelPair(objectType2.ordinal(), concatLists2));
+
+        svm_problem svmProblem = LibSvmUtil.createSvmProblem(pairs);
+
+        svm_parameter param = new svm_parameter();
+        param.svm_type = svm_parameter.C_SVC;
+        param.kernel_type = svm_parameter.RBF;
+        param.probability = 0;
+        param.gamma = gamma;
+        param.C = c;
+
+        //default values
+        param.coef0 = 0;
+        param.nu = 0.5;
+        param.p = 0.1;
+        param.cache_size = 20000;
+        param.eps = 0.001;
+
+        svm_model svmModel = svm.svm_train(svmProblem, param);
+        try {
+            svm.svm_save_model(LibSvm.getSvmDirectoryPath().concat("/").concat(modelName), svmModel);
+        } catch (IOException e) {
+            logger.error("", e);
+        }
+
+    }
 
     private static void libSvmUsage() {
 

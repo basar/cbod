@@ -293,7 +293,7 @@ public final class CBODUtil {
         return Arrays.asList(ArrayUtils.toObject(arr));
     }
 
-    public static List<Double> concatDataList(List<Double>... dataLists) {
+    public static List<Double> concatDataList(List<List<Double>> dataLists) {
 
         List<Double> result = new ArrayList<Double>();
 
