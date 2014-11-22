@@ -20,6 +20,47 @@ public class LibSvmUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(LibSvm.class);
 
+
+    public static svm_parameter createSvmParameter(double c, double gamma, boolean probabilistic) {
+
+        svm_parameter param = new svm_parameter();
+        param.svm_type = svm_parameter.C_SVC;
+        param.kernel_type = svm_parameter.RBF;
+        param.probability = 0;
+        if (probabilistic) param.probability = 1;
+        param.C = c;
+        param.gamma = gamma;
+        //default values
+        param.coef0 = 0;
+        param.nu = 0.5;
+        param.p = 0.1;
+        param.cache_size = 20000;
+        param.eps = 0.001;
+
+        return param;
+    }
+
+    public  static svm_parameter createSvmParameter(int c,int gamma,boolean probabilistic){
+        return createSvmParameter(Math.pow(2.0,c),Math.pow(2.0,gamma),probabilistic);
+    }
+
+
+    public static svm_node[] createSVMNodeArray(List<Double> list) {
+
+        svm_node[] svmNodeArr = new svm_node[list.size()];
+
+        for (int j = 0; j < list.size(); j++) {
+            svm_node node = new svm_node();
+            node.index = j + 1;
+            node.value = list.get(j);
+
+            svmNodeArr[j] = node;
+        }
+
+        return svmNodeArr;
+    }
+
+
     /**
      * create an svm problem
      *
@@ -84,12 +125,13 @@ public class LibSvmUtil {
      */
     public static void doCrossValidation(svm_problem svmProblem, svm_parameter param, int costStep, int gammaStep, int fold) {
 
-
+        /**
         String checkParameterResult = svm.svm_check_parameter(svmProblem, param);
         if (checkParameterResult != null) {
             logger.error("Parameters not feasible:{}", checkParameterResult);
             return;
         }
+        **/
 
         List<String> stats = new ArrayList<String>();
         int maxSuccess = 0;
@@ -97,6 +139,8 @@ public class LibSvmUtil {
         double maxGamma = 0;
         double maxI = 0;
         double maxJ = 0;
+        double totalSuccess = 0.0;
+        int totalCrossValidationCount = 0;
 
         for (double i = -5; i <= 15; i = i + costStep) {
 
@@ -124,7 +168,10 @@ public class LibSvmUtil {
                     maxJ = j;
                 }
 
+
                 double successPercentage = ((double) success / (double) svmProblem.l) * 100;
+                totalSuccess = totalSuccess + successPercentage;
+                totalCrossValidationCount = totalCrossValidationCount + 1;
 
                 StringBuilder sb = new StringBuilder();
 
@@ -152,6 +199,12 @@ public class LibSvmUtil {
         sb.append("]");
 
         logger.debug(sb.toString());
+
+        sb = new StringBuilder();
+        sb.append("[Mean Success:").append((totalSuccess / (double) totalCrossValidationCount));
+        sb.append("]");
+
+        // logger.debug(sb.toString());
     }
 
 

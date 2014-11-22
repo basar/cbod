@@ -11,6 +11,10 @@ import net.bsrc.cbod.jseg.JSEGParameter;
 import net.bsrc.cbod.jseg.JSEGParameterFactory;
 import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
+import net.bsrc.cbod.pascal.EPascalType;
+import net.bsrc.cbod.pascal.PascalVOC;
+import net.bsrc.cbod.pascal.xml.PascalAnnotation;
+import net.bsrc.cbod.pascal.xml.PascalObject;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.ScaleParameter;
 
@@ -171,6 +175,110 @@ public class CBODDemo {
 	}
 
 
+
+    private static void createNoneCarImageModel() {
+
+        final int trainImgCount = 40;
+        final int testImgCount = 10;
+        final String trainFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/train/";
+        final String testFolder = "/Users/bsr/Documents/Phd/cbod/image_db/none_car/test/";
+
+        final int trainImgCountCar = 400;
+        final int testImgCountCar = 100;
+
+        final String trainFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/train/";
+        final String testFolderCar = "/Users/bsr/Documents/Phd/cbod/image_db/car/test/";
+
+        // none cars
+        saveImageToDisk(EPascalType.BIRD, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.BIRD, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.PERSON, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.PERSON, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.COW, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.COW, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.BOAT, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.BOAT, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.AEROPLANE, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.AEROPLANE, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.HORSE, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.HORSE, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.TV_MONITOR, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.TV_MONITOR, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.POTTED_PLANT, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.POTTED_PLANT, true, testImgCount,
+                testFolder);
+
+        saveImageToDisk(EPascalType.CHAIR, false, trainImgCount, trainFolder);
+        saveImageToDisk(EPascalType.CHAIR, true, testImgCount, testFolder);
+
+        saveImageToDisk(EPascalType.DINING_TABLE, false, trainImgCount,
+                trainFolder);
+        saveImageToDisk(EPascalType.DINING_TABLE, true, testImgCount,
+                testFolder);
+
+        // cars
+        saveImageToDisk(EPascalType.CAR, false, trainImgCountCar,
+                trainFolderCar);
+        saveImageToDisk(EPascalType.CAR, true, testImgCountCar, testFolderCar);
+
+    }
+
+    private static void saveImageToDisk(EPascalType pascalType, boolean isTest,
+                                        int count, String folder) {
+
+        PascalVOC pascalVOC = PascalVOC.getInstance();
+
+        // 0, train, 1 test
+        int suffix = 0;
+        if (isTest)
+            suffix = 1;
+
+        List<ImageModel> imageModels = pascalVOC.getImageModels(pascalType,
+                suffix, 1);
+
+        int localCount = 0;
+        for (ImageModel imgModel : imageModels) {
+
+            if (localCount == count)
+                break;
+
+            PascalAnnotation pascalAnnotation = pascalVOC
+                    .getAnnotation(imgModel.getRawImageName());
+            List<PascalObject> pascalObjects = pascalAnnotation
+                    .getObjectList(pascalType);
+            for (PascalObject pascalObject : pascalObjects) {
+
+                if (!pascalObject.isTruncated()) {
+
+                    Mat imgMat = OpenCV.getImageMat(imgModel.getImagePath(),
+                            pascalObject.getBndbox());
+                    OpenCV.writeImage(
+                            imgMat,
+                            folder.concat(imgModel.getRawImageName())
+                                    .concat("_")
+                                    .concat(pascalType.getName())
+                                    .concat("_")
+                                    .concat(Integer.toString(localCount++)
+                                            .concat(".jpg")));
+
+                }
+
+                if (localCount == count)
+                    break;
+            }
+        }
+
+    }
 
 
 }
