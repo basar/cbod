@@ -1,5 +1,7 @@
 package net.bsrc.cbod.svm.libsvm;
 
+import jsr166y.ForkJoinPool;
+import jsr166y.RecursiveAction;
 import libsvm.svm;
 import libsvm.svm_node;
 import libsvm.svm_parameter;
@@ -40,8 +42,8 @@ public class LibSvmUtil {
         return param;
     }
 
-    public  static svm_parameter createSvmParameter(int c,int gamma,boolean probabilistic){
-        return createSvmParameter(Math.pow(2.0,c),Math.pow(2.0,gamma),probabilistic);
+    public static svm_parameter createSvmParameter(int c, int gamma, boolean probabilistic) {
+        return createSvmParameter(Math.pow(2.0, c), Math.pow(2.0, gamma), probabilistic);
     }
 
 
@@ -126,12 +128,12 @@ public class LibSvmUtil {
     public static void doCrossValidation(svm_problem svmProblem, svm_parameter param, int costStep, int gammaStep, int fold) {
 
         /**
-        String checkParameterResult = svm.svm_check_parameter(svmProblem, param);
-        if (checkParameterResult != null) {
-            logger.error("Parameters not feasible:{}", checkParameterResult);
-            return;
-        }
-        **/
+         String checkParameterResult = svm.svm_check_parameter(svmProblem, param);
+         if (checkParameterResult != null) {
+         logger.error("Parameters not feasible:{}", checkParameterResult);
+         return;
+         }
+         **/
 
         List<String> stats = new ArrayList<String>();
         int maxSuccess = 0;
@@ -159,7 +161,6 @@ public class LibSvmUtil {
                         success++;
                     }
                 }
-
                 if (success > maxSuccess) {
                     maxSuccess = success;
                     maxCost = param.C;
@@ -167,24 +168,21 @@ public class LibSvmUtil {
                     maxI = i;
                     maxJ = j;
                 }
-
-
                 double successPercentage = ((double) success / (double) svmProblem.l) * 100;
                 totalSuccess = totalSuccess + successPercentage;
                 totalCrossValidationCount = totalCrossValidationCount + 1;
 
                 StringBuilder sb = new StringBuilder();
-
                 sb.append("[");
-                sb.append("Cost[" + i + "]:").append(param.C).append(" ");
-                sb.append("Gamma[" + j + "]:").append(param.gamma).append(" ");
+                sb.append("Cost[").append(i).append("]:").append(param.C).append(" ");
+                sb.append("Gamma[").append(j).append("]:").append(param.gamma).append(" ");
                 sb.append("Success:").append(successPercentage);
                 sb.append("]");
 
                 stats.add(sb.toString());
-
             }
         }
+
 
         for (String stat : stats) {
             logger.debug(stat);
@@ -199,13 +197,136 @@ public class LibSvmUtil {
         sb.append("]");
 
         logger.debug(sb.toString());
-
-        sb = new StringBuilder();
-        sb.append("[Mean Success:").append((totalSuccess / (double) totalCrossValidationCount));
-        sb.append("]");
-
-        // logger.debug(sb.toString());
     }
 
 
+    public static void doCrossValidationWithParallel(svm_problem svmProblem, svm_parameter param, int costStep, int gammaStep, int fold) {
+
+        List<CrossValidationModel> list = new ArrayList<CrossValidationModel>();
+
+        int count = 0;
+        for (double i = -5; i <= 15; i = i + costStep) {
+            for (double j = -15; j <= 3; j = j + gammaStep) {
+                param.C = Math.pow(2.0, i);
+                param.gamma = Math.pow(2.0, j);
+                CrossValidationModel cvm = new CrossValidationModel(svmProblem, param, fold, i, j, count);
+                list.add(cvm);
+                count++;
+            }
+        }
+
+        ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+        CrossValidationTask cvt = new CrossValidationTask(count-1,list);
+        pool.invoke(cvt);
+
+    }
+
+}
+
+class CrossValidationModel {
+
+
+    private svm_problem svmProblem;
+
+    private svm_parameter svmParameter;
+
+    int fold;
+
+    private double i;
+
+    private double j;
+
+    int index;
+
+
+    CrossValidationModel(svm_problem svmProblem, svm_parameter svmParameter, int fold, double i, double j, int index) {
+        this.svmProblem = svmProblem;
+        this.svmParameter = svmParameter;
+        this.fold = fold;
+        this.i = i;
+        this.j = j;
+        this.index = index;
+    }
+
+    public svm_problem getSvmProblem() {
+        return svmProblem;
+    }
+
+    public void setSvmProblem(svm_problem svmProblem) {
+        this.svmProblem = svmProblem;
+    }
+
+    public svm_parameter getSvmParameter() {
+        return svmParameter;
+    }
+
+    public void setSvmParameter(svm_parameter svmParameter) {
+        this.svmParameter = svmParameter;
+    }
+
+    public int getFold() {
+        return fold;
+    }
+
+    public void setFold(int fold) {
+        this.fold = fold;
+    }
+
+    public double getI() {
+        return i;
+    }
+
+    public void setI(double i) {
+        this.i = i;
+    }
+
+    public double getJ() {
+        return j;
+    }
+
+    public void setJ(double j) {
+        this.j = j;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+}
+
+
+class CrossValidationTask extends RecursiveAction {
+
+    private List<CrossValidationModel> list;
+
+    int count;
+
+    public CrossValidationTask(int count,List<CrossValidationModel> list){
+        this.count = count;
+        this.list = list;
+    }
+
+
+    @Override
+    protected void compute() {
+
+        if(this.count<0){
+           return;
+        }
+
+        CrossValidationTask cvt = new CrossValidationTask(this.count-1,this.list);
+        cvt.fork();
+
+        CrossValidationModel cvm = list.get(count);
+        double[] target = new double[cvm.getSvmProblem().l];
+        //cross validation
+        svm.svm_cross_validation(cvm.getSvmProblem(), cvm.getSvmParameter(),cvm.getFold(), target);
+
+        cvt.join();
+        System.out.println(count + "" +  cvm.getI());
+
+    }
 }
