@@ -55,7 +55,8 @@ public class Main {
     public static void main(String[] args) {
 
 
-        doPredictionWithBinarySVMs("22.jpg",new ZScoreNormalization());
+        //doPredictionWithBinarySVMs("IMG_9.jpg",new ZScoreNormalization());
+        doPredictionWithMultiClassSVMs("10.jpg",new ZScoreNormalization());
 
         DB4O.getInstance().close();
     }
