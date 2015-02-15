@@ -16,6 +16,8 @@ import net.bsrc.cbod.jseg.JSEG;
 import net.bsrc.cbod.jseg.JSEGParameter;
 import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
+import net.bsrc.cbod.pascal.EPascalType;
+import net.bsrc.cbod.pascal.PascalVOC;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.LibSvmUtil;
 import net.bsrc.cbod.svm.libsvm.SvmModelPair;
@@ -55,8 +57,16 @@ public class Main {
     public static void main(String[] args) {
 
 
-        //doPredictionWithBinarySVMs("IMG_9.jpg",new ZScoreNormalization());
-        doPredictionWithMultiClassSVMs("10.jpg",new ZScoreNormalization());
+
+
+            String imageName = "IMG_" + 90 + ".jpg";
+            doPredictionWithBinarySVMs(imageName, new ZScoreNormalization());
+            doPredictionWithFusedBinarySVMs(imageName, new ZScoreNormalization());
+            doPredictionWithMultiClassSVMs(imageName, new ZScoreNormalization());
+
+
+
+
 
         DB4O.getInstance().close();
     }
@@ -188,7 +198,7 @@ public class Main {
                     case 0:
                         break;
                     case 1:
-                        if (bayesTailLight > 0.50) {
+                        if (bayesTailLight > 0.40) {
                             possibleTailLights.add(im);
                         }
                         break;
@@ -197,7 +207,7 @@ public class Main {
                             possibleWheels.add(im);
                         break;
                     case 3:
-                        if (bayesLicensePlate > 0.50)
+                        if (bayesLicensePlate > 0.40)
                             possibleLicensePlate.add(im);
                         break;
                     default:
@@ -231,7 +241,7 @@ public class Main {
                 OpenCV.drawRect(rect, copy, blue);
             }
 
-            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".out.jpg");
+            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".mc.out.jpg");
             OpenCV.writeImage(copy, outputImagePath);
 
         } catch (IOException e) {
@@ -257,7 +267,7 @@ public class Main {
     }
 
 
-    private static void doPredictionWithBinarySVMs(String imageName, INormalization normalization) {
+    private static void doPredictionWithFusedBinarySVMs(String imageName, INormalization normalization) {
 
         EDescriptorType[] descriptorTypes = new EDescriptorType[]{EDescriptorType.EHD,
                 EDescriptorType.SIFT, EDescriptorType.CLD, EDescriptorType.CSD,
@@ -303,9 +313,9 @@ public class Main {
         try {
 
             //SVM models
-            svm_model wheelNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.WHEEL_NON_CAR_PART.txt"));
-            svm_model tailLightNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.TAIL_LIGHT_NON_CAR_PART.txt"));
-            svm_model licensePlateNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.LICENSE_PLATE_NON_CAR_PART.txt"));
+            svm_model wheelNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.FUSED.WHEEL_NON_CAR_PART.txt"));
+            svm_model tailLightNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.FUSED.TAIL_LIGHT_NON_CAR_PART.txt"));
+            svm_model licensePlateNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.FUSED.LICENSE_PLATE_NON_CAR_PART.txt"));
 
             List<ImageModel> possibleTailLights = new ArrayList<ImageModel>();
             List<ImageModel> possibleWheels = new ArrayList<ImageModel>();
@@ -313,12 +323,12 @@ public class Main {
 
             for (ImageModel im : imageSegments) {
 
-                List<Double> dataListForWheel = CBODUtil.concatDataList(createDescriptorList(im,EDescriptorType.HOG,
+                List<Double> dataListForWheel = CBODUtil.concatDataList(createDescriptorList(im, EDescriptorType.HOG,
                         EDescriptorType.CSD, EDescriptorType.EHD,
                         EDescriptorType.SCD, EDescriptorType.CLD,
                         EDescriptorType.SIFT, EDescriptorType.DCD));
-                List<Double> dataListForTailLights = CBODUtil.concatDataList(createDescriptorList(im,EDescriptorType.SCD,EDescriptorType.DCD));
-                List<Double> dataListForLicensePlates = CBODUtil.concatDataList(createDescriptorList(im,EDescriptorType.HOG,EDescriptorType.EHD,EDescriptorType.CLD));
+                List<Double> dataListForTailLights = CBODUtil.concatDataList(createDescriptorList(im, EDescriptorType.SCD, EDescriptorType.DCD));
+                List<Double> dataListForLicensePlates = CBODUtil.concatDataList(createDescriptorList(im, EDescriptorType.HOG, EDescriptorType.EHD, EDescriptorType.CLD));
                 normalization.applyNormalization(dataListForWheel);
                 normalization.applyNormalization(dataListForTailLights);
                 normalization.applyNormalization(dataListForLicensePlates);
@@ -362,7 +372,7 @@ public class Main {
                 OpenCV.drawRect(rect, copy, blue);
             }
 
-            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".out.jpg");
+            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".b.fused.out.jpg");
             OpenCV.writeImage(copy, outputImagePath);
 
         } catch (IOException ex) {
@@ -371,7 +381,7 @@ public class Main {
     }
 
 
-    private static List<List<Double>> createDescriptorList(ImageModel im,EDescriptorType... descriptorTypes){
+    private static List<List<Double>> createDescriptorList(ImageModel im, EDescriptorType... descriptorTypes) {
 
         List<List<Double>> descriptors = new ArrayList<List<Double>>();
         for (int i = 0; i < descriptorTypes.length; i++) {
@@ -383,6 +393,108 @@ public class Main {
 
         return descriptors;
     }
+
+    private static void doPredictionWithBinarySVMs(String imageName, INormalization normalization) {
+
+        // Test yapilacak image
+        ImageModel imageModel = ImageModelFactory.createImageModel(IMG_DIR.concat(imageName), true);
+
+
+        JSEGParameter jsegParam = new JSEGParameter(imageModel.getImagePath());
+        jsegParam.setFactor(0.5);
+        jsegParam.setColorQuantizationThreshold(150);
+        jsegParam.setRegionMergeThreshold(0.4);
+        jsegParam.setNumberOfScales(3);
+
+        //Image segmentlere ayriliyor
+        List<ImageModel> imageSegments = JSEG.segmentImage(
+                imageModel.getImagePath(), jsegParam);
+        //Burada parca bazli en yuksek iki oznitelik kullanilacak teker ve plaka icin HOG arka far icin SCD.
+        //Bu nedenle parcalardan sadece bu oznitelikler cikarilmali
+
+        //HOG Descriptor
+        for (ImageModel im : imageSegments) {
+            Descriptor hogDesc = new Descriptor();
+            hogDesc.setType(EDescriptorType.HOG);
+            hogDesc.setDataList(CBODHog.extractHogDescriptor(im));
+            im.getDescriptors().add(hogDesc);
+        }
+
+        BilMpeg7Fex mpeg7Fex = BilMpeg7Fex.getInstance();
+        //SCD
+        mpeg7Fex.extractScalableColorDescriptors(imageSegments, 256);
+
+        //SVM models
+        try {
+
+            svm_model wheelNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.HOG.WHEEL_NON_CAR_PART.txt"));
+            svm_model tailLightNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.SCD.TAIL_LIGHT_NON_CAR_PART.txt"));
+            svm_model licensePlateNonCarPartModel = svm.svm_load_model(LibSvm.getSvmDirectoryPath().concat("/").concat("B.HOG.LICENSE_PLATE_NON_CAR_PART.txt"));
+
+            List<ImageModel> possibleWheels = new ArrayList<ImageModel>();
+            List<ImageModel> possibleTailLights = new ArrayList<ImageModel>();
+            List<ImageModel> possibleLicensePlates = new ArrayList<ImageModel>();
+
+            for (ImageModel im : imageSegments) {
+
+                Descriptor hogDescriptor = im.getDescriptor(EDescriptorType.HOG);
+                Descriptor scdDescriptor = im.getDescriptor(EDescriptorType.SCD);
+                List<Double> hogDataList = hogDescriptor.getDataList();
+                List<Double> scdDataList = scdDescriptor.getDataList();
+
+                normalization.applyNormalization(hogDataList);
+                normalization.applyNormalization(scdDataList);
+
+
+                svm_node[] hogNodes = LibSvmUtil.createSVMNodeArray(hogDataList);
+                svm_node[] scdNodes = LibSvmUtil.createSVMNodeArray(scdDataList);
+
+                if (EObjectType.WHEEL.ordinal() == svm.svm_predict(wheelNonCarPartModel, hogNodes)) {
+                    possibleWheels.add(im);
+                }
+
+                if (EObjectType.TAIL_LIGHT.ordinal() == svm.svm_predict(tailLightNonCarPartModel, scdNodes)) {
+                    possibleTailLights.add(im);
+                }
+
+                if (EObjectType.LICENSE_PLATE.ordinal() == svm.svm_predict(licensePlateNonCarPartModel, hogNodes)) {
+                    possibleLicensePlates.add(im);
+                }
+
+            }
+
+            Mat copy = OpenCV.copyImage(imageModel.getMat());
+
+            Scalar blue = new Scalar(255, 0, 0);
+            Scalar green = new Scalar(0, 255, 0);
+            Scalar red = new Scalar(0, 0, 255);
+
+            for (ImageModel candidate : possibleTailLights) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, green);
+            }
+
+            for (ImageModel candidate : possibleWheels) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, red);
+            }
+
+            for (ImageModel candidate : possibleLicensePlates) {
+                Rect rect = candidate.getRelativeToOrg();
+                OpenCV.drawRect(rect, copy, blue);
+            }
+
+            String outputImagePath = TMP_DIR.concat(imageModel.getRawImageName() + ".b.out.jpg");
+            OpenCV.writeImage(copy, outputImagePath);
+
+
+        } catch (IOException ex) {
+            logger.error("", ex);
+        }
+
+
+    }
+
 
     private static void createMultiClassSVMModels(INormalization normalization) {
 
@@ -404,16 +516,32 @@ public class Main {
     }
 
 
-    private static void createBinarySVMModels(INormalization normalization) {
+    private static void createBinarySVMFusedModels(INormalization normalization) {
 
-        createAndSaveBinarySVMModel("B.WHEEL_NON_CAR_PART.txt", EObjectType.WHEEL, EObjectType.NONE_CAR_PART, normalization, Math.pow(2.0,15.0),Math.pow(2.0,-12.0), EDescriptorType.HOG,
+        createAndSaveBinarySVMModel("B.WHEEL_NON_CAR_PART.txt", EObjectType.WHEEL, EObjectType.NONE_CAR_PART,
+                normalization, Math.pow(2.0, 15.0), Math.pow(2.0, -12.0), EDescriptorType.HOG,
                 EDescriptorType.CSD, EDescriptorType.EHD,
                 EDescriptorType.SCD, EDescriptorType.CLD,
                 EDescriptorType.SIFT, EDescriptorType.DCD);
-        createAndSaveBinarySVMModel("B.TAIL_LIGHT_NON_CAR_PART.txt", EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART, normalization, Math.pow(2.0,10.0),Math.pow(2.0,-12.0),
-                EDescriptorType.SCD,EDescriptorType.DCD);
-        createAndSaveBinarySVMModel("B.LICENSE_PLATE_NON_CAR_PART.txt", EObjectType.LICENSE_PLATE, EObjectType.NONE_CAR_PART, normalization, Math.pow(2.0,15.0),Math.pow(2.0,-6.0),
-                EDescriptorType.HOG,EDescriptorType.EHD,EDescriptorType.CLD);
+        createAndSaveBinarySVMModel("B.TAIL_LIGHT_NON_CAR_PART.txt", EObjectType.TAIL_LIGHT,
+                EObjectType.NONE_CAR_PART, normalization, Math.pow(2.0, 10.0), Math.pow(2.0, -12.0),
+                EDescriptorType.SCD, EDescriptorType.DCD);
+        createAndSaveBinarySVMModel("B.LICENSE_PLATE_NON_CAR_PART.txt",
+                EObjectType.LICENSE_PLATE, EObjectType.NONE_CAR_PART, normalization, Math.pow(2.0, 15.0), Math.pow(2.0, -6.0),
+                EDescriptorType.HOG, EDescriptorType.EHD, EDescriptorType.CLD);
+    }
+
+
+    private static void createBinarySVMModels(INormalization normalization) {
+
+        createAndSaveBinarySVMModel("B.HOG.WHEEL_NON_CAR_PART.txt", EObjectType.WHEEL, EObjectType.NONE_CAR_PART,
+                new ZScoreNormalization(), Math.pow(2.0, 5.0), Math.pow(2.0, -12.0), EDescriptorType.HOG);
+
+        createAndSaveBinarySVMModel("B.SCD.TAIL_LIGHT_NON_CAR_PART.txt", EObjectType.TAIL_LIGHT, EObjectType.NONE_CAR_PART,
+                new ZScoreNormalization(), Math.pow(2.0, 10.0), Math.pow(2.0, -9.0), EDescriptorType.SCD);
+
+        createAndSaveBinarySVMModel("B.HOG.LICENSE_PLATE_NON_CAR_PART.txt", EObjectType.LICENSE_PLATE, EObjectType.NONE_CAR_PART,
+                new ZScoreNormalization(), Math.pow(2.0, 5.0), Math.pow(2.0, -12.0), EDescriptorType.HOG);
     }
 
 
@@ -557,8 +685,6 @@ public class Main {
             logger.error("", e);
         }
     }
-
-
 
 
 }
