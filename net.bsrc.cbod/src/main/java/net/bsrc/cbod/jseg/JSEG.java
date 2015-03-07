@@ -30,6 +30,8 @@ public class JSEG implements IProcessExecute {
 
 	private String executeCommand;
 
+
+
 	public final static int MIN_IMG_WIDTH = 64;
 	public final static int MIN_IMG_HEIGHT = 64;
 

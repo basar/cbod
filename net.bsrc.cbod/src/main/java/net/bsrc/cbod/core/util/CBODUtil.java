@@ -8,8 +8,11 @@ import java.util.*;
 import com.googlecode.javacv.JavaCV;
 import net.bsrc.cbod.core.CBODConstants;
 import net.bsrc.cbod.core.exception.CBODException;
+import net.bsrc.cbod.core.model.CandidateComponent;
+import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
 
+import net.bsrc.cbod.opencv.OpenCV;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.io.FileUtils;
@@ -24,6 +27,9 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.MathUtils;
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -352,5 +358,34 @@ public final class CBODUtil {
 
         return maxIndex;
     }
+
+    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, ImageModel imageModel, String outputSuffix) {
+
+
+        Mat copy = OpenCV.copyImage(imageModel.getMat());
+        Scalar blue = new Scalar(255, 0, 0);
+        Scalar green = new Scalar(0, 255, 0);
+        Scalar red = new Scalar(0, 0, 255);
+
+        for (CandidateComponent cc : candidateComponents) {
+            Rect rect = cc.getRect();
+            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
+                OpenCV.drawRect(rect, copy, red);
+            }
+            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
+                OpenCV.drawRect(rect, copy, green);
+            }
+            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
+                OpenCV.drawRect(rect, copy, blue);
+            }
+        }
+
+        String outputImagePath = getCbodTempDirectory().concat("/").
+                concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
+        OpenCV.writeImage(copy, outputImagePath);
+
+
+    }
+
 
 }

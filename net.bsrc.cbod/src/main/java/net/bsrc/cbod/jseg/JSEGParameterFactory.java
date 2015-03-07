@@ -27,4 +27,16 @@ public class JSEGParameterFactory {
 		return jsegParameter;
 	}
 
+
+    public static JSEGParameter createJsegParameterWithDefultCbodValues(String imagePath){
+
+        JSEGParameter jsegParam = new JSEGParameter(imagePath);
+        jsegParam.setFactor(0.5);
+        jsegParam.setColorQuantizationThreshold(150);
+        jsegParam.setRegionMergeThreshold(0.4);
+        jsegParam.setNumberOfScales(3);
+        return jsegParam;
+
+    }
+
 }

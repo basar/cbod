@@ -23,6 +23,10 @@ public final class CBODConstants {
 	public static final String SEG_SUFFIX = ".seg";
 	public static final String TXT_SUFFIX = ".txt";
 
+    public static final String MC_OUT_SUFFIX = "_mc_out";
+    public static final String B_FUSED_OUT = "_b_fused_out";
+    public static final String B_OUT = "_b_out";
+
 	public static final String SVM_TRAIN = "train";
 	public static final String SVM_TEST = "test";
 	public static final String SVM_RANGE = "range";
@@ -79,6 +83,9 @@ public final class CBODConstants {
 	 * SIFT
 	 */
 	public static final String SIFT_DICTIONARY_FILE_NAME = "cbod_sift.xml";
+
+
+
 
 	/**
 	 * To prevent object creation

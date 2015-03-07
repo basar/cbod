@@ -128,6 +128,19 @@ public final class OpenCV {
 		Core.line(mat, p4, p1, scalar, 2);
 	}
 
+    public static void drawText(Mat m,Point p,String text){
+        Core.putText(m,text,p,Core.FONT_HERSHEY_SIMPLEX,0.5,new Scalar(0,0,0));
+    }
+
+    public static Point getCenterPoint(Rect rect){
+
+        double centerX = rect.x + (rect.width / 2.0);
+        double centerY = rect.y + (rect.height / 2.0);
+
+        return new Point(centerX,centerY);
+
+    }
+
 	/**
 	 * 
 	 * @param imagePath
