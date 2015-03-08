@@ -1,7 +1,10 @@
 package net.bsrc.cbod;
 
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.opencv.OpenCV;
 import org.junit.Test;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,20 @@ import java.util.List;
  */
 public class UtilTest {
 
-	@Test
+
+    @Test
+    public void testUtil(){
+
+
+        Rect r1 = OpenCV.createRect(16,4,10,4);
+        Rect r2 = OpenCV.createRect(4,5,8,6);
+
+        System.out.println(OpenCV.getMinimumDistance(r2,r1));
+
+
+    }
+
+
 	public void testListConcat() {
 
 		List<Double> a1 = new ArrayList<Double>();

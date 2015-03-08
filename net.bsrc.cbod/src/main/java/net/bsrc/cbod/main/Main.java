@@ -22,6 +22,7 @@ import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,11 +49,21 @@ public class Main {
     public static void main(String[] args) {
 
 
+
         MultiClassSVM instance = MultiClassSVM.getInstance();
 
 
-        String imageName = "IMG_" + 1 + ".jpg";
+        String imageName = "IMG_" + 31 + ".jpg";
         SVMPredictionResult result = instance.doPredictionWithMultiClassSVMs(imageName, 0.0, new ZScoreNormalization());
+
+        CandidateComponent max=instance.findComponentWithMaximumDecisionFusionResult(result.getCandidateComponents());
+
+
+        for(CandidateComponent comp1:result.getCandidateComponents()){
+
+            System.out.println(comp1.getObjectType().getName() + " - " + OpenCV.getMinimumDistance(max.getRect(),comp1.getRect()));
+
+        }
 
 
         CBODUtil.drawComponentsToImage(result.getCandidateComponents(), result.getInputImageModel(), CBODConstants.MC_OUT_SUFFIX);
@@ -60,6 +71,28 @@ public class Main {
 
         DB4O.getInstance().close();
     }
+
+
+
+    public List<CandidateComponent> doGeometricConfigurationProcess(List<CandidateComponent> list){
+
+        List<CandidateComponent> resultList = new ArrayList<CandidateComponent>();
+
+        if(list.size()==0)
+            return resultList;
+
+        if(list.size()==1){
+            resultList.add(list.get(0));
+            return resultList;
+        }
+
+
+
+
+        return resultList;
+    }
+
+
 
 
 }
