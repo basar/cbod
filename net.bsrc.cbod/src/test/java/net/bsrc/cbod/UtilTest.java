@@ -2,6 +2,7 @@ package net.bsrc.cbod;
 
 import net.bsrc.cbod.core.util.CBODUtil;
 import net.bsrc.cbod.opencv.OpenCV;
+import org.apache.commons.math.util.MathUtils;
 import org.junit.Test;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -16,13 +17,24 @@ public class UtilTest {
 
 
     @Test
-    public void testUtil(){
+    public void testDistance(){
 
 
         Rect r1 = OpenCV.createRect(16,4,10,4);
         Rect r2 = OpenCV.createRect(4,5,8,6);
 
         System.out.println(OpenCV.getMinimumDistance(r2,r1));
+
+
+    }
+
+
+
+    @Test
+    public void testAngle(){
+
+        System.out.println(OpenCV.getAngle(new Point(4,2),new Point(2,2)));
+        System.out.println(Math.sin(Math.toRadians(9.52)));
 
 
     }

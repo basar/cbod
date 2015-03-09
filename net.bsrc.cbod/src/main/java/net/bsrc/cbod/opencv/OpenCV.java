@@ -504,8 +504,38 @@ public final class OpenCV {
         return getCornerPoints(r)[index].y;
     }
 
+
     public static Point getPoint(Rect r, int index) {
         return getCornerPoints(r)[index];
     }
+
+    /**
+     *
+     * @param p1 source
+     * @param p2 target
+     * @return
+     */
+    public static double getAngle(Point p1,Point p2){
+
+        double angle = Math.toDegrees(Math.atan2((p2.y - p1.y),(p2.x - p1.x)));
+
+        if(angle<0){
+            angle +=360;
+        }
+        return angle;
+    }
+
+
+    /**
+     *
+     * @param r1 source
+     * @param r2 target
+     * @return
+     */
+    public static double getAngle(Rect r1,Rect r2){
+
+        return getAngle(getCenterPoint(r1),getCenterPoint(r2));
+    }
+
 
 }
