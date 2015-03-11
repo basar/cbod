@@ -33,8 +33,7 @@ public class UtilTest {
     @Test
     public void testAngle(){
 
-        System.out.println(OpenCV.getAngle(new Point(4,2),new Point(2,2)));
-        System.out.println(Math.sin(Math.toRadians(9.52)));
+        System.out.println(OpenCV.getAngle(new Point(2,2),new Point(2,3)));
 
 
     }

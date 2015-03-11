@@ -64,7 +64,7 @@ public class FuzzyFunctions {
 
         double teta = OpenCV.getAngle(r1, r2);
 
-        if ((0 < teta && teta < 90) || (270 < teta && teta < 360))
+        if ((0 <= teta && teta < 90) || (270 < teta && teta <= 360))
             return Math.sin(Math.toRadians(teta + 90));
 
         return 0.0;
@@ -99,7 +99,7 @@ public class FuzzyFunctions {
 
         double teta = OpenCV.getAngle(r1, r2);
 
-        if (180 < teta && teta < 360)
+        if (180 < teta && teta <= 360)
             return Math.sin(Math.toRadians(teta - 180));
 
         return 0.0;

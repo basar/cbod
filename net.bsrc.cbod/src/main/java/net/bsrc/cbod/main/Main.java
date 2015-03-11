@@ -54,16 +54,27 @@ public class Main {
         MultiClassSVM instance = MultiClassSVM.getInstance();
 
 
-        String imageName = "IMG_" + 1 + ".jpg";
+        String imageName = "IMG_" + 70 + ".jpg";
         SVMPredictionResult result = instance.doPredictionWithMultiClassSVMs(imageName, 0.0, new ZScoreNormalization());
 
         CandidateComponent max = instance.findComponentWithMaximumDecisionFusionResult(result.getCandidateComponents());
-
+        Rect r1 = max.getRect();
 
         for (CandidateComponent comp1 : result.getCandidateComponents()) {
 
-            if (!comp1.equals(max))
-                System.out.println(comp1.getObjectType().getName() + " - " + "Above: " + FuzzyFunctions.aboveMembershipFunction(max.getRect(), comp1.getRect()) + " Below: " + FuzzyFunctions.belowMembershipFunction(max.getRect(), comp1.getRect()));
+            if (!comp1.equals(max)) {
+                Rect r2 = comp1.getRect();
+                logger.debug("Object Type:{}",comp1.getObjectType().getName());
+                logger.debug("Left:{}",FuzzyFunctions.leftMembershipFunction(r1,r2));
+                logger.debug("Right:{}",FuzzyFunctions.rightMembershipFunction(r1,r2));
+                logger.debug("Above:{}",FuzzyFunctions.aboveMembershipFunction(r1,r2));
+                logger.debug("Below:{}",FuzzyFunctions.belowMembershipFunction(r1,r2));
+                logger.debug("Near:{}",FuzzyFunctions.nearMembershipFunction(r1,r2));
+                logger.debug("Far:{}",FuzzyFunctions.farMembershipFunction(r1,r2));
+                logger.debug("---------------------------------------------");
+
+            }
+
 
         }
 

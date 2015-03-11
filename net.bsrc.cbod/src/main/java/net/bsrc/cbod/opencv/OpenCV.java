@@ -519,9 +519,13 @@ public final class OpenCV {
 
         double angle = Math.toDegrees(Math.atan2((p2.y - p1.y),(p2.x - p1.x)));
 
-        if(angle<0){
-            angle +=360;
+
+        if(p2.y < p1.y){
+            angle = angle * (-1);
+        }else {
+            angle = 360 - angle;
         }
+
         return angle;
     }
 
