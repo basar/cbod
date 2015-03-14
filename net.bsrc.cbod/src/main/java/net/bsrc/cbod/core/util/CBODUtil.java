@@ -359,33 +359,5 @@ public final class CBODUtil {
         return maxIndex;
     }
 
-    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, ImageModel imageModel, String outputSuffix) {
-
-
-        Mat copy = OpenCV.copyImage(imageModel.getMat());
-        Scalar blue = new Scalar(255, 0, 0);
-        Scalar green = new Scalar(0, 255, 0);
-        Scalar red = new Scalar(0, 0, 255);
-
-        for (CandidateComponent cc : candidateComponents) {
-            Rect rect = cc.getRect();
-            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
-                OpenCV.drawRect(rect, copy, red);
-            }
-            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
-                OpenCV.drawRect(rect, copy, green);
-            }
-            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
-                OpenCV.drawRect(rect, copy, blue);
-            }
-        }
-
-        String outputImagePath = getCbodTempDirectory().concat("/").
-                concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
-        OpenCV.writeImage(copy, outputImagePath);
-
-
-    }
-
 
 }

@@ -33,7 +33,7 @@ public class UtilTest {
     @Test
     public void testAngle(){
 
-        System.out.println(OpenCV.getAngle(new Point(2,2),new Point(2,3)));
+        System.out.println(OpenCV.getAngle(new Point(2,2),new Point(3,1)));
 
 
     }

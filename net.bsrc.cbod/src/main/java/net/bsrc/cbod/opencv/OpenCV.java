@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bsrc.cbod.core.RegionMapFactory;
+import net.bsrc.cbod.core.model.CandidateComponent;
+import net.bsrc.cbod.core.model.EObjectType;
 import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.model.RegionMap;
 import net.bsrc.cbod.core.util.CBODUtil;
@@ -120,6 +122,69 @@ public final class OpenCV {
         Core.line(mat, p2, p3, scalar, 2);
         Core.line(mat, p3, p4, scalar, 2);
         Core.line(mat, p4, p1, scalar, 2);
+    }
+
+    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, ImageModel imageModel, String outputSuffix) {
+
+
+        Mat copy = OpenCV.copyImage(imageModel.getMat());
+        Scalar blue = new Scalar(255, 0, 0);
+        Scalar green = new Scalar(0, 255, 0);
+        Scalar red = new Scalar(0, 0, 255);
+
+        for (CandidateComponent cc : candidateComponents) {
+            Rect rect = cc.getRect();
+            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
+                OpenCV.drawRect(rect, copy, red);
+            }
+            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
+                OpenCV.drawRect(rect, copy, green);
+            }
+            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
+                OpenCV.drawRect(rect, copy, blue);
+            }
+        }
+
+        String outputImagePath = CBODUtil.getCbodTempDirectory().concat("/").
+                concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
+        OpenCV.writeImage(copy, outputImagePath);
+
+
+    }
+
+
+    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, CandidateComponent pivot,
+                                             ImageModel imageModel, String outputSuffix) {
+
+
+        Mat copy = OpenCV.copyImage(imageModel.getMat());
+        Scalar blue = new Scalar(255, 0, 0);
+        Scalar green = new Scalar(0, 255, 0);
+        Scalar red = new Scalar(0, 0, 255);
+        Scalar yellow = new Scalar(0,255,255);
+
+        for (CandidateComponent cc : candidateComponents) {
+            Rect rect = cc.getRect();
+            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
+                OpenCV.drawRect(rect, copy, red);
+            }
+            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
+                OpenCV.drawRect(rect, copy, green);
+            }
+            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
+                OpenCV.drawRect(rect, copy, blue);
+            }
+        }
+
+        if(pivot!=null) {
+            OpenCV.drawRect(pivot.getRect(), copy, yellow);
+        }
+
+        String outputImagePath = CBODUtil.getCbodTempDirectory().concat("/").
+                concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
+        OpenCV.writeImage(copy, outputImagePath);
+
+
     }
 
     public static void drawText(Mat m, Point p, String text) {
