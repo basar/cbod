@@ -58,7 +58,7 @@ public class Main {
 
         File outputFile = FileUtils.getFile(CBODUtil.getCbodTempDirectory().concat("/").concat("log.txt"));
 
-        for (int i = 58; i <= 58; i++) {
+        for (int i = 84; i <= 84; i++) {
 
             String imageName = "IMG_" + i + ".jpg";
 
@@ -128,7 +128,8 @@ public class Main {
 
         //Eger en yuksek dereceli obje teker ise
         if (max.getObjectType() == EObjectType.WHEEL) {
-
+            //Kesisen farlar cikarilacak
+            list = removeCandidatesIfintersectAny(max,EObjectType.TAIL_LIGHT,list);
             //Yakin olan plakalar cikarilacak
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, NearMembership.getInstance(), 1.0, Operator.EQUAL, list);
             //Yakın olan tekerler cikarilacak
@@ -137,15 +138,21 @@ public class Main {
             list = removeCandidates(max, EObjectType.TAIL_LIGHT, BelowMembership.getInstance(), 0.0, Operator.BIGGER, list);
             //Altda olan plakalar cikarilacak
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, BelowMembership.getInstance(), 0.0, Operator.BIGGER, list);
-
+            //Max component ile en hizali teker haric digerlerini cikar
+            list = removeCandidatesExceptMostAlign(max, EObjectType.WHEEL, 0.30, list);
 
         }
 
         if (max.getObjectType() == EObjectType.TAIL_LIGHT) {
+            //Kesisen tekerler cikarilacak
+            list = removeCandidatesIfintersectAny(max,EObjectType.WHEEL,list);
             //Uzak olan plakalari cikar
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, FarMembership.getInstance(), 1.0, Operator.EQUAL, list);
-            //Yukarda olan tekerleri at (threshold gerekebilir)
-            list = removeCandidates(max, EObjectType.WHEEL, AboveMembership.getInstance(), 0.0, Operator.BIGGER, list);
+            //Yukarda olan tekerleri cikar (threshold gerekebilir)
+            list = removeCandidates(max, EObjectType.WHEEL, AboveMembership.getInstance(), 0.20, Operator.BIGGER, list);
+            //Max component ile en hizali far haric digerlerini cikar
+            list = removeCandidatesExceptMostAlign(max, EObjectType.TAIL_LIGHT, 0.30, list);
+
 
         }
 
@@ -157,13 +164,78 @@ public class Main {
             list = removeCandidates(max, EObjectType.TAIL_LIGHT, FarMembership.getInstance(), 1.0, Operator.EQUAL, list);
             //Yakın olan tekerler cikarilacak
             list = removeCandidates(max, EObjectType.WHEEL, NearMembership.getInstance(), 1.0, Operator.EQUAL, list);
-            //TODO Belirli bir threshold degerinden yukarda olan tekerleri cikar
+            //Yukarda olan tekerleri cikar (threshold gerekebilir)
+            list = removeCandidates(max, EObjectType.WHEEL, AboveMembership.getInstance(), 0.20, Operator.BIGGER, list);
 
 
         }
 
+        //Eger ikiden fazla far bulunmus ise
+        if (getCountObjectType(EObjectType.TAIL_LIGHT, list) > 2) {
+            //Aralarindan en yuksek decision value'ya sahip olanini bul
+            CandidateComponent maxTaillight = instance.findComponentWithMaximumDecisionFusionResult(EObjectType.TAIL_LIGHT, list);
+            //Max taillight component ile en hizali far haric digerlerini cikar
+            list = removeCandidatesExceptMostAlign(maxTaillight, EObjectType.TAIL_LIGHT, 0.30, list);
+        }
+
+        //Eger ikiden fazla teker bulunmus ise
+        if (getCountObjectType(EObjectType.WHEEL, list) > 2) {
+            //Aralarindan en yuksek decision value'ya sahip olanini bul
+            CandidateComponent maxWheel = instance.findComponentWithMaximumDecisionFusionResult(EObjectType.WHEEL, list);
+            //Max taillight component ile en hizali far haric digerlerini cikar
+            list = removeCandidatesExceptMostAlign(maxWheel, EObjectType.WHEEL, 0.30, list);
+        }
+
+        //Eger birden fazla license plate varsa decision fusion en yüksek olan alınacak digerleri cikarilacak
+        list = removeCandidatesExceptHighestDecisionValue(EObjectType.LICENSE_PLATE, list);
+
 
         return list;
+    }
+
+
+    private static int getCountObjectType(EObjectType objectType, List<CandidateComponent> list) {
+
+        int count = 0;
+        for (CandidateComponent candidateComponent : list) {
+            if (candidateComponent.getObjectType() == objectType)
+                count++;
+        }
+        return count;
+
+    }
+
+
+    private static List<CandidateComponent> removeCandidatesExceptHighestDecisionValue(EObjectType objectType, List<CandidateComponent> list) {
+
+        CandidateComponent max = null;
+
+        List<CandidateComponent> resultList = new ArrayList<CandidateComponent>();
+
+        for (CandidateComponent target : list) {
+            if (target.getObjectType() == objectType) {
+                if (max == null) {
+                    max = target;
+                    continue;
+                }
+                if (!max.equals(target)) {
+                    if (target.getDecisionFusionResult() > max.getDecisionFusionResult()) {
+                        max = target;
+                    }
+                }
+            }
+
+        }
+
+        if (max == null) return list;
+
+        for (CandidateComponent target : list) {
+            if (target.equals(max) || target.getObjectType() != objectType) {
+                resultList.add(target);
+            }
+        }
+
+        return resultList;
     }
 
 
@@ -193,6 +265,12 @@ public class Main {
     private static List<CandidateComponent> removeCandidatesIfintersectAndSameObjectType(
             CandidateComponent source, List<CandidateComponent> targetList) {
 
+       return removeCandidatesIfintersectAny(source,source.getObjectType(),targetList);
+    }
+
+    private static List<CandidateComponent> removeCandidatesIfintersectAny(
+            CandidateComponent source,EObjectType objectType,List<CandidateComponent> targetList) {
+
         if (source == null)
             return targetList;
 
@@ -200,7 +278,7 @@ public class Main {
 
         for (CandidateComponent candidateComponent : targetList) {
             if (!source.equals(candidateComponent)) {
-                if (source.getObjectType() == candidateComponent.getObjectType()) {
+                if (objectType == candidateComponent.getObjectType()) {
                     if (OpenCV.intersect(source.getRect(), candidateComponent.getRect())) {
                         continue;
                     }
@@ -235,6 +313,62 @@ public class Main {
 
             }
             resultList.add(target);
+        }
+
+
+        return resultList;
+    }
+
+
+    private static List<CandidateComponent> removeCandidatesExceptMostAlign(
+            CandidateComponent source, EObjectType objectType, double threshold,
+            List<CandidateComponent> list) {
+
+        if (source == null) return list;
+
+        List<CandidateComponent> resultList = new ArrayList<CandidateComponent>();
+
+        CandidateComponent mostAlign = null;
+        double mostAlignValue = 0;
+
+
+        for (CandidateComponent target : list) {
+            if (!target.equals(source)) {
+                if (target.getObjectType() == objectType) {
+                    if (mostAlign == null) {
+                        mostAlign = target;
+                        mostAlignValue = Math.max(BelowMembership.getInstance().calculateValue(source, target),
+                                AboveMembership.getInstance().calculateValue(source, target));
+                        continue;
+                    }
+
+                    double alignValue = Math.max(BelowMembership.getInstance().calculateValue(source, target),
+                            AboveMembership.getInstance().calculateValue(source, target));
+                    if (alignValue < mostAlignValue) {
+                        mostAlign = target;
+                        mostAlignValue = alignValue;
+                    }
+
+                }
+            }
+        }
+
+
+        if (mostAlign == null) return list;
+
+
+        for (CandidateComponent target : list) {
+            if (target.equals(source)) {
+                resultList.add(target);
+                continue;
+            }
+            if (target.equals(mostAlign) && mostAlignValue < threshold) {
+                resultList.add(target);
+                continue;
+            }
+            if(target.getObjectType()!=objectType) {
+                resultList.add(target);
+            }
         }
 
 

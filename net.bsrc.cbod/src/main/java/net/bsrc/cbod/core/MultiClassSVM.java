@@ -324,16 +324,15 @@ public class MultiClassSVM {
     }
 
 
-
-    public CandidateComponent findComponentWithMaximumDecisionFusionResult(List<CandidateComponent> candidateComponents){
+    public CandidateComponent findComponentWithMaximumDecisionFusionResult(List<CandidateComponent> candidateComponents) {
 
         CandidateComponent result = null;
         for (CandidateComponent candidateComponent : candidateComponents) {
-            if(result==null){
+            if (result == null) {
                 result = candidateComponent;
                 continue;
             }
-            if(result.getDecisionFusionResult()<candidateComponent.getDecisionFusionResult()){
+            if (result.getDecisionFusionResult() < candidateComponent.getDecisionFusionResult()) {
                 result = candidateComponent;
             }
 
@@ -341,4 +340,24 @@ public class MultiClassSVM {
 
         return result;
     }
+
+    public CandidateComponent findComponentWithMaximumDecisionFusionResult(EObjectType objectType, List<CandidateComponent> candidateComponents) {
+
+        CandidateComponent result = null;
+        for (CandidateComponent candidateComponent : candidateComponents) {
+            if(candidateComponent.getObjectType()==objectType) {
+                if (result == null) {
+                    result = candidateComponent;
+                    continue;
+                }
+                if (result.getDecisionFusionResult() < candidateComponent.getDecisionFusionResult()) {
+                    result = candidateComponent;
+                }
+            }
+        }
+
+        return result;
+    }
+
+
 }
