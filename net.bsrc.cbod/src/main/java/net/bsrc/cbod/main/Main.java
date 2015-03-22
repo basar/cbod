@@ -15,6 +15,11 @@ import net.bsrc.cbod.opencv.OpenCV;
 import net.bsrc.cbod.svm.libsvm.LibSvm;
 import net.bsrc.cbod.svm.libsvm.LibSvmUtil;
 import net.bsrc.cbod.svm.libsvm.SvmModelPair;
+import net.sourceforge.jFuzzyLogic.FIS;
+import net.sourceforge.jFuzzyLogic.optimization.ErrorFunction;
+import net.sourceforge.jFuzzyLogic.optimization.OptimizationDeltaJump;
+import net.sourceforge.jFuzzyLogic.optimization.Parameter;
+import net.sourceforge.jFuzzyLogic.rule.RuleBlock;
 import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -53,57 +58,89 @@ public class Main {
     public static void main(String[] args) {
 
 
+
+        FIS fis = FIS.load("/Users/bsr/Documents/Phd/jfuzzylogic/cbod.fcl");
+        RuleBlock ruleBlock = fis.getFunctionBlock("cbod").getFuzzyRuleBlock("cbod_rule_block");
+
+
+        ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+
+        //parameters.addAll(Parameter.parametersMembershipFunction(ruleBlock.getVariable("t1_ex")));
+        //parameters.addAll(Parameter.parametersMembershipFunction(ruleBlock.getVariable("t2_ex")));
+
+        parameters.addAll(Parameter.parameters(ruleBlock));
+
+        ErrorFunctionQualify errorFunctionQualify = new ErrorFunctionQualify();
+
+        OptimizationDeltaJump optimizationDeltaJump = new OptimizationDeltaJump(ruleBlock,errorFunctionQualify,parameters);
+
+        optimizationDeltaJump.setMaxIterations(20);
+        optimizationDeltaJump.setVerbose(true);
+        optimizationDeltaJump.optimize();
+
+        DB4O.getInstance().close();
+    }
+
+
+    private static void doPrediction() {
         MultiClassSVM instance = MultiClassSVM.getInstance();
 
 
         File outputFile = FileUtils.getFile(CBODUtil.getCbodTempDirectory().concat("/").concat("log.txt"));
 
-        for (int i = 84; i <= 84; i++) {
+        for (int i = 7; i <= 7; i++) {
 
             String imageName = "IMG_" + i + ".jpg";
 
             SVMPredictionResult result = instance.doPredictionWithMultiClassSVMs(imageName, 0.0, new ZScoreNormalization());
+            List<CandidateComponent> nonFilteredList = result.getCandidateComponents();
+            List<CandidateComponent> filteredList = null;
 
             CandidateComponent max = instance.findComponentWithMaximumDecisionFusionResult(result.getCandidateComponents());
-            Rect r1 = max.getRect();
+            if (max != null) {
+                Rect r1 = max.getRect();
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("\nImage Name: IMG_").append(i).append(".jpg");
-            sb.append("\nMax component type: ").append(max.getObjectType().getName());
-            sb.append("\nDecision Value: ").append(max.getDecisionFusionResult());
-            sb.append("\n--------------------------------------------------------\n");
+                StringBuilder sb = new StringBuilder();
+                sb.append("\nImage Name: IMG_").append(i).append(".jpg");
+                sb.append("\nMax component type: ").append(max.getObjectType().getName());
+                sb.append("\nDecision Value: ").append(max.getDecisionFusionResult());
+                sb.append("\n--------------------------------------------------------\n");
 
-            List<CandidateComponent> filteredList = doFalseComponentElimination(result.getCandidateComponents());
+                filteredList = doFalseComponentElimination(result.getCandidateComponents());
 
-            for (CandidateComponent comp1 : result.getCandidateComponents()) {
+                for (CandidateComponent comp1 : result.getCandidateComponents()) {
 
-                if (!comp1.equals(max)) {
-                    Rect r2 = comp1.getRect();
-                    sb.append("Object Type   : ").append(comp1.getObjectType().getName()).append("\n");
-                    sb.append("Decision Value: ").append(comp1.getDecisionFusionResult()).append("\n");
-                    sb.append("Left          : ").append(LeftMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("Right         : ").append(RightMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("Above         : ").append(AboveMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("Below         : ").append(BelowMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("Near          : ").append(NearMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("Far           : ").append(FarMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                    sb.append("----------------------------------------------------------------------\n");
+                    if (!comp1.equals(max)) {
+                        Rect r2 = comp1.getRect();
+                        sb.append("Object Type   : ").append(comp1.getObjectType().getName()).append("\n");
+                        sb.append("Decision Value: ").append(comp1.getDecisionFusionResult()).append("\n");
+                        sb.append("Left          : ").append(LeftMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("Right         : ").append(RightMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("Above         : ").append(AboveMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("Below         : ").append(BelowMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("Near          : ").append(NearMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("Far           : ").append(FarMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                        sb.append("----------------------------------------------------------------------\n");
+
+                    }
 
                 }
 
+                sb.append("##################################################################################");
+                try {
+                    FileUtils.writeStringToFile(outputFile, sb.toString(), true);
+                } catch (IOException e) {
+                    logger.error("", e);
+                }
             }
+            OpenCV.drawComponentsToImage(nonFilteredList, max, result.getInputImageModel(), CBODConstants.MC_OUT_SUFFIX);
+            OpenCV.drawComponentsToImage(filteredList, max, result.getInputImageModel(), CBODConstants.F_OUT);
 
-            sb.append("##################################################################################");
-            try {
-                FileUtils.writeStringToFile(outputFile, sb.toString(), true);
-            } catch (IOException e) {
-                logger.error("", e);
+            for (CandidateComponent candidateComponent : filteredList) {
+                System.out.println("Comp " + candidateComponent.getObjectType().getName() + " val:" + candidateComponent.getDecisionFusionResult());
             }
-            OpenCV.drawComponentsToImage(filteredList, max, result.getInputImageModel(), CBODConstants.MC_OUT_SUFFIX);
 
         }
-
-        DB4O.getInstance().close();
     }
 
 
@@ -129,7 +166,7 @@ public class Main {
         //Eger en yuksek dereceli obje teker ise
         if (max.getObjectType() == EObjectType.WHEEL) {
             //Kesisen farlar cikarilacak
-            list = removeCandidatesIfintersectAny(max,EObjectType.TAIL_LIGHT,list);
+            list = removeCandidatesIfintersectAny(max, EObjectType.TAIL_LIGHT, list);
             //Yakin olan plakalar cikarilacak
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, NearMembership.getInstance(), 1.0, Operator.EQUAL, list);
             //Yakın olan tekerler cikarilacak
@@ -145,7 +182,7 @@ public class Main {
 
         if (max.getObjectType() == EObjectType.TAIL_LIGHT) {
             //Kesisen tekerler cikarilacak
-            list = removeCandidatesIfintersectAny(max,EObjectType.WHEEL,list);
+            list = removeCandidatesIfintersectAny(max, EObjectType.WHEEL, list);
             //Uzak olan plakalari cikar
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, FarMembership.getInstance(), 1.0, Operator.EQUAL, list);
             //Yukarda olan tekerleri cikar (threshold gerekebilir)
@@ -265,11 +302,11 @@ public class Main {
     private static List<CandidateComponent> removeCandidatesIfintersectAndSameObjectType(
             CandidateComponent source, List<CandidateComponent> targetList) {
 
-       return removeCandidatesIfintersectAny(source,source.getObjectType(),targetList);
+        return removeCandidatesIfintersectAny(source, source.getObjectType(), targetList);
     }
 
     private static List<CandidateComponent> removeCandidatesIfintersectAny(
-            CandidateComponent source,EObjectType objectType,List<CandidateComponent> targetList) {
+            CandidateComponent source, EObjectType objectType, List<CandidateComponent> targetList) {
 
         if (source == null)
             return targetList;
@@ -366,12 +403,19 @@ public class Main {
                 resultList.add(target);
                 continue;
             }
-            if(target.getObjectType()!=objectType) {
+            if (target.getObjectType() != objectType) {
                 resultList.add(target);
             }
         }
 
 
         return resultList;
+    }
+}
+
+class ErrorFunctionQualify extends ErrorFunction {
+    public double evaluate(RuleBlock ruleBlock) {
+        double error = 0.0;
+        return error;
     }
 }

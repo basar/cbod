@@ -131,20 +131,20 @@ public final class OpenCV {
         Scalar blue = new Scalar(255, 0, 0);
         Scalar green = new Scalar(0, 255, 0);
         Scalar red = new Scalar(0, 0, 255);
-
-        for (CandidateComponent cc : candidateComponents) {
-            Rect rect = cc.getRect();
-            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
-                OpenCV.drawRect(rect, copy, red);
-            }
-            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
-                OpenCV.drawRect(rect, copy, green);
-            }
-            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
-                OpenCV.drawRect(rect, copy, blue);
+        if (candidateComponents != null) {
+            for (CandidateComponent cc : candidateComponents) {
+                Rect rect = cc.getRect();
+                if (cc.getObjectType().equals(EObjectType.WHEEL)) {
+                    OpenCV.drawRect(rect, copy, red);
+                }
+                if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
+                    OpenCV.drawRect(rect, copy, green);
+                }
+                if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
+                    OpenCV.drawRect(rect, copy, blue);
+                }
             }
         }
-
         String outputImagePath = CBODUtil.getCbodTempDirectory().concat("/").
                 concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
         OpenCV.writeImage(copy, outputImagePath);
@@ -161,22 +161,22 @@ public final class OpenCV {
         Scalar blue = new Scalar(255, 0, 0);
         Scalar green = new Scalar(0, 255, 0);
         Scalar red = new Scalar(0, 0, 255);
-        Scalar yellow = new Scalar(0,255,255);
-
-        for (CandidateComponent cc : candidateComponents) {
-            Rect rect = cc.getRect();
-            if (cc.getObjectType().equals(EObjectType.WHEEL)) {
-                OpenCV.drawRect(rect, copy, red);
-            }
-            if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
-                OpenCV.drawRect(rect, copy, green);
-            }
-            if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
-                OpenCV.drawRect(rect, copy, blue);
+        Scalar yellow = new Scalar(0, 255, 255);
+        if (candidateComponents != null) {
+            for (CandidateComponent cc : candidateComponents) {
+                Rect rect = cc.getRect();
+                if (cc.getObjectType().equals(EObjectType.WHEEL)) {
+                    OpenCV.drawRect(rect, copy, red);
+                }
+                if (cc.getObjectType().equals(EObjectType.TAIL_LIGHT)) {
+                    OpenCV.drawRect(rect, copy, green);
+                }
+                if (cc.getObjectType().equals(EObjectType.LICENSE_PLATE)) {
+                    OpenCV.drawRect(rect, copy, blue);
+                }
             }
         }
-
-        if(pivot!=null) {
+        if (pivot != null) {
             OpenCV.drawRect(pivot.getRect(), copy, yellow);
         }
 
@@ -432,7 +432,7 @@ public final class OpenCV {
                 Point p2_0 = getPoint(r2, 0);
 
                 if (p1_2.x <= p2_0.x && p1_2.y <= p2_0.y) {
-                    result = distance(p1_2,p2_0);
+                    result = distance(p1_2, p2_0);
                 }
                 if (p1_2.x > p2_0.x && p1_2.y < p2_0.y) {
                     result = p2_0.y - p1_2.y;
@@ -448,7 +448,7 @@ public final class OpenCV {
                 Point p2_3 = getPoint(r2, 3);
 
                 if (p1_1.x <= p2_3.x && p1_1.y >= p2_3.y) {
-                    result=distance(p1_1,p2_3);
+                    result = distance(p1_1, p2_3);
                 }
                 if (p1_1.x < p2_3.x && p1_1.y < p2_3.y) {
                     result = p2_3.x - p1_1.x;
@@ -468,7 +468,7 @@ public final class OpenCV {
                 Point p2_1 = getPoint(r2, 1);
 
                 if (p1_3.x >= p2_1.x && p1_3.y <= p2_1.y) {
-                    result=distance(p1_3,p2_1);
+                    result = distance(p1_3, p2_1);
                 }
                 if (p1_3.x > p2_1.x && p1_3.y > p2_1.y) {
                     result = p1_3.x - p2_1.x;
@@ -484,7 +484,7 @@ public final class OpenCV {
                 Point p2_2 = getPoint(r2, 2);
 
                 if (p1_0.x >= p2_2.x && p1_0.y >= p2_2.y) {
-                    result = distance(p1_0,p2_2);
+                    result = distance(p1_0, p2_2);
                 }
                 if (p1_0.x > p2_2.x && p1_0.y < p2_2.y) {
                     result = p1_0.x - p2_2.x;
@@ -501,8 +501,8 @@ public final class OpenCV {
         return result;
     }
 
-    public static double distance(Point p1,Point p2){
-        return Math.sqrt(Math.pow(Math.abs(p1.x-p2.x),2) + Math.pow(Math.abs(p1.y-p2.y),2));
+    public static double distance(Point p1, Point p2) {
+        return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
     }
 
     public static boolean intersect(Rect r1, Rect r2) {
@@ -525,7 +525,7 @@ public final class OpenCV {
         return false;
     }
 
-    public static Rect createRect(int x,int y,int width,int height){
+    public static Rect createRect(int x, int y, int width, int height) {
         Rect r = new Rect();
         r.x = x;
         r.y = y;
@@ -575,19 +575,18 @@ public final class OpenCV {
     }
 
     /**
-     *
      * @param p1 source
      * @param p2 target
      * @return
      */
-    public static double getAngle(Point p1,Point p2){
+    public static double getAngle(Point p1, Point p2) {
 
-        double angle = Math.toDegrees(Math.atan2((p2.y - p1.y),(p2.x - p1.x)));
+        double angle = Math.toDegrees(Math.atan2((p2.y - p1.y), (p2.x - p1.x)));
 
 
-        if(p2.y < p1.y){
+        if (p2.y < p1.y) {
             angle = angle * (-1);
-        }else {
+        } else {
             angle = 360 - angle;
         }
 
@@ -596,14 +595,13 @@ public final class OpenCV {
 
 
     /**
-     *
      * @param r1 source
      * @param r2 target
      * @return
      */
-    public static double getAngle(Rect r1,Rect r2){
+    public static double getAngle(Rect r1, Rect r2) {
 
-        return getAngle(getCenterPoint(r1),getCenterPoint(r2));
+        return getAngle(getCenterPoint(r1), getCenterPoint(r2));
     }
 
 

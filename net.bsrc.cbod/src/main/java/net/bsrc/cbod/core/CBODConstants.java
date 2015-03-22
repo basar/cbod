@@ -24,6 +24,7 @@ public final class CBODConstants {
 	public static final String TXT_SUFFIX = ".txt";
 
     public static final String MC_OUT_SUFFIX = "_mc_out";
+    public static final String F_OUT = "_f_out";
     public static final String B_FUSED_OUT = "_b_fused_out";
     public static final String B_OUT = "_b_out";
 
