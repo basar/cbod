@@ -1,6 +1,7 @@
 package net.bsrc.cbod.opencv;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -153,8 +154,8 @@ public final class OpenCV {
     }
 
 
-    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, CandidateComponent pivot,
-                                             ImageModel imageModel, String outputSuffix) {
+    private static void drawComponentsToImage(List<CandidateComponent> candidateComponents, CandidateComponent pivot,
+                                             ImageModel imageModel, String outputSuffix, double fuzzyResult, boolean writeFuzzyResult) {
 
 
         Mat copy = OpenCV.copyImage(imageModel.getMat());
@@ -180,6 +181,11 @@ public final class OpenCV {
             OpenCV.drawRect(pivot.getRect(), copy, yellow);
         }
 
+        if (writeFuzzyResult) {
+            DecimalFormat dFormat = new DecimalFormat("#.####");
+            drawText(copy, new Point(5, 20), dFormat.format(fuzzyResult));
+        }
+
         String outputImagePath = CBODUtil.getCbodTempDirectory().concat("/").
                 concat(imageModel.getRawImageName() + outputSuffix + "." + imageModel.getExtension());
         OpenCV.writeImage(copy, outputImagePath);
@@ -187,8 +193,21 @@ public final class OpenCV {
 
     }
 
-    public static void drawText(Mat m, Point p, String text) {
-        Core.putText(m, text, p, Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(0, 0, 0));
+    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, CandidateComponent pivot,
+                                             ImageModel imageModel, String outputSuffix) {
+       drawComponentsToImage(candidateComponents,pivot,imageModel,outputSuffix,0.0,false);
+    }
+
+    public static void drawComponentsToImage(List<CandidateComponent> candidateComponents, CandidateComponent pivot,
+                                             ImageModel imageModel, String outputSuffix,double fuzzyResult) {
+        drawComponentsToImage(candidateComponents,pivot,imageModel,outputSuffix,fuzzyResult,true);
+    }
+
+
+
+
+        public static void drawText(Mat m, Point p, String text) {
+        Core.putText(m, text, p, Core.FONT_HERSHEY_SIMPLEX, 0.75, new Scalar(238, 130, 238), 2);
     }
 
     public static Point getCenterPoint(Rect rect) {

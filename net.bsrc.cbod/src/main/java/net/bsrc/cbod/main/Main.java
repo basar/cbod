@@ -1,40 +1,26 @@
 package net.bsrc.cbod.main;
 
-import com.googlecode.javacv.cpp.opencv_core.CvMat;
-import libsvm.*;
+import com.fuzzylite.Engine;
+import com.fuzzylite.imex.FclImporter;
+import com.fuzzylite.imex.FllImporter;
 import net.bsrc.cbod.core.*;
-import net.bsrc.cbod.core.model.*;
+import net.bsrc.cbod.core.model.CandidateComponent;
+import net.bsrc.cbod.core.model.EObjectType;
+import net.bsrc.cbod.core.model.SVMPredictionResult;
 import net.bsrc.cbod.core.persistence.DB4O;
-import net.bsrc.cbod.core.persistence.ImageModelService;
 import net.bsrc.cbod.core.util.CBODUtil;
-import net.bsrc.cbod.jseg.JSEG;
-import net.bsrc.cbod.jseg.JSEGParameter;
-import net.bsrc.cbod.jseg.JSEGParameterFactory;
-import net.bsrc.cbod.mpeg.bil.BilMpeg7Fex;
 import net.bsrc.cbod.opencv.OpenCV;
-import net.bsrc.cbod.svm.libsvm.LibSvm;
-import net.bsrc.cbod.svm.libsvm.LibSvmUtil;
-import net.bsrc.cbod.svm.libsvm.SvmModelPair;
-import net.sourceforge.jFuzzyLogic.FIS;
-import net.sourceforge.jFuzzyLogic.optimization.ErrorFunction;
-import net.sourceforge.jFuzzyLogic.optimization.OptimizationDeltaJump;
-import net.sourceforge.jFuzzyLogic.optimization.Parameter;
-import net.sourceforge.jFuzzyLogic.rule.RuleBlock;
 import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
-import org.opencv.core.Mat;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -57,90 +43,128 @@ public class Main {
      */
     public static void main(String[] args) {
 
+        doPrediction("test.jpg", false);
 
 
-        FIS fis = FIS.load("/Users/bsr/Documents/Phd/jfuzzylogic/cbod.fcl");
-        RuleBlock ruleBlock = fis.getFunctionBlock("cbod").getFuzzyRuleBlock("cbod_rule_block");
-
-
-        ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-
-        //parameters.addAll(Parameter.parametersMembershipFunction(ruleBlock.getVariable("t1_ex")));
-        //parameters.addAll(Parameter.parametersMembershipFunction(ruleBlock.getVariable("t2_ex")));
-
-        parameters.addAll(Parameter.parameters(ruleBlock));
-
-        ErrorFunctionQualify errorFunctionQualify = new ErrorFunctionQualify();
-
-        OptimizationDeltaJump optimizationDeltaJump = new OptimizationDeltaJump(ruleBlock,errorFunctionQualify,parameters);
-
-        optimizationDeltaJump.setMaxIterations(20);
-        optimizationDeltaJump.setVerbose(true);
-        optimizationDeltaJump.optimize();
 
         DB4O.getInstance().close();
     }
 
 
-    private static void doPrediction() {
+    private static void doPrediction(String imageName, boolean writeToFile) {
+
         MultiClassSVM instance = MultiClassSVM.getInstance();
 
 
-        File outputFile = FileUtils.getFile(CBODUtil.getCbodTempDirectory().concat("/").concat("log.txt"));
+        SVMPredictionResult result = instance.doPredictionWithMultiClassSVMs(imageName, 0.0, new ZScoreNormalization());
+        List<CandidateComponent> nonFilteredList = result.getCandidateComponents();
+        List<CandidateComponent> filteredList = null;
 
-        for (int i = 7; i <= 7; i++) {
+        double fuzzyResult = 0.0;
+        CandidateComponent max = instance.findComponentWithMaximumDecisionFusionResult(result.getCandidateComponents());
+        if (max != null) {
 
-            String imageName = "IMG_" + i + ".jpg";
-
-            SVMPredictionResult result = instance.doPredictionWithMultiClassSVMs(imageName, 0.0, new ZScoreNormalization());
-            List<CandidateComponent> nonFilteredList = result.getCandidateComponents();
-            List<CandidateComponent> filteredList = null;
-
-            CandidateComponent max = instance.findComponentWithMaximumDecisionFusionResult(result.getCandidateComponents());
-            if (max != null) {
-                Rect r1 = max.getRect();
-
-                StringBuilder sb = new StringBuilder();
-                sb.append("\nImage Name: IMG_").append(i).append(".jpg");
-                sb.append("\nMax component type: ").append(max.getObjectType().getName());
-                sb.append("\nDecision Value: ").append(max.getDecisionFusionResult());
-                sb.append("\n--------------------------------------------------------\n");
-
-                filteredList = doFalseComponentElimination(result.getCandidateComponents());
-
-                for (CandidateComponent comp1 : result.getCandidateComponents()) {
-
-                    if (!comp1.equals(max)) {
-                        Rect r2 = comp1.getRect();
-                        sb.append("Object Type   : ").append(comp1.getObjectType().getName()).append("\n");
-                        sb.append("Decision Value: ").append(comp1.getDecisionFusionResult()).append("\n");
-                        sb.append("Left          : ").append(LeftMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("Right         : ").append(RightMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("Above         : ").append(AboveMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("Below         : ").append(BelowMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("Near          : ").append(NearMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("Far           : ").append(FarMembership.getInstance().calculateValue(r1, r2)).append("\n");
-                        sb.append("----------------------------------------------------------------------\n");
-
-                    }
-
-                }
-
-                sb.append("##################################################################################");
-                try {
-                    FileUtils.writeStringToFile(outputFile, sb.toString(), true);
-                } catch (IOException e) {
-                    logger.error("", e);
-                }
+            if (writeToFile) {
+                writeMaxAndOtherComponentRelationsToFile(imageName, max, result.getCandidateComponents());
             }
-            OpenCV.drawComponentsToImage(nonFilteredList, max, result.getInputImageModel(), CBODConstants.MC_OUT_SUFFIX);
-            OpenCV.drawComponentsToImage(filteredList, max, result.getInputImageModel(), CBODConstants.F_OUT);
 
-            for (CandidateComponent candidateComponent : filteredList) {
-                System.out.println("Comp " + candidateComponent.getObjectType().getName() + " val:" + candidateComponent.getDecisionFusionResult());
-            }
+            filteredList = doFalseComponentElimination(result.getCandidateComponents());
+            fuzzyResult = doFuzzyOperation(filteredList);
 
         }
+        OpenCV.drawComponentsToImage(nonFilteredList, max, result.getInputImageModel(), CBODConstants.MC_OUT_SUFFIX);
+        OpenCV.drawComponentsToImage(filteredList, max, result.getInputImageModel(), CBODConstants.F_OUT_SUFFIX,fuzzyResult);
+
+    }
+
+    private static double doFuzzyOperation(List<CandidateComponent> components) {
+
+
+        FclImporter importer = new FclImporter();
+
+        String s = CBODUtil.getFileDataAsString("/Users/bsr/Documents/Phd/cbod/fuzzy/cbod.fcl");
+
+        Engine engine = importer.fromString(s);
+
+        CandidateComponent t1 = null;
+        CandidateComponent t2 = null;
+        CandidateComponent lp = null;
+        CandidateComponent w1 = null;
+        CandidateComponent w2 = null;
+
+        for (CandidateComponent component : components) {
+            if (t1 == null && component.getObjectType() == EObjectType.TAIL_LIGHT) {
+                t1 = component;
+                continue;
+            }
+            if (t2 == null && component.getObjectType() == EObjectType.TAIL_LIGHT) {
+                t2 = component;
+                continue;
+            }
+            if (component.getObjectType() == EObjectType.LICENSE_PLATE) {
+                lp = component;
+                continue;
+            }
+            if (w1 == null && component.getObjectType() == EObjectType.WHEEL) {
+                w1 = component;
+                continue;
+            }
+            if (w2 == null && component.getObjectType() == EObjectType.WHEEL) {
+                w2 = component;
+            }
+        }
+
+        double t1Ex = t1 != null ? t1.getDecisionFusionResult() : 0.0;
+        double t2Ex = t2 != null ? t2.getDecisionFusionResult() : 0.0;
+        double lpEx = lp != null ? lp.getDecisionFusionResult() : 0.0;
+        double w1Ex = w1 != null ? w1.getDecisionFusionResult() : 0.0;
+        double w2Ex = w2 != null ? w2.getDecisionFusionResult() : 0.0;
+        double t1lpNr = (t1 != null && lp != null) ? NearMembership.getInstance().calculateValue(t1, lp) : 0.0;
+        double t2lpNr = (t2 != null && lp != null) ? NearMembership.getInstance().calculateValue(t2, lp) : 0.0;
+        double w1w2Far = (w1 != null && w2 != null) ? FarMembership.getInstance().calculateValue(w1, w2) : 0.0;
+        double w1w2Al = (w1!=null && w2!=null) ? Math.max(BelowMembership.getInstance().calculateValue(w1, w2),
+                AboveMembership.getInstance().calculateValue(w1, w2)) : 0.0;
+        double t1t2Al = (t1!=null && t2!=null) ? Math.max(BelowMembership.getInstance().calculateValue(t1, t2),
+                AboveMembership.getInstance().calculateValue(t1, t2)) : 0.0;
+
+        //kuralin tetiklenmesi icin
+        if(w1!=null && w2!=null && w1w2Al==0.0){
+            w1w2Al = 0.01;
+        }
+        //kuralin tetiklenmesi icin
+        if(t1!=null && t2!=null && t1t2Al==0.0){
+            t1t2Al = 0.01;
+        }
+        if(t1lpNr==1.0)
+            t1lpNr = 0.9999;
+        if(t2lpNr == 1.0){
+            t2lpNr = 0.9999;
+        }
+
+
+        engine.getInputVariable(CBODConstants.T1_EX).setInputValue(t1Ex);
+        engine.getInputVariable(CBODConstants.T2_EX).setInputValue(t2Ex);
+        engine.getInputVariable(CBODConstants.LP_EX).setInputValue(lpEx);
+        engine.getInputVariable(CBODConstants.W1_EX).setInputValue(w1Ex);
+        engine.getInputVariable(CBODConstants.W2_EX).setInputValue(w2Ex);
+        engine.getInputVariable(CBODConstants.T1LP_NR).setInputValue(t1lpNr);
+        engine.getInputVariable(CBODConstants.T2LP_NR).setInputValue(t2lpNr);
+        engine.getInputVariable(CBODConstants.W1W2_FAR).setInputValue(w1w2Far);
+        engine.getInputVariable(CBODConstants.W1w2_AL).setInputValue(w1w2Al);
+        engine.getInputVariable(CBODConstants.T1T2_AL).setInputValue(t1t2Al);
+
+
+
+        StringBuilder status = new StringBuilder();
+        if (!engine.isReady(status))
+            throw new RuntimeException("Engine not ready. " +
+                    "The following errors were encountered:\n" + status.toString());
+
+        engine.process();
+
+        return engine.getOutputVariable(CBODConstants.CAR_EX).defuzzify();
+
+
     }
 
 
@@ -153,7 +177,6 @@ public class Main {
             return resultList;
 
         if (list.size() == 1) {
-            resultList.add(list.get(0));
             return resultList;
         }
 
@@ -162,6 +185,9 @@ public class Main {
         CandidateComponent max = instance.findComponentWithMaximumDecisionFusionResult(list);
         //En yuksek dereceli parca ile kesisen aynı sınıfa ait diger objeleri cikar
         list = removeCandidatesIfintersectAndSameObjectType(max, list);
+
+        double wheelAlignThreshold = 0.40;
+        double tailLightAlignThreshold = 0.30;
 
         //Eger en yuksek dereceli obje teker ise
         if (max.getObjectType() == EObjectType.WHEEL) {
@@ -176,7 +202,7 @@ public class Main {
             //Altda olan plakalar cikarilacak
             list = removeCandidates(max, EObjectType.LICENSE_PLATE, BelowMembership.getInstance(), 0.0, Operator.BIGGER, list);
             //Max component ile en hizali teker haric digerlerini cikar
-            list = removeCandidatesExceptMostAlign(max, EObjectType.WHEEL, 0.30, list);
+            list = removeCandidatesExceptMostAlign(max, EObjectType.WHEEL, wheelAlignThreshold, list);
 
         }
 
@@ -188,7 +214,7 @@ public class Main {
             //Yukarda olan tekerleri cikar (threshold gerekebilir)
             list = removeCandidates(max, EObjectType.WHEEL, AboveMembership.getInstance(), 0.20, Operator.BIGGER, list);
             //Max component ile en hizali far haric digerlerini cikar
-            list = removeCandidatesExceptMostAlign(max, EObjectType.TAIL_LIGHT, 0.30, list);
+            list = removeCandidatesExceptMostAlign(max, EObjectType.TAIL_LIGHT, tailLightAlignThreshold, list);
 
 
         }
@@ -212,7 +238,7 @@ public class Main {
             //Aralarindan en yuksek decision value'ya sahip olanini bul
             CandidateComponent maxTaillight = instance.findComponentWithMaximumDecisionFusionResult(EObjectType.TAIL_LIGHT, list);
             //Max taillight component ile en hizali far haric digerlerini cikar
-            list = removeCandidatesExceptMostAlign(maxTaillight, EObjectType.TAIL_LIGHT, 0.30, list);
+            list = removeCandidatesExceptMostAlign(maxTaillight, EObjectType.TAIL_LIGHT, tailLightAlignThreshold, list);
         }
 
         //Eger ikiden fazla teker bulunmus ise
@@ -220,7 +246,7 @@ public class Main {
             //Aralarindan en yuksek decision value'ya sahip olanini bul
             CandidateComponent maxWheel = instance.findComponentWithMaximumDecisionFusionResult(EObjectType.WHEEL, list);
             //Max taillight component ile en hizali far haric digerlerini cikar
-            list = removeCandidatesExceptMostAlign(maxWheel, EObjectType.WHEEL, 0.30, list);
+            list = removeCandidatesExceptMostAlign(maxWheel, EObjectType.WHEEL, wheelAlignThreshold, list);
         }
 
         //Eger birden fazla license plate varsa decision fusion en yüksek olan alınacak digerleri cikarilacak
@@ -411,11 +437,48 @@ public class Main {
 
         return resultList;
     }
-}
 
-class ErrorFunctionQualify extends ErrorFunction {
-    public double evaluate(RuleBlock ruleBlock) {
-        double error = 0.0;
-        return error;
+
+    private static void writeMaxAndOtherComponentRelationsToFile(String imageName, CandidateComponent max, List<CandidateComponent> components) {
+
+
+        Rect r1 = max.getRect();
+
+        File outputFile = FileUtils.getFile(CBODUtil.getCbodTempDirectory().concat("/").concat("log.txt"));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nImage Name: ").append(imageName);
+        sb.append("\nMax component type: ").append(max.getObjectType().getName());
+        sb.append("\nDecision Value: ").append(max.getDecisionFusionResult());
+        sb.append("\n--------------------------------------------------------\n");
+
+
+        for (CandidateComponent comp1 : components) {
+
+            if (!comp1.equals(max)) {
+                Rect r2 = comp1.getRect();
+                sb.append("Object Type   : ").append(comp1.getObjectType().getName()).append("\n");
+                sb.append("Decision Value: ").append(comp1.getDecisionFusionResult()).append("\n");
+                sb.append("Left          : ").append(LeftMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("Right         : ").append(RightMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("Above         : ").append(AboveMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("Below         : ").append(BelowMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("Near          : ").append(NearMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("Far           : ").append(FarMembership.getInstance().calculateValue(r1, r2)).append("\n");
+                sb.append("----------------------------------------------------------------------\n");
+
+            }
+
+        }
+
+        sb.append("##################################################################################");
+
+        try {
+            FileUtils.writeStringToFile(outputFile, sb.toString(), true);
+        } catch (IOException e) {
+            logger.error("", e);
+        }
+
+
     }
 }

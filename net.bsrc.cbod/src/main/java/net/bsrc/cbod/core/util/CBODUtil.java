@@ -68,6 +68,28 @@ public final class CBODUtil {
         return result;
     }
 
+    public static String getFileDataAsString(String filePath) {
+
+        Validate.notEmpty(filePath);
+        File file = FileUtils.getFile(filePath);
+
+        if (!file.exists())
+            throw new CBODException("File could not be found. Path: "
+                    + filePath);
+
+        String result = null;
+
+        try {
+            result = FileUtils.readFileToString(file);
+        } catch (IOException e) {
+            logger.error("", e);
+            result = null;
+        }
+
+        return result;
+    }
+
+
     public static File getDefaultOutputDirectory() {
 
         String outputDirPath = ConfigurationUtil

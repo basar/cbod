@@ -9,7 +9,7 @@ package net.bsrc.cbod.core;
 public final class CBODConstants {
 
 	/**
-	 * Command project constants
+	 * Common project constants
 	 */
 	public static final String CONFIG_BASE = "META-INF/config/";
 	public static final String PROJECT_PROPERTIES = "project.properties";
@@ -24,7 +24,7 @@ public final class CBODConstants {
 	public static final String TXT_SUFFIX = ".txt";
 
     public static final String MC_OUT_SUFFIX = "_mc_out";
-    public static final String F_OUT = "_f_out";
+    public static final String F_OUT_SUFFIX = "_f_out";
     public static final String B_FUSED_OUT = "_b_fused_out";
     public static final String B_OUT = "_b_out";
 
@@ -35,9 +35,25 @@ public final class CBODConstants {
 	public static final String SVM_MODEL = "model";
 	public static final String SVM_PREDICT = "predict";
 
-	/**
-	 * Property files keys
-	 */
+    public static final String T1_EX = "t1_ex";
+    public static final String T2_EX = "t2_ex";
+    public static final String LP_EX = "lp_ex";
+    public static final String W1_EX = "w1_ex";
+    public static final String W2_EX = "w2_ex";
+    public static final String T1LP_NR = "t1lp_nr";
+    public static final String T2LP_NR = "t2lp_nr";
+    public static final String W1W2_FAR = "w1w2_far";
+    public static final String W1w2_AL = "w1w2_al";
+    public static final String T1T2_AL = "t1t2_al";
+    public static final String CAR_EX = "car_ex";
+
+
+
+
+
+    /**
+     * Property files keys
+     */
 
 	/**
 	 * CBOD Core
