@@ -30,131 +30,121 @@ import com.googlecode.javacv.cpp.opencv_nonfree.SIFT;
 
 public class CBODSift {
 
-	public static CvMat createDictionary(List<ImageModel> imageModelList,
-			int dictionarySize) {
+    public static CvMat createDictionary(List<ImageModel> imageModelList, int dictionarySize) {
 
-		CvMat dictionary = null;
+        CvMat dictionary = null;
+        SIFT sift = new SIFT();
+        DescriptorExtractor extractor = sift.getDescriptorExtractor();
+        FeatureDetector detector = sift.getFeatureDetector();
 
-		SIFT sift = new SIFT();
-		DescriptorExtractor extractor = sift.getDescriptorExtractor();
-		FeatureDetector detector = sift.getFeatureDetector();
+        List<CvMat> cvMatList = new ArrayList<CvMat>();
 
-		List<CvMat> cvMatList = new ArrayList<CvMat>();
+        for (int i = 0; i < imageModelList.size(); i++) {
 
-		for (int i = 0; i < imageModelList.size(); i++) {
+            ImageModel imgModel = imageModelList.get(i);
+            CvMat imageMat = cvLoadImageM(imgModel.getImagePath(), CV_LOAD_IMAGE_GRAYSCALE);
+            KeyPoint keyPoints = new KeyPoint();
+            // detect key points in the image
+            detector.detect(imageMat, keyPoints, null);
 
-			ImageModel imgModel = imageModelList.get(i);
-			CvMat imageMat = cvLoadImageM(imgModel.getImagePath(),
-					CV_LOAD_IMAGE_GRAYSCALE);
+            CvMat descriptors = new CvMat(null);
+            // extractor descriptor for each keypoint
+            extractor.compute(imageMat, keyPoints, descriptors);
+            // Descriptor is not null
+            if (!descriptors.isNull()) {
+                cvMatList.add(descriptors);
+            }
+        }
+        CvMat totalDescriptors = OpenCV.concatenateDescriptors(cvMatList, CV_32F);
+        // KMEANS_PP_CENTER
+        int flags = 2;
 
-			KeyPoint keyPoints = new KeyPoint();
-			// detect key points in the image
-			detector.detect(imageMat, keyPoints, null);
+        CvTermCriteria termCriteria = new CvTermCriteria(CV_TERMCRIT_ITER, 100, 0.001);
+        BOWKMeansTrainer bowKMeansTrainer = new BOWKMeansTrainer(
+                dictionarySize, termCriteria, 1, flags);
+        dictionary = bowKMeansTrainer.cluster(totalDescriptors);
 
-			CvMat descriptors = new CvMat(null);
-			// extractor descriptor for each keypoint
-			extractor.compute(imageMat, keyPoints, descriptors);
-			// Descriptor is not null
-			if (!descriptors.isNull()) {
-				cvMatList.add(descriptors);
-			}
-		}
+        return dictionary;
+    }
 
-		CvMat totalDescriptors = OpenCV.concatenateDescriptors(cvMatList,
-				CV_32F);
+    public static CvMat extractSIFTDescriptor(ImageModel imgModel,
+                                              CvMat dictionary) {
 
-		// KMEANS_PP_CENTER
-		int flags = 2;
+        SIFT sift = new SIFT();
+        DescriptorExtractor extractor = sift.getDescriptorExtractor();
+        FeatureDetector detector = sift.getFeatureDetector();
 
-		CvTermCriteria termCriteria = new CvTermCriteria(CV_TERMCRIT_ITER, 100,
-				0.001);
-		BOWKMeansTrainer bowKMeansTrainer = new BOWKMeansTrainer(
-				dictionarySize, termCriteria, 1, flags);
+        DescriptorMatcher descMatcher = new FlannBasedMatcher();
+        // DescriptorMatcher descMatcher = new BFMatcher();
 
-		dictionary = bowKMeansTrainer.cluster(totalDescriptors);
+        BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
+                extractor, descMatcher);
+        bowDE.setVocabulary(dictionary);
 
-		return dictionary;
+        CvMat imageMat = cvLoadImageM(imgModel.getImagePath(),
+                CV_LOAD_IMAGE_GRAYSCALE);
 
-	}
+        KeyPoint keyPoints = new KeyPoint();
+        detector.detect(imageMat, keyPoints, null);
 
-	public static CvMat extractSIFTDescriptor(ImageModel imgModel,
-			CvMat dictionary) {
+        CvMat outputImgDesc = new CvMat(null);
+        CvMat temp = new CvMat(null);
+        IntVectorVector intVectorVector = new IntVectorVector();
+        bowDE.compute(imageMat, keyPoints, outputImgDesc, intVectorVector, temp);
 
-		SIFT sift = new SIFT();
-		DescriptorExtractor extractor = sift.getDescriptorExtractor();
-		FeatureDetector detector = sift.getFeatureDetector();
+        return outputImgDesc;
+    }
 
-		DescriptorMatcher descMatcher = new FlannBasedMatcher();
-		// DescriptorMatcher descMatcher = new BFMatcher();
+    public static List<Double> extractSIFTDescriptorAsList(ImageModel imgModel,
+                                                           CvMat dictionary) {
 
-		BOWImgDescriptorExtractor bowDE = new BOWImgDescriptorExtractor(
-				extractor, descMatcher);
-		bowDE.setVocabulary(dictionary);
+        CvMat mat = extractSIFTDescriptor(imgModel, dictionary);
 
-		CvMat imageMat = cvLoadImageM(imgModel.getImagePath(),
-				CV_LOAD_IMAGE_GRAYSCALE);
+        List<Double> list = new ArrayList<Double>();
+        if (!mat.isNull()) {
+            for (int i = 0; i < mat.rows(); i++) {
+                for (int j = 0; j < mat.cols(); j++) {
+                    list.add(mat.get(i, j));
+                }
+            }
+        }
+        return list;
+    }
 
-		KeyPoint keyPoints = new KeyPoint();
-		detector.detect(imageMat, keyPoints, null);
+    public static void drawKeypointsFromImageModel(ImageModel imageModel) {
 
-		CvMat outputImgDesc = new CvMat(null);
-		CvMat temp = new CvMat(null);
-		IntVectorVector intVectorVector = new IntVectorVector();
-		bowDE.compute(imageMat, keyPoints, outputImgDesc, intVectorVector, temp);
+        KeyPoint keyPoint = new KeyPoint();
 
-		return outputImgDesc;
-	}
+        SIFT sift = new SIFT();
+        // SIFT sift = new SIFT(0,3,0.04,5,1.2);
+        FeatureDetector detector = sift.getFeatureDetector();
 
-	public static List<Double> extractSIFTDescriptorAsList(ImageModel imgModel,
-			CvMat dictionary) {
+        // Orginal image
+        CvMat orginalImg = cvLoadImageM(imageModel.getImagePath());
+        // Gray image
+        CvMat grayImg = CvMat.create(orginalImg.rows(), orginalImg.cols(),
+                CV_8U);
+        // Fill gray image
+        cvCvtColor(orginalImg, grayImg, CV_BGR2GRAY);
 
-		CvMat mat = extractSIFTDescriptor(imgModel, dictionary);
+        // detect key points in the image
+        detector.detect(grayImg, keyPoint, null);
 
-		List<Double> list = new ArrayList<Double>();
-		if (!mat.isNull()) {
-			for (int i = 0; i < mat.rows(); i++) {
-				for (int j = 0; j < mat.cols(); j++) {
-					list.add(mat.get(i, j));
-				}
-			}
-		}
-		return list;
-	}
+        CvMat outputImgDesc = CvMat.create(orginalImg.rows(),
+                orginalImg.cols(), orginalImg.type());
 
-	public static void drawKeypointsFromImageModel(ImageModel imageModel) {
+        drawKeypoints(orginalImg, keyPoint, outputImgDesc,
+                opencv_core.CvScalar.YELLOW,
+                opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
+        // App temp dir
+        String cbodTempDir = CBODUtil.getCbodTempDirectory();
 
-		KeyPoint keyPoint = new KeyPoint();
+        String path = cbodTempDir.concat("/")
+                .concat(imageModel.getRawImageName())
+                .concat("_key_points" + CBODConstants.JPEG_SUFFIX);
 
-		SIFT sift = new SIFT();
-		// SIFT sift = new SIFT(0,3,0.04,5,1.2);
-		FeatureDetector detector = sift.getFeatureDetector();
+        cvSaveImage(path, outputImgDesc);
 
-		// Orginal image
-		CvMat orginalImg = cvLoadImageM(imageModel.getImagePath());
-		// Gray image
-		CvMat grayImg = CvMat.create(orginalImg.rows(), orginalImg.cols(),
-				CV_8U);
-		// Fill gray image
-		cvCvtColor(orginalImg, grayImg, CV_BGR2GRAY);
-
-		// detect key points in the image
-		detector.detect(grayImg, keyPoint, null);
-
-		CvMat outputImgDesc = CvMat.create(orginalImg.rows(),
-				orginalImg.cols(), orginalImg.type());
-
-		drawKeypoints(orginalImg, keyPoint, outputImgDesc,
-				opencv_core.CvScalar.YELLOW,
-				opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
-		// App temp dir
-		String cbodTempDir = CBODUtil.getCbodTempDirectory();
-
-		String path = cbodTempDir.concat("/")
-				.concat(imageModel.getRawImageName())
-				.concat("_key_points" + CBODConstants.JPEG_SUFFIX);
-
-		cvSaveImage(path, outputImgDesc);
-
-	}
+    }
 
 }

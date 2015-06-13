@@ -21,9 +21,7 @@ public class CBODHog {
 	public static List<Double> extractHogDescriptor(ImageModel imageModel) {
 
 		List<Double> list = new ArrayList<Double>();
-
 		IplImage rawImg = cvLoadImage(imageModel.getImagePath());
-
 		// resize image
 		IplImage resizedImg = IplImage.create(64, 64, rawImg.depth(),
 				rawImg.nChannels());
@@ -48,7 +46,6 @@ public class CBODHog {
 		}
 
 		return list;
-
 	}
 
 }

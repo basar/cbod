@@ -134,7 +134,6 @@ public class LibSvmUtil {
          return;
          }
          **/
-
         List<String> stats = new ArrayList<String>();
         int maxSuccess = 0;
         double maxCost = 0;
@@ -183,13 +182,11 @@ public class LibSvmUtil {
             }
         }
 
-
         for (String stat : stats) {
             logger.debug(stat);
         }
 
         StringBuilder sb = new StringBuilder();
-
         sb.append("Max:[");
         sb.append("Cost[" + maxI + "]:").append(maxCost).append(" ");
         sb.append("Gamma[" + maxJ + "]:").append(maxGamma).append(" ");
@@ -220,6 +217,9 @@ public class LibSvmUtil {
         pool.invoke(cvt);
 
     }
+
+
+
 
 }
 

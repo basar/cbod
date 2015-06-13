@@ -6,9 +6,13 @@ import com.fuzzylite.imex.FllImporter;
 import net.bsrc.cbod.core.*;
 import net.bsrc.cbod.core.model.CandidateComponent;
 import net.bsrc.cbod.core.model.EObjectType;
+import net.bsrc.cbod.core.model.ImageModel;
 import net.bsrc.cbod.core.model.SVMPredictionResult;
 import net.bsrc.cbod.core.persistence.DB4O;
 import net.bsrc.cbod.core.util.CBODUtil;
+import net.bsrc.cbod.jseg.JSEG;
+import net.bsrc.cbod.jseg.JSEGParameter;
+import net.bsrc.cbod.jseg.JSEGParameterFactory;
 import net.bsrc.cbod.opencv.OpenCV;
 import org.apache.commons.io.FileUtils;
 import org.opencv.core.Core;
@@ -43,10 +47,27 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        doPrediction("test.jpg", false);
+
+        for(int i=80;i<=80;i++){
+            doPrediction("IMG_NEG_"+i+".jpg", false);
+        }
 
 
 
+        /**
+        // Test yapilacak image
+        ImageModel imageModel = ImageModelFactory.createImageModel(CBODUtil.getCbodInputImageDirectory().concat("/").concat("IMG_45.jpg"), true);
+
+        JSEGParameter jsegParam = new JSEGParameter(imageModel.getImagePath());
+        jsegParam.setFactor(0.5);
+        jsegParam.setColorQuantizationThreshold(150);
+        jsegParam.setRegionMergeThreshold(0.4);
+        jsegParam.setNumberOfScales(3);
+
+        //Image segmentlere ayriliyor
+        List<ImageModel> imageSegments = JSEG.segmentImage(
+                imageModel.getImagePath(), jsegParam);
+        */
         DB4O.getInstance().close();
     }
 
@@ -154,6 +175,8 @@ public class Main {
         engine.getInputVariable(CBODConstants.T1T2_AL).setInputValue(t1t2Al);
 
 
+        logger.debug("t1ex={},t2ex={},lpex={},w1ex={},w2ex={},t1lpnr={},t2lpnr={},w1w2far={},w1w2al={},t1t2al={}",
+                t1Ex,t2Ex,lpEx,w1Ex,w2Ex,t1lpNr,t2lpNr,w1w2Far,w1w2Al,t1t2Al);
 
         StringBuilder status = new StringBuilder();
         if (!engine.isReady(status))
@@ -163,7 +186,6 @@ public class Main {
         engine.process();
 
         return engine.getOutputVariable(CBODConstants.CAR_EX).defuzzify();
-
 
     }
 
